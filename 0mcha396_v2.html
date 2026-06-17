@@ -270,23 +270,30 @@ body{
   text-shadow: 0 0 24px rgba(0,0,0,.9), 0 0 44px rgba(255,255,255,.35);
 }
 
+/* UT432 = affichage principal, coloré dynamiquement */
+.sph-ut {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.8rem, 7.5vmin, 3.2rem);
+  font-weight: 400;
+  color: rgba(200,180,255,.9);
+  text-shadow: 0 0 18px currentColor, 0 0 40px currentColor;
+  line-height: 1;
+  letter-spacing: .04em;
+  transition: color .8s, text-shadow .8s;
+}
+/* masterFreq = secondaire, rouge discret en dessous */
 .sph-freq {
   font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(1.4rem, 6vmin, 2.4rem);
+  font-size: clamp(.9rem, 3.5vmin, 1.4rem);
   font-weight: 400;
   color: #FF3030;
   text-shadow:
-    0 -1px 0 rgba(255,180,180,.6),
-    0  1px 0 rgba(255,120,120,1),
-    0  2px 0 rgba(210,30,30,.95),
-    0  3px 0 rgba(170,10,10,.85),
-    0  4px 0 rgba(130,0,0,.7),
-    0  5px 4px rgba(80,0,0,.5),
-    0  8px 14px rgba(0,0,0,.55),
-    0  0  18px rgba(255,80,80,.55),
-    0  0  40px rgba(255,0,0,.2);
+    0 1px 0 rgba(200,20,20,.9),
+    0 2px 3px rgba(100,0,0,.5),
+    0 0 12px rgba(255,60,60,.5);
   line-height: 1;
-  letter-spacing: .05em;
+  letter-spacing: .06em;
+  opacity: .85;
 }
 
 .sph-sub {
@@ -2490,9 +2497,10 @@ function drawMetatron(){
   _ut432 = calcUT432Now();
   _utHue = utGetHue(_ut432);
   _utSeuil = utGetSeuil(_ut432);
+  // Auto-satellites guidés par l'heure UT432
+  _autoUT432Satellites();
   // Appliquer hue au flux 3D si mode on ou random
   if(_fluxMode !== 'off') {
-    // passer _utHue aux géométries existantes via applyMasterHueToFlux
     applyMasterHueToFlux(typeof masterFreq!=='undefined'?masterFreq:432);
   }
   // Dessiner l'anneau
@@ -2636,9 +2644,9 @@ function buildVesicaPairs() {
   sphere.innerHTML = `
     <div class="sph-content">
       <div class="sph-label">0mcha396</div>
-      <div class="sph-freq" id="sphere-freq">${masterFreq}</div>
-      <div class="sph-ut" id="sphere-ut">—</div>
-      <div class="sph-sub" id="sphere-sub">Press &amp; Destress</div>
+      <div class="sph-ut"   id="sphere-ut">—</div>
+      <div class="sph-freq" id="sphere-freq">${masterFreq} Hz</div>
+      <div class="sph-sub"  id="sphere-sub">∿</div>
     </div>`;
 
   sphere.addEventListener('mousedown',  _sphStart);
@@ -2666,13 +2674,15 @@ function buildVesicaPairs() {
 // Met à jour l'affichage de la sphère (fréquence, couleur, état flux)
 function updateSphereDisplay() {
   const freqEl = document.getElementById('sphere-freq');
-  if (freqEl) freqEl.textContent = masterFreq;
+  if (freqEl) freqEl.textContent = masterFreq + ' Hz';
 
   const utEl = document.getElementById('sphere-ut');
-  if(utEl && typeof _ut432 !== 'undefined') {
+  if (utEl && typeof _ut432 !== 'undefined') {
     utEl.textContent = _ut432.toFixed(1);
     const seuil = typeof _utSeuil !== 'undefined' ? _utSeuil : null;
-    if(seuil) utEl.style.color = `hsl(${seuil.h},80%,68%)`;
+    const h = seuil ? seuil.h : 200;
+    utEl.style.color = `hsl(${h},88%,72%)`;
+    utEl.style.textShadow = `0 0 18px hsl(${h},88%,72%), 0 0 40px hsl(${h},80%,55%)`;
   }
 
   const sphere = document.getElementById('fbf-sphere');
@@ -2684,13 +2694,9 @@ function updateSphereDisplay() {
   _applyStyle(sphere, SPHERE_COLORS_12[_sphereColorIdx]);
 }
 
-// Tap court = toggle flux ; si on démarre → random complet
+// Tap court = re-tirage satellites (masterFreq conservé) ; long press = random complet
 function fbfSpherePress() {
-  if (typeof flowing !== 'undefined' && flowing) {
-    stopFlow();
-  } else {
-    trigger0mcha396();
-  }
+  triggerSatellites();
 }
 
 // Stubs de compatibilité (remplaçants des fonctions Vesica multi-sphères)
@@ -2723,6 +2729,57 @@ function toggleAccord(id) {
 /* ═══════════════════════════════════════════
    05-controls.js — Contrôles 0mcha396 & oscillateurs
    ═══════════════════════════════════════════ */
+
+// ── Satellites — ratios spec (brief) ──────────────────────────────
+const SAT_RATIOS = [10/11, 11/12, 10/12, 12/11, 11/10, 12/10];
+const SAT_LABELS = ['10/11','11/12','10/12','12/11','11/10','12/10'];
+
+// Tire 6 ratios à partir d'une graine (seed=null → pur aléatoire)
+function _pickSatRatios(seed) {
+  return Array.from({length: 6}, (_, i) => {
+    if (seed === null) return Math.floor(Math.random() * SAT_RATIOS.length);
+    // Déterministe : mélange basé sur (seed + i) pour avoir 6 indices différents
+    return Math.floor((seed * 37 + i * 13) % SAT_RATIOS.length);
+  });
+}
+
+// Applique les 6 ratios aux satellites (PAIRS 0-5), garde masterFreq intact
+function _applySatellites(ratioIdxs) {
+  for (let i = 0; i < MASTER_IDX; i++) {
+    const r = SAT_RATIOS[ratioIdxs[i]];
+    const f = safeF(masterFreq * r);
+    PAIRS[i].pingala.baseFreq = f;
+    PAIRS[i].pingala.ri = ratioIdxs[i];
+    if (typeof flowing !== 'undefined' && flowing) {
+      tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
+      tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
+    }
+  }
+}
+
+// TAP = re-tirage aléatoire de tout sauf masterFreq
+function triggerSatellites() {
+  const idxs = _pickSatRatios(null); // pur aléatoire
+  _applySatellites(idxs);
+  if (typeof flowing === 'undefined' || !flowing) startFlow();
+  randomizeFX();
+  _sphereColorIdx = (_sphereColorIdx + 1) % SPHERE_COLORS_12.length;
+  updateDisplay();
+  saveState();
+}
+
+// Auto-UT432 : déclenche satellites quand UT432 franchit un seuil entier
+let _lastSatTriggerUT = -1;
+function _autoUT432Satellites() {
+  if (_fluxMode !== 'on') return;
+  const slot = Math.floor(_ut432); // change toutes les ~3.3 minutes
+  if (slot !== _lastSatTriggerUT) {
+    _lastSatTriggerUT = slot;
+    const idxs = _pickSatRatios(_ut432); // déterministe par l'heure
+    _applySatellites(idxs);
+    if (typeof flowing === 'undefined' || !flowing) startFlow();
+  }
+}
 
 // ── Trigger 0mcha396 — mode full aléatoire binaural ─────────────────
 // Band A (36–108) : oscs 0,1
