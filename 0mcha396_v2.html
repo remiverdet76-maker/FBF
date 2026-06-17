@@ -205,8 +205,8 @@ body{
   top: 50%;
   left: 50%;
   transform: translate(-50%, -56%);
-  width:  clamp(230px, 58vmin, 340px);
-  height: clamp(230px, 58vmin, 340px);
+  width:  clamp(130px, 32vmin, 200px);
+  height: clamp(130px, 32vmin, 200px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,7 +219,7 @@ body{
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2.5px solid rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,11 +229,17 @@ body{
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: filter .35s, transform .22s;
-  /* Légère texture verre */
-  backdrop-filter: blur(2px);
+  /* Effet goutte d'eau */
+  background: radial-gradient(ellipse at 32% 28%, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 40%, rgba(180,220,255,.04) 100%);
+  backdrop-filter: blur(6px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 8px rgba(255,255,255,.18),
+    inset 0 -2px 6px rgba(100,180,255,.10),
+    0 4px 24px rgba(0,0,0,.22),
+    0 0 40px rgba(180,220,255,.08);
 }
-.fbf-bubble:hover  { filter: brightness(1.18); }
-.fbf-bubble:active { transform: scale(.95); }
+.fbf-bubble:hover  { filter: brightness(1.22); }
+.fbf-bubble:active { transform: scale(.93); }
 
 /* Animation de pulsation quand le flux est actif */
 .fbf-bubble.sph-flowing {
@@ -242,19 +248,6 @@ body{
 @keyframes sphPulse {
   0%,100% { filter: brightness(1) saturate(1); }
   50%     { filter: brightness(1.32) saturate(1.25); }
-}
-
-/* ── Reflet spéculaire (effet verre) ───── */
-.sph-shine {
-  position: absolute;
-  top: 9%;
-  left: 16%;
-  width: 38%;
-  height: 32%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,255,255,.65) 0%, transparent 70%);
-  pointer-events: none;
-  transform: rotate(-15deg);
 }
 
 /* ── Contenu intérieur ──────────────────── */
@@ -279,10 +272,9 @@ body{
 
 .sph-freq {
   font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(2.4rem, 10vmin, 4.2rem);
+  font-size: clamp(1.4rem, 6vmin, 2.4rem);
   font-weight: 400;
   color: #FF3030;
-  /* Relief 3D doux : highlight + profondeur + glow */
   text-shadow:
     0 -1px 0 rgba(255,180,180,.6),
     0  1px 0 rgba(255,120,120,1),
@@ -306,6 +298,41 @@ body{
   text-shadow: 0 0 10px rgba(0,0,0,.9);
   text-transform: uppercase;
 }
+
+.sph-ut {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(.55rem, 2vmin, .8rem);
+  font-weight: 400;
+  color: rgba(200,180,255,.55);
+  letter-spacing: .14em;
+  transition: color .8s;
+}
+
+#flux-mode-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(10,4,28,.72);
+  border: 1.5px solid rgba(200,180,255,.22);
+  color: rgba(200,180,255,.7);
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all .25s;
+  pointer-events: all;
+}
+#flux-mode-btn:hover { border-color: rgba(200,180,255,.55); color: rgba(200,180,255,1); }
+#flux-mode-btn.mode-on  { border-color: rgba(100,220,180,.6); color: rgba(100,220,180,.9); }
+#flux-mode-btn.mode-rnd { border-color: rgba(200,100,255,.6); color: rgba(200,100,255,.9); }
+#flux-mode-btn.mode-off { opacity: .38; }
 
 /* ── Boutons + et − ────────────────────── */
 .sph-btn {
@@ -1237,6 +1264,10 @@ input.param-input{
     <span class="bnav-lbl">Menu</span>
   </button>
 </nav>
+
+<div id="flux-mode-btn" onclick="cycleFluxMode()" title="Flux UT432">
+  <span id="flux-mode-ico">●</span>
+</div>
 
 <div id="drop-menu">
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
@@ -2455,6 +2486,29 @@ function drawMetatron(){
   drawParts(ctx);
   drawLabels(ctx);
 
+  // Mettre à jour UT432
+  _ut432 = calcUT432Now();
+  _utHue = utGetHue(_ut432);
+  _utSeuil = utGetSeuil(_ut432);
+  // Appliquer hue au flux 3D si mode on ou random
+  if(_fluxMode !== 'off') {
+    // passer _utHue aux géométries existantes via applyMasterHueToFlux
+    applyMasterHueToFlux(typeof masterFreq!=='undefined'?masterFreq:432);
+  }
+  // Dessiner l'anneau
+  const _rCanvas = document.getElementById('meta-canvas');
+  const _rCtx = _rCanvas ? _rCanvas.getContext('2d') : null;
+  if(_rCtx) {
+    const _rW=_rCanvas.width,_rH=_rCanvas.height;
+    drawUT432Ring(_ut432, _utHue, _rCtx, _rW/2, _rH/2, Math.min(_rW,_rH)*0.46);
+  }
+  // Mettre à jour sphere UT432
+  const _utEl = document.getElementById('sphere-ut');
+  if(_utEl) {
+    _utEl.textContent = _ut432.toFixed(1);
+    if(_utSeuil) _utEl.style.color = `hsl(${_utSeuil.h},80%,68%)`;
+  }
+
   V.t+=.016*V.spd;
 }
 
@@ -2580,10 +2634,10 @@ function buildVesicaPairs() {
   _applyStyle(sphere, color);
 
   sphere.innerHTML = `
-    <div class="sph-shine"></div>
     <div class="sph-content">
       <div class="sph-label">0mcha396</div>
       <div class="sph-freq" id="sphere-freq">${masterFreq}</div>
+      <div class="sph-ut" id="sphere-ut">—</div>
       <div class="sph-sub" id="sphere-sub">Press &amp; Destress</div>
     </div>`;
 
@@ -2613,6 +2667,13 @@ function buildVesicaPairs() {
 function updateSphereDisplay() {
   const freqEl = document.getElementById('sphere-freq');
   if (freqEl) freqEl.textContent = masterFreq;
+
+  const utEl = document.getElementById('sphere-ut');
+  if(utEl && typeof _ut432 !== 'undefined') {
+    utEl.textContent = _ut432.toFixed(1);
+    const seuil = typeof _utSeuil !== 'undefined' ? _utSeuil : null;
+    if(seuil) utEl.style.color = `hsl(${seuil.h},80%,68%)`;
+  }
 
   const sphere = document.getElementById('fbf-sphere');
   if (!sphere) return;
@@ -4085,6 +4146,56 @@ function _renderPresets() {
   });
 }
 
+// ── UT432 Clock (depuis OmCv477) ──────────────────────
+const UT_SEUILS=[
+  {v:0,  h:280,s:'Kether'},  {v:54, h:250,s:'Chokhmah'},{v:108,h:200,s:'Binah'},
+  {v:162,h:155,s:'Chesed'},  {v:216,h:48, s:'Tiphereth'},{v:270,h:88, s:'Netzach'},
+  {v:324,h:32, s:'Hod'},     {v:378,h:5,  s:'Yesod'},    {v:432,h:295,s:'Malkuth'},
+];
+function utGetHue(ut){
+  for(let i=0;i<UT_SEUILS.length-1;i++){
+    const a=UT_SEUILS[i],b=UT_SEUILS[i+1];
+    if(ut>=a.v&&ut<b.v){
+      const t=(ut-a.v)/(b.v-a.v);
+      let dh=b.h-a.h;if(dh>180)dh-=360;if(dh<-180)dh+=360;
+      return(a.h+dh*t+360)%360;
+    }
+  }
+  return UT_SEUILS[UT_SEUILS.length-1].h;
+}
+function utGetSeuil(ut){let c=UT_SEUILS[0];for(const s of UT_SEUILS){if(ut>=s.v)c=s;}return c;}
+function _utLastSun(y,m){let d=new Date(Date.UTC(y,m+1,0));while(d.getUTCDay()!==0)d.setUTCDate(d.getUTCDate()-1);return d;}
+function _utFrOff(n){const y=n.getUTCFullYear(),s=_utLastSun(y,2),e=_utLastSun(y,9);s.setUTCHours(1,0,0,0);e.setUTCHours(1,0,0,0);return(n>=s&&n<e)?2:1;}
+function _utFrNow(){const n=new Date(),o=_utFrOff(n);return{date:new Date(n.getTime()+o*3600000),off:o};}
+let _utEot={v:0,min:-1};
+function _utEqT(d){
+  const m=d.getUTCHours()*60+d.getUTCMinutes();
+  if(m===_utEot.min)return _utEot.v;
+  const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+  const B2=(360/365*(doy-81))*Math.PI/180;
+  const v=9.87*Math.sin(2*B2)-7.53*Math.cos(B2)-1.5*Math.sin(B2);
+  _utEot={v,min:m};return v;
+}
+const _utLon=2.35,_utLat=48.85*Math.PI/180;
+function calcUT432Now(){
+  const{date:fd,off}=_utFrNow();
+  const m=(fd.getUTCHours()-off)*60+fd.getUTCMinutes()+fd.getUTCSeconds()/60;
+  return((m+_utLon/15*60+_utEqT(fd))/1440*432+432)%432;
+}
+function _utSunTimes(fd){
+  const doy=Math.floor((fd-new Date(Date.UTC(fd.getFullYear(),0,1)))/86400000)+1;
+  const B2=(360/365*(doy-81))*Math.PI/180;
+  const eot=9.87*Math.sin(2*B2)-7.53*Math.cos(B2)-1.5*Math.sin(B2);
+  const decl=Math.asin(Math.sin(23.45*Math.PI/180)*Math.sin(B2));
+  const cosHA=(Math.sin(-.833*Math.PI/180)-Math.sin(_utLat)*Math.sin(decl))/(Math.cos(_utLat)*Math.cos(decl));
+  if(Math.abs(cosHA)>1)return null;
+  const HA=Math.acos(cosHA)*180/Math.PI,noon=720-eot-_utLon*4;
+  return{rise:(noon-HA*4)/60,set:(noon+HA*4)/60};
+}
+let _ut432=0,_utHue=48,_utSeuil=UT_SEUILS[4];
+// État du bouton flux : 'on' | 'random' | 'off'
+let _fluxMode='on';
+
 // ── Init ──────────────────────────────────────────────────────────
 /* ═══ HORLOGE COSMIQUE UTC-36 ═══════════════════════════════════
    Algorithme UT432 (repris d'OmCv-450) : l'heure solaire vraie de Paris
@@ -4521,6 +4632,53 @@ const Bowl = (() => {
 
 if (typeof window !== 'undefined') window.Bowl = Bowl;
 
+function drawUT432Ring(ut432, hue, ctx, cx, cy, ms) {
+  const TAU=Math.PI*2;
+  const RR = ms * 0.92;
+  // Arc fond
+  for(let i=0;i<360;i++){
+    const a0=i/360*TAU-Math.PI/2, a1=(i+1)/360*TAU-Math.PI/2+.010;
+    ctx.beginPath();ctx.arc(cx,cy,RR,a0,a1);
+    ctx.strokeStyle=`hsla(${(hue+i)%360},85%,58%,.09)`;ctx.lineWidth=RR*.028;ctx.stroke();
+  }
+  // Arc rempli jusqu'à la position actuelle
+  const frac=ut432/432;
+  for(let i=0;i<=Math.floor(frac*180);i++){
+    const p=i/180;if(p>frac)break;
+    const a0=p*TAU-Math.PI/2,a1=(p+1/180)*TAU-Math.PI/2+.008;
+    const h=(hue+p*360)%360;
+    const prox=Math.max(0,1-(frac-p)*5);
+    ctx.beginPath();ctx.arc(cx,cy,RR,a0,a1);
+    ctx.strokeStyle=`hsla(${h},98%,72%,${.38+.46*prox})`;ctx.lineWidth=RR*.032;ctx.stroke();
+    if(prox>.45){ctx.beginPath();ctx.arc(cx,cy,RR,a0,a1);ctx.strokeStyle=`hsla(${h},98%,88%,${prox*.14})`;ctx.lineWidth=RR*.064;ctx.stroke();}
+  }
+  // Tête lumineuse
+  const ha=frac*TAU-Math.PI/2;
+  const hx=cx+Math.cos(ha)*RR,hy=cy+Math.sin(ha)*RR;
+  const ph=(hue+frac*360)%360;
+  const hg=ctx.createRadialGradient(hx,hy,0,hx,hy,RR*.072);
+  hg.addColorStop(0,`hsla(${ph},100%,88%,.8)`);hg.addColorStop(.4,`hsla(${ph},95%,72%,.32)`);hg.addColorStop(1,`hsla(${ph},90%,60%,0)`);
+  ctx.beginPath();ctx.arc(hx,hy,RR*.072,0,TAU);ctx.fillStyle=hg;ctx.fill();
+  // Seuils — petites graduations uniquement, pas de labels texte
+  UT_SEUILS.forEach(s=>{
+    const a=s.v/432*TAU-Math.PI/2;
+    const near=Math.abs(ut432-s.v)<10;
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*RR*.96,cy+Math.sin(a)*RR*.96);ctx.lineTo(cx+Math.cos(a)*RR*.985,cy+Math.sin(a)*RR*.985);
+    ctx.strokeStyle=`hsla(${s.h},88%,68%,${near?.75:.20})`;ctx.lineWidth=near?1.6:.5;ctx.stroke();
+  });
+}
+
+function cycleFluxMode() {
+  const modes = ['on','random','off'];
+  const icons = { on:'●', random:'∞', off:'○' };
+  const classes = { on:'mode-on', random:'mode-rnd', off:'mode-off' };
+  const cur = modes.indexOf(_fluxMode);
+  _fluxMode = modes[(cur+1) % 3];
+  const btn = document.getElementById('flux-mode-btn');
+  const ico = document.getElementById('flux-mode-ico');
+  if(btn) { btn.className=''; btn.classList.add(classes[_fluxMode]); }
+  if(ico) ico.textContent = icons[_fluxMode];
+}
 
 </script>
 </body>
