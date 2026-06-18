@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMCHA 432 — Flux Hélicoïdal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@300;400;700&display=swap');
+:root{
+  --void:#010306;--c432:#00ccff;--cexp:#00ff88;--ccont:#ff6600;
+  --cflux:#ff0066;--cgold:#e8a020;--cviolet:#8855ff;
+  --text:#7a9ab0;--bright:#ddeeff;
+  --mono:'Share Tech Mono',monospace;--orb:'Orbitron',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--void);color:var(--text);font-family:var(--mono);}
+#cvM{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#cvF{position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#hdr{position:absolute;top:18px;left:24px;pointer-events:auto;}
+#hdr-title{font-family:var(--orb);font-size:26px;font-weight:700;color:var(--c432);letter-spacing:.08em;text-shadow:0 0 30px rgba(0,204,255,.5),0 0 60px rgba(0,204,255,.2);}
+#hdr-sub{font-size:9px;letter-spacing:.32em;opacity:.42;text-transform:uppercase;margin-top:4px;}
+#hdr-ratio{font-size:10px;color:var(--cgold);opacity:.65;margin-top:2px;letter-spacing:.05em;}
+#toolbar{position:absolute;top:18px;right:18px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;pointer-events:auto;max-width:600px;}
+.tbtn{font-family:var(--mono);font-size:9px;letter-spacing:.14em;padding:7px 11px;cursor:pointer;text-transform:uppercase;border-radius:2px;transition:all .18s;background:rgba(1,3,6,.92);border:1px solid rgba(0,204,255,.2);color:var(--c432);backdrop-filter:blur(10px);white-space:nowrap;}
+.tbtn:hover{background:rgba(0,204,255,.1);border-color:rgba(0,204,255,.5);}
+.tbtn.on{background:rgba(0,204,255,.14);border-color:rgba(0,204,255,.7);color:#fff;}
+.tbtn.mx{border-color:rgba(255,215,0,.3);color:#ffd700;}
+.tbtn.mx.on{background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.7);}
+#panModes{position:absolute;top:66px;left:18px;width:198px;background:rgba(1,3,6,.94);border:1px solid rgba(0,204,255,.12);border-radius:3px;padding:13px;pointer-events:auto;backdrop-filter:blur(12px);display:none;}
+#panModes.open{display:block;}
+.psec{font-size:8px;letter-spacing:.28em;text-transform:uppercase;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid rgba(0,204,255,.07);}
+.psec.e{color:var(--cexp);}.psec.c{color:var(--ccont);}.psec.g{color:#ffd700;}
+.gap{height:9px;}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-bottom:3px;cursor:pointer;border:1px solid rgba(0,204,255,.07);border-radius:2px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;transition:all .14s;}
+.mrow:hover{border-color:rgba(0,204,255,.28);background:rgba(0,204,255,.04);}
+.mrow.on{border-color:var(--c432);background:rgba(0,204,255,.1);color:var(--bright);}
+.mrow.e{color:var(--cexp);border-color:rgba(0,255,136,.07);}
+.mrow.e:hover,.mrow.e.on{border-color:var(--cexp);background:rgba(0,255,136,.07);}
+.mrow.c{color:var(--ccont);border-color:rgba(255,102,0,.07);}
+.mrow.c:hover,.mrow.c.on{border-color:var(--ccont);background:rgba(255,102,0,.07);}
+.mrow.mx{color:#ffd700;border-color:rgba(255,215,0,.14);}
+.mrow.mx:hover,.mrow.mx.on{border-color:#ffd700;background:rgba(255,215,0,.09);}
+.mrow.fl{color:var(--cflux);border-color:rgba(255,0,102,.07);}
+.mrow.fl:hover,.mrow.fl.on{border-color:var(--cflux);background:rgba(255,0,102,.07);}
+#panParams{position:absolute;top:66px;right:18px;width:238px;max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:none;pointer-events:auto;display:none;}
+#panParams.open{display:block;}
+#panParams::-webkit-scrollbar{display:none;}
+.pcard{background:rgba(1,3,6,.93);border:1px solid rgba(0,204,255,.1);border-radius:2px;padding:12px;margin-bottom:6px;backdrop-filter:blur(10px);}
+.pct{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--c432);opacity:.55;margin-bottom:10px;}
+.pr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.pl{font-size:9px;opacity:.62;}.pv{font-size:10px;color:var(--bright);min-width:52px;text-align:right;}
+input[type=range]{width:100%;-webkit-appearance:none;height:2px;background:rgba(0,204,255,.1);border-radius:1px;outline:none;margin-top:3px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:9px;border-radius:50%;background:var(--c432);cursor:pointer;box-shadow:0 0 5px rgba(0,204,255,.55);}
+input[type=range].rg::-webkit-slider-thumb{background:var(--cgold);}
+input[type=range].re::-webkit-slider-thumb{background:var(--cexp);}
+input[type=range].rf::-webkit-slider-thumb{background:var(--cflux);}
+input[type=checkbox]{accent-color:var(--c432);width:13px;height:13px;cursor:pointer;}
+#panBin{position:absolute;bottom:86px;left:50%;transform:translateX(-50%);min-width:300px;background:rgba(1,3,6,.97);border:1px solid rgba(0,204,255,.2);border-radius:3px;padding:15px;pointer-events:auto;backdrop-filter:blur(16px);display:none;text-align:center;}
+#panBin.open{display:block;}
+.bh{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;}
+.bt{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--c432);}
+.bx{font-size:14px;cursor:pointer;opacity:.4;background:none;border:none;color:var(--text);}
+.bx:hover{opacity:1;}
+.bfr{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;text-align:left;}
+.bfl{font-size:8px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:3px;}
+.bfl.L{color:#0099ff;}.bfl.R{color:#ff6600;}
+.bfv{font-family:var(--orb);font-size:17px;color:var(--bright);}
+.bbeat{font-size:9px;color:var(--cflux);letter-spacing:.18em;margin-bottom:11px;}
+.bplay{width:100%;font-family:var(--mono);font-size:9px;letter-spacing:.18em;padding:9px;cursor:pointer;text-transform:uppercase;border-radius:1px;background:rgba(0,204,255,.07);border:1px solid rgba(0,204,255,.22);color:var(--c432);transition:all .2s;}
+.bplay:hover{background:rgba(0,204,255,.16);}
+.bplay.on{background:rgba(255,0,102,.09);border-color:rgba(255,0,102,.32);color:var(--cflux);}
+#polGauge{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);pointer-events:none;text-align:center;}
+#polRow{display:flex;align-items:center;gap:9px;}
+#polExpLbl{font-size:7px;color:var(--cexp);opacity:.45;letter-spacing:.12em;white-space:nowrap;}
+#polContLbl{font-size:7px;color:var(--cflux);opacity:.45;letter-spacing:.12em;white-space:nowrap;}
+#polBar{width:148px;height:2px;background:rgba(255,255,255,.05);border-radius:1px;position:relative;overflow:visible;}
+#polFill{position:absolute;top:-0.5px;height:3px;border-radius:2px;transition:all .25s;}
+#polLbl{font-size:7px;letter-spacing:.28em;opacity:.26;text-transform:uppercase;margin-top:4px;}
+#infobar{position:absolute;bottom:18px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;}
+.ib{background:rgba(1,3,6,.82);border:1px solid rgba(0,204,255,.07);padding:7px 12px;border-radius:2px;backdrop-filter:blur(8px);}
+.ib-k{font-size:7px;letter-spacing:.22em;opacity:.38;text-transform:uppercase;}
+.ib-v{font-size:12px;color:var(--bright);margin-top:2px;}
+.ib-v.r{color:var(--cflux);}.ib-v.g{color:var(--cgold);}.ib-v.e{color:var(--cexp);}.ib-v.v{color:var(--cviolet);}
+#mflash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--orb);font-size:13px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;padding:5px 17px;border-radius:2px;opacity:0;transition:opacity .4s;z-index:20;}
+#mflash.show{opacity:1;}
+#mxOv{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity 2s;}
+#mxOv.on{opacity:1;}
+#mxLbl{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--orb);font-size:11px;font-weight:300;color:#ffd700;letter-spacing:.38em;text-transform:uppercase;opacity:0;transition:opacity 1.5s;pointer-events:none;text-shadow:0 0 28px rgba(255,215,0,.6);z-index:25;text-align:center;line-height:1.8;}
+#mxLbl.on{opacity:.85;}
+@keyframes mxring{0%{transform:translate(-50%,-50%) scale(.4);opacity:.7;}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0;}}
+.mxr{position:absolute;border-radius:50%;border-style:solid;left:50%;top:50%;transform:translate(-50%,-50%);opacity:0;}
+#khint{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.16em;opacity:.13;text-transform:uppercase;pointer-events:none;white-space:nowrap;}
+</style>
+</head>
+<body>
+<canvas id="cvM"></canvas>
+<canvas id="cvF"></canvas>
+<div id="ui">
+<div id="hdr">
+  <div id="hdr-title">OMCHA 432</div>
+  <div id="hdr-sub">Double Hélice · Flux Fractal · Polarité</div>
+  <div id="hdr-ratio">432 / 360 = 6/5 · expansion organique infinie</div>
+</div>
+<div id="toolbar">
+  <button class="tbtn" id="tModes">⊞ Modes</button>
+  <button class="tbtn mx" id="tMx" onclick="toggleMx()">✦ Expansion ∞</button>
+  <button class="tbtn" id="tBin">⬡ Binaural 432</button>
+  <button class="tbtn" id="tParams">≡ Params</button>
+  <button class="tbtn" id="tFS">⤢ Plein écran</button>
+</div>
+<div id="panModes">
+  <div class="psec e">Expansion</div>
+  <div class="mrow e" data-m="exp1">T=432 · 6/5 <span style="opacity:.4;font-size:8px">×1.200</span></div>
+  <div class="mrow e" data-m="exp2">T=864 · 12/5 <span style="opacity:.4;font-size:8px">×2.400</span></div>
+  <div class="mrow" data-m="exp3" style="color:#ffd700;border-color:rgba(255,215,0,.14);flex-direction:column;align-items:flex-start;gap:2px;">
+    <div style="display:flex;justify-content:space-between;width:100%">T=1296 · 18/5 <span style="opacity:.4;font-size:8px">×3.600</span></div>
+    <div style="font-size:7px;opacity:.45;letter-spacing:.1em;">⬡ formation toroïdale · handpan</div>
+  </div>
+  <div class="gap"></div>
+  <div class="psec c">Contraction</div>
+  <div class="mrow c" data-m="cnt1">360/432 <span style="opacity:.4;font-size:8px">×0.833</span></div>
+  <div class="mrow c" data-m="cnt2">360/864 <span style="opacity:.4;font-size:8px">×0.417</span></div>
+  <div class="gap"></div>
+  <div class="psec" style="color:var(--cflux)">Flux</div>
+  <div class="mrow fl" data-m="flux">Flux Libre ∿</div>
+  <div class="mrow" data-m="breath" style="color:var(--cexp);border-color:rgba(0,255,136,.07)">Respiration Omcha</div>
+  <div class="gap"></div>
+  <div class="psec g">Suprême</div>
+  <div class="mrow mx" data-m="maxexp">360 × 432^(432×432)</div>
+</div>
+<div id="panParams">
+  <div class="pcard">
+    <div class="pct">Paramètres Fondamentaux</div>
+    <!-- T : clé de la formation toroïdale -->
+    <div class="pr"><div class="pl">T — Fréquence base</div><div class="pv" id="pvT" style="color:#ffd700">432</div></div>
+    <input type="range" class="rg" id="rT" min="360" max="1296" value="432" step="1">
+    <div style="height:3px"></div>
+    <div style="font-size:7px;opacity:.35;letter-spacing:.14em;margin-bottom:7px">360 → 432 → 864 → <span style="color:#ffd700">1296 ⬡</span></div>
+    <!-- Torsion -->
+    <div class="pr"><div class="pl">Torsion ω</div><div class="pv" id="pvWi">3.5×</div></div>
+    <input type="range" class="re" id="rWi" min="5" max="90" value="35">
+    <div style="height:7px"></div>
+    <!-- Densité -->
+    <div class="pr"><div class="pl">Densité</div><div class="pv" id="pvNs">160</div></div>
+    <input type="range" id="rNs" min="40" max="320" value="160">
+    <div style="height:7px"></div>
+    <div class="pr"><div class="pl">Vitesse</div><div class="pv" id="pvSp">1.0×</div></div>
+    <input type="range" id="rSp" min="0" max="30" value="10">
+  </div>
+  <div class="pcard">
+    <div class="pct">Géométrie secondaire</div>
+    <div class="pr"><div class="pl">Expansion radiale</div><div class="pv" id="pvEx">0.14</div></div>
+    <input type="range" class="rg" id="rEx" min="2" max="45" value="14">
+    <div style="height:7px"></div>
+    <div class="pr"><div class="pl">Étendue axiale</div><div class="pv" id="pvTM">7.0</div></div>
+    <input type="range" id="rTM" min="20" max="120" value="70">
+  </div>
+  <div class="pcard">
+    <div class="pct">Visuel</div>
+    <div class="pr"><div class="pl">Rotation auto</div><input type="checkbox" id="ckRot" checked></div>
+    <div class="pr"><div class="pl">Ponts harmoniques</div><input type="checkbox" id="ckBr" checked></div>
+    <div class="pr"><div class="pl">Particules flux</div><input type="checkbox" id="ckPa" checked></div>
+    <div class="pr"><div class="pl">Mandala fond</div><input type="checkbox" id="ckMa" checked></div>
+    <div class="pr"><div class="pl">Labels fractals</div><input type="checkbox" id="ckLa" checked></div>
+    <div style="height:4px"></div>
+    <div class="pr"><div class="pl">Glow</div><div class="pv" id="pvGl">60%</div></div>
+    <input type="range" id="rGl" min="0" max="100" value="60">
+    <div style="height:4px"></div>
+    <div class="pr"><div class="pl">Asymétrie pol.</div><div class="pv" id="pvPo">0</div></div>
+    <input type="range" class="rf" id="rPo" min="-100" max="100" value="0">
+  </div>
+</div>
+<div id="panBin">
+  <div class="bh">
+    <div class="bt">⬡ Binaural · 360 / 432 Ω</div>
+    <button class="bx" onclick="document.getElementById('panBin').classList.remove('open');document.getElementById('tBin').classList.remove('on')">✕</button>
+  </div>
+  <div class="bfr">
+    <div><div class="bfl L">Gauche</div><div class="bfv">360 Ω</div></div>
+    <div><div class="bfl R">Droite</div><div class="bfv">432 Ω</div></div>
+  </div>
+  <div class="bbeat">▷ Battement : 72 Ω · Theta · ∿</div>
+  <button class="bplay" id="binPlay">▶ Activer 360 / 432 Ω</button>
+</div>
+<div id="polGauge">
+  <div id="polRow">
+    <span id="polExpLbl">↑ exp</span>
+    <div id="polBar"><div id="polFill"></div></div>
+    <span id="polContLbl">cont ↓</span>
+  </div>
+  <div id="polLbl">polarité du flux · brin A / brin B</div>
+</div>
+<div id="infobar">
+  <div class="ib"><div class="ib-k">T actuel</div><div class="ib-v g" id="ibT">432</div></div>
+  <div class="ib"><div class="ib-k">Tore ⬡</div><div class="ib-v" id="ibTF" style="color:rgba(255,215,0,.4)">0%</div></div>
+  <div class="ib"><div class="ib-k">Battement 72Ω</div><div class="ib-v r">∿ pulse</div></div>
+  <div class="ib"><div class="ib-k">Torsion ω</div><div class="ib-v e" id="ibWi">3.5×</div></div>
+  <div class="ib"><div class="ib-k">Mode</div><div class="ib-v g" id="ibMode">Neutre</div></div>
+</div>
+<div id="mflash"></div>
+<div id="mxOv"></div>
+<div id="mxLbl">360 × 432^(432×432)<br><span style="font-size:8px;letter-spacing:.45em;opacity:.55;">flux total · centres partout · aucun centre absolu</span></div>
+<div id="khint">Glisser orbiter · Scroll zoom · F plein écran · Shift+1–8 modes</div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────
+var V={rx:.22,ry:0,trx:.22,try_:0,zoom:1,tzoom:1,drag:false,lmx:0,lmy:0,t:0,spd:1,autoRot:true,mode:null,ms:1,msT:1};
+var HP={ex:.14,wi:3.5,tM:7,rM:.007,ns:160,br:true,pa:true,ma:true,la:true,gl:.6,po:0,breathe:1};
+var ME={on:false,ph:0,sps:[]};
+
+// ─── FACTEUR TOROÏDAL ─────────────────────────────────────────────
+// TF.val : 0 = hélice pure · 1 = tore complet (handpan cosmique)
+// Se calcule depuis T : TF = max(0, (T−864) / 432)
+// T=864 → seuil · T=1296 → champ toroïdal fermé
+var TF={val:0,target:0};
+var baseT=432; // fréquence base courante (360→1296)
+
+// ─── CANVAS ──────────────────────────────────────────────────────
+var MC=document.getElementById('cvM'),FC=document.getElementById('cvF');
+var mctx=MC.getContext('2d'),ctx=FC.getContext('2d');
+var W,Ht,cx,cy;
+
+function resize(){
+  W=MC.width=FC.width=window.innerWidth;
+  Ht=MC.height=FC.height=window.innerHeight;
+  cx=W/2;cy=Ht/2;buildMC();
+}
+window.addEventListener('resize',resize);
+
+// ─── PROJECTION ──────────────────────────────────────────────────
+function proj(x,y,z){
+  var crx=Math.cos(V.rx),srx=Math.sin(V.rx),cry=Math.cos(V.ry),sry=Math.sin(V.ry);
+  var y2=y*crx-z*srx,z2=y*srx+z*crx;
+  var x2=x*cry+z2*sry,z3=-x*sry+z2*cry;
+  var sc=V.zoom*(Ht*.38),fov=600/(600+z3*80);
+  return{sx:cx+x2*sc*fov,sy:cy+y2*sc*fov,fov:fov,z:z3};
+}
+
+// ─── COLORS ──────────────────────────────────────────────────────
+function lrp(r1,g1,b1,r2,g2,b2,t){
+  return'rgb('+Math.round(r1+(r2-r1)*t)+','+Math.round(g1+(g2-g1)*t)+','+Math.round(b1+(b2-b1)*t)+')';
+}
+// Strand A: cyan → green → gold (expansion journey)
+function colA(p){return p<.5?lrp(0,204,255,0,255,136,p*2):lrp(0,255,136,232,160,32,(p-.5)*2);}
+// Strand B: rose → violet → deep (contraction journey)
+function colB(p){return p<.5?lrp(255,0,102,136,85,255,p*2):lrp(136,85,255,22,0,66,(p-.5)*2);}
+
+// ─── MANDALA CACHE ───────────────────────────────────────────────
+var mandCache=null,mandRot=0;
+function buildMC(){
+  mandCache=document.createElement('canvas');
+  mandCache.width=W;mandCache.height=Ht;
+  var m=mandCache.getContext('2d'),base=Math.min(W,Ht)*.44;
+  m.save();m.translate(cx,cy);
+
+  // Fibonacci arms (3)
+  var phi=1.6180339887;
+  for(var a=0;a<3;a++){
+    m.save();m.rotate(a*Math.PI*2/3);
+    m.strokeStyle='rgba(232,160,32,.022)';m.lineWidth=.4;m.beginPath();
+    var r0=5,fst=true;
+    for(var ii=0;ii<550;ii++){
+      var ang=ii*.055,r=r0*Math.pow(phi,ang/(Math.PI*2));
+      if(r>base*1.3)break;
+      fst?m.moveTo(r*Math.cos(ang),r*Math.sin(ang)):m.lineTo(r*Math.cos(ang),r*Math.sin(ang));
+      fst=false;
+    }
+    m.stroke();m.restore();
+  }
+
+  // 9 sacred rings
+  for(var ri=1;ri<=9;ri++){
+    var rr=base*ri/9,ra=.022*(1-ri/11);
+    m.beginPath();m.arc(0,0,rr,0,Math.PI*2);
+    m.strokeStyle='rgba(0,180,255,'+ra+')';m.lineWidth=.4;m.stroke();
+    if(ri%3===0){
+      m.strokeStyle='rgba(0,204,255,'+(ra*.55)+')';m.lineWidth=.25;
+      for(var si=0;si<12;si++){
+        var a1=si/12*Math.PI*2,a2=(si+5)/12*Math.PI*2;
+        m.beginPath();m.moveTo(rr*Math.cos(a1),rr*Math.sin(a1));m.lineTo(rr*Math.cos(a2),rr*Math.sin(a2));m.stroke();
+      }
+    }
+  }
+
+  // 12-petal lotus
+  var pR=base*.135;
+  for(var pi=0;pi<12;pi++){
+    var pa=pi/12*Math.PI*2,px=Math.cos(pa)*pR*.62,py=Math.sin(pa)*pR*.62;
+    m.save();m.translate(px,py);m.rotate(pa+Math.PI/2);
+    m.beginPath();m.ellipse(0,0,pR*.21,pR*.48,0,0,Math.PI*2);
+    m.strokeStyle='rgba(232,160,32,.038)';m.lineWidth=.5;m.stroke();m.restore();
+  }
+
+  // Vesica piscis × 6
+  var vR=base*.21;
+  for(var vi=0;vi<6;vi++){
+    var va=vi/6*Math.PI*2;
+    m.beginPath();m.arc(Math.cos(va)*vR*.5,Math.sin(va)*vR*.5,vR,0,Math.PI*2);
+    m.strokeStyle='rgba(0,204,255,.012)';m.lineWidth=.35;m.stroke();
+  }
+
+  // 72Ω marker dots (5×72=360)
+  for(var di=0;di<5;di++){
+    var da=di/5*Math.PI*2;
+    m.beginPath();m.arc(Math.cos(da)*base*.71,Math.sin(da)*base*.71,2.2,0,Math.PI*2);
+    m.fillStyle='rgba(255,204,0,.055)';m.fill();
+  }
+
+  // Center seed of life
+  m.beginPath();m.arc(0,0,base*.045,0,Math.PI*2);
+  m.strokeStyle='rgba(232,160,32,.06)';m.lineWidth=.5;m.stroke();
+
+  m.restore();
+}
+
+function drawMandala(){
+  if(!HP.ma){mctx.fillStyle='#010306';mctx.fillRect(0,0,W,Ht);return;}
+  mctx.fillStyle='rgba(1,3,6,.032)';mctx.fillRect(0,0,W,Ht);
+  if(mandCache){
+    mandRot+=.00022;
+    mctx.save();mctx.translate(cx,cy);mctx.rotate(mandRot);mctx.translate(-cx,-cy);
+    mctx.globalAlpha=.82;mctx.drawImage(mandCache,0,0);mctx.restore();
+  }
+  // star field
+  if(Math.random()<.35){
+    for(var i=0;i<2;i++){
+      mctx.fillStyle='rgba(255,255,255,'+(Math.random()*.22)+')';
+      mctx.beginPath();mctx.arc(Math.random()*W,Math.random()*Ht,.3+Math.random()*.8,0,Math.PI*2);mctx.fill();
+    }
+  }
+}
+
+// ─── HELIX POINT — MORPHE HÉLIX→TORE via TF.val ─────────────────
+// Quand TF.val=0 : hélice pure
+// Quand TF.val=1 : tore handpan cosmique
+// Le même paramètre t pilote les DEUX géométries — la transition est continue
+function hPt(t,strand){
+  var ang=t*HP.wi+V.t*V.spd*.28+strand*Math.PI;
+  var r=(HP.rM+HP.ex*Math.pow(Math.abs(t)+.08,.76))*HP.breathe*V.ms;
+
+  // ── Géométrie hélice (TF=0)
+  var hx=r*Math.cos(ang),hy=r*Math.sin(ang),hz=t*.17;
+
+  if(TF.val<.001)return{x:hx,y:hy,z:hz,r:r,ang:ang};
+
+  // ── Géométrie tore (TF=1)
+  // t ∈ [-tM, tM] → u ∈ [0, 2π] : révolution autour de l'axe principal
+  var u=(t/HP.tM+1)*Math.PI;
+  // L'angle de l'hélice devient l'angle du tube (enroulement poloïdal)
+  var v=ang;
+  var TR=.34*V.ms*HP.breathe; // rayon principal du tore
+  var tr=.11*V.ms*HP.breathe; // rayon du tube
+  var flat=.50;               // aplatissement Y → forme handpan / flying saucer
+  var tx=(TR+tr*Math.cos(v))*Math.cos(u);
+  var ty=tr*Math.sin(v)*flat;
+  var tz=(TR+tr*Math.cos(v))*Math.sin(u);
+
+  // ── Interpolation linéaire hélice → tore
+  var f=TF.val;
+  return{
+    x:hx+(tx-hx)*f,
+    y:hy+(ty-hy)*f,
+    z:hz+(tz-hz)*f,
+    r:r,ang:ang
+  };
+}
+
+// ─── DRAW HELIX ──────────────────────────────────────────────────
+var segBuf=[];
+function drawHelix(){
+  var N=HP.ns,TM=HP.tM,dt=2*TM/N;
+  var total=N*2,idx=0;
+  if(segBuf.length!==total)segBuf=new Array(total);
+
+  for(var strand=0;strand<2;strand++){
+    for(var i=0;i<N;i++){
+      var t1=-TM+i*dt,t2=-TM+(i+1)*dt,tM=(t1+t2)*.5;
+      var h1=hPt(t1,strand),h2=hPt(t2,strand),hm=hPt(tM,strand);
+      var p1=proj(h1.x,h1.y,h1.z),p2=proj(h2.x,h2.y,h2.z),pm=proj(hm.x,hm.y,hm.z);
+      var pr=Math.abs(tM)/TM;
+      var ePr=Math.max(0,Math.min(1,pr+(strand===0?HP.po*.28:-HP.po*.28)));
+      segBuf[idx++]={x1:p1.sx,y1:p1.sy,x2:p2.sx,y2:p2.sy,fov:pm.fov,dz:pm.z,pr:pr,ePr:ePr,strand:strand};
+    }
+  }
+  segBuf.sort(function(a,b){return b.dz-a.dz;});
+
+  var prevBlur=-1;
+  for(var s=0;s<total;s++){
+    var sg=segBuf[s];
+    var col=sg.strand===0?colA(sg.ePr):colB(sg.ePr);
+    var dA=Math.max(0,Math.min(1.05,sg.fov*.72+.18));
+    var fA=Math.max(0,1-sg.pr*.7);
+    var alpha=dA*fA;
+    if(alpha<.018)continue;
+    var needGl=HP.gl>.12&&sg.fov>.85&&sg.pr<.84;
+    var gb=needGl?Math.round(HP.gl*11):0;
+    if(gb!==prevBlur){ctx.shadowBlur=gb;if(gb>0)ctx.shadowColor=col;prevBlur=gb;}
+    ctx.strokeStyle=col;
+    ctx.lineWidth=Math.max(.4,1.7*sg.fov*V.zoom);
+    ctx.globalAlpha=Math.min(.92,alpha);
+    ctx.beginPath();ctx.moveTo(sg.x1,sg.y1);ctx.lineTo(sg.x2,sg.y2);ctx.stroke();
+  }
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+}
+
+// ─── CROSS BRIDGES ───────────────────────────────────────────────
+function drawBridges(){
+  if(!HP.br)return;
+  var TM=HP.tM,nB=Math.floor(TM*HP.wi/Math.PI)+1;
+  for(var b=-nB;b<=nB;b++){
+    var t=b*Math.PI/HP.wi;
+    if(Math.abs(t)>TM*.97)continue;
+    var ha=hPt(t,0),hb=hPt(t,1);
+    var pa=proj(ha.x,ha.y,ha.z),pb=proj(hb.x,hb.y,hb.z);
+    var pr=Math.abs(t)/TM;
+    var avgFov=(pa.fov+pb.fov)*.5;
+    var alpha=Math.max(0,.42*avgFov*(1-pr*.72));
+    if(alpha<.03)continue;
+    var grad=ctx.createLinearGradient(pa.sx,pa.sy,pb.sx,pb.sy);
+    grad.addColorStop(0,colA(pr));
+    grad.addColorStop(.5,'rgba(255,255,255,'+(alpha*.38)+')');
+    grad.addColorStop(1,colB(pr));
+    ctx.beginPath();ctx.moveTo(pa.sx,pa.sy);ctx.lineTo(pb.sx,pb.sy);
+    ctx.strokeStyle=grad;ctx.lineWidth=Math.max(.25,avgFov*.75);
+    ctx.globalAlpha=alpha;ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+
+// ─── CENTER FRACTAL ───────────────────────────────────────────────
+function drawCenter(){
+  var p0=proj(0,0,0);
+  var pulse=.6+.4*Math.sin(V.t*4.32*V.spd);
+
+  // 72Ω expanding rings
+  for(var ri=0;ri<5;ri++){
+    var ph=(V.t*.7*V.spd+ri*.21)%1;
+    ctx.beginPath();ctx.arc(p0.sx,p0.sy,ph*82,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,204,255,'+(1-ph)*.28+')';ctx.lineWidth=.65;ctx.globalAlpha=1;ctx.stroke();
+  }
+  // 432 gold ring
+  var gph=(V.t*.9*V.spd)%1;
+  ctx.beginPath();ctx.arc(p0.sx,p0.sy,gph*105,0,Math.PI*2);
+  ctx.strokeStyle='rgba(232,160,32,'+(1-gph)*.32+')';ctx.lineWidth=.9;ctx.stroke();
+
+  // White core
+  ctx.fillStyle='#ffffff';ctx.shadowColor='#00ccff';ctx.shadowBlur=22*pulse;
+  ctx.globalAlpha=.92*pulse;
+  ctx.beginPath();ctx.arc(p0.sx,p0.sy,4.2*pulse,0,Math.PI*2);ctx.fill();
+  // Gold inner
+  ctx.fillStyle='#ffd700';ctx.shadowColor='#ffd700';ctx.shadowBlur=11*pulse;
+  ctx.globalAlpha=.7*pulse;
+  ctx.beginPath();ctx.arc(p0.sx,p0.sy,2*pulse,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+}
+
+// ─── PARTICLES ───────────────────────────────────────────────────
+var PARTS=[];
+function initParts(){
+  PARTS=[];
+  for(var i=0;i<44;i++){
+    PARTS.push({
+      strand:i%2,
+      t:(Math.random()-.5)*2*HP.tM,
+      dir:i<22?1:-1,
+      spd:.018+Math.random()*.028,
+      sz:1.3+Math.random()*2.2,
+      pw:Math.random()*Math.PI*2
+    });
+  }
+}
+
+function drawParts(){
+  if(!HP.pa)return;
+  var TM=HP.tM;
+  for(var i=0;i<PARTS.length;i++){
+    var pt=PARTS[i];
+    pt.t+=pt.dir*pt.spd*V.spd;
+    if(pt.t>TM)pt.t=-TM*(.1+Math.random()*.15);
+    if(pt.t<-TM)pt.t=TM*(.1+Math.random()*.15);
+    var hp=hPt(pt.t,pt.strand);
+    var p=proj(hp.x,hp.y,hp.z);
+    var pr=Math.abs(pt.t)/TM;
+    var col=pt.strand===0?colA(pr):colB(pr);
+    var pulse=.7+.3*Math.sin(V.t*5+pt.pw);
+    var sz=pt.sz*p.fov*pulse;
+    var alpha=Math.max(.03,.52*p.fov*(1-pr*.58));
+    ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=sz*5;
+    ctx.globalAlpha=alpha;
+    ctx.beginPath();ctx.arc(p.sx,p.sy,sz,0,Math.PI*2);ctx.fill();
+  }
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+}
+
+// ─── LABELS ──────────────────────────────────────────────────────
+function drawLabels(){
+  if(!HP.la)return;
+  var TM=HP.tM;
+  var lbs=[
+    {t:0,s:0,txt:'· 432 ·',col:'rgba(232,160,32,.82)'},
+    {t:TM*.32,s:0,txt:'360',col:'rgba(0,204,255,.6)'},
+    {t:TM*.64,s:1,txt:'72Ω',col:'rgba(255,0,102,.52)'},
+    {t:TM*.92,s:0,txt:'∞',col:'rgba(255,215,0,.35)'},
+    {t:-TM*.32,s:1,txt:'360',col:'rgba(0,204,255,.5)'},
+    {t:-TM*.64,s:0,txt:'72Ω',col:'rgba(255,0,102,.44)'},
+    {t:-TM*.92,s:1,txt:'∞',col:'rgba(255,215,0,.28)'},
+  ];
+  ctx.font="10px 'Share Tech Mono'";
+  lbs.forEach(function(lb){
+    var hp=hPt(lb.t,lb.s);
+    var p=proj(hp.x+.04,hp.y,hp.z);
+    var pr=Math.abs(lb.t)/TM;
+    ctx.fillStyle=lb.col;
+    ctx.globalAlpha=Math.max(0,.82*p.fov*(1-pr*.58));
+    ctx.fillText(lb.txt,p.sx+7,p.sy-5);
+  });
+  ctx.globalAlpha=1;
+}
+
+// ─── MAX EXPANSION ───────────────────────────────────────────────
+function startMx(){
+  ME.on=true;ME.ph=0;ME.sps=[];
+  for(var i=0;i<9;i++)ME.sps.push({ang:i/9*Math.PI*2,spd:.005+i*.001,col:['#ffd700','#00ccff','#ff0066','#00ff88','#8855ff','#ff6600','#00ccff','#ffd700','#ff0066'][i]});
+  document.getElementById('tMx').classList.add('on');
+  document.getElementById('mxOv').classList.add('on');
+  document.getElementById('mxLbl').classList.add('on');
+  document.getElementById('ibMode').textContent='360 × 432^∞';
+  document.getElementById('hdr-ratio').textContent='360 × 432^(432×432) · expansion totale ∞';
+  var ov=document.getElementById('mxOv');ov.innerHTML='';
+  for(var j=0;j<7;j++)(function(idx){
+    setTimeout(function(){
+      if(!ME.on)return;
+      var ring=document.createElement('div');ring.className='mxr';
+      var sz=60+idx*80;
+      ring.style.cssText='width:'+sz+'px;height:'+sz+'px;border-width:'+(1.5-idx*.14)+'px;border-color:rgba('+(255-idx*28)+','+(215-idx*18)+',0,'+(0.58-idx*.07)+');animation:mxring '+(3+idx*1.4)+'s linear '+(idx*.4)+'s infinite;';
+      ov.appendChild(ring);
+    },idx*200);
+  })(j);
+  flash('360 × 432^(432×432)','#ffd700');
+}
+
+function stopMx(){
+  ME.on=false;ME.ph=0;
+  document.getElementById('tMx').classList.remove('on');
+  document.getElementById('mxOv').classList.remove('on');
+  document.getElementById('mxLbl').classList.remove('on');
+  document.getElementById('mxOv').innerHTML='';
+  document.getElementById('ibMode').textContent='Neutre';
+  document.getElementById('hdr-ratio').textContent='432 / 360 = 6/5 · expansion organique infinie';
+  V.msT=1;
+}
+
+function toggleMx(){ME.on?stopMx():startMx();}
+
+function drawMx(){
+  if(!ME.on)return;
+  ME.ph=Math.min(1,ME.ph+.0008*V.spd);
+  var p=ME.ph;
+
+  // ── Tore handpan : rayon principal R, rayon du tube r
+  // Forme aplatie (handpan cosmique) : rapport R/r ≈ 3, aplatissement vertical
+  var pulse=1+.05*Math.sin(V.t*4.32*V.spd);
+  var TR=(.24+p*.22)*V.ms*pulse;   // rayon principal
+  var tr=(.08+p*.10)*V.ms*pulse;   // rayon tube
+  var flat=.52;                     // aplatissement Y → forme handpan
+
+  // ── Fond radial doré
+  var c0=proj(0,0,0);
+  var bgA=p*.03*(.7+.3*Math.sin(V.t*.5));
+  var bg=ctx.createRadialGradient(c0.sx,c0.sy,0,c0.sx,c0.sy,Math.max(W,Ht)*.9);
+  bg.addColorStop(0,'rgba(255,215,0,'+(bgA*2)+')');
+  bg.addColorStop(.45,'rgba(0,100,200,'+bgA+')');
+  bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bg;ctx.globalAlpha=1;ctx.fillRect(0,0,W,Ht);
+
+  var NP=72; // résolution des cercles
+
+  // ── PHASE 1 (p>0.05) : Cercles de latitude — anneaux horizontaux du tore
+  // Ce sont les "dents" du handpan vues de dessus
+  if(p>.05){
+    var nLat=18,aLat=Math.min(1,p*3)*.14;
+    for(var li=0;li<nLat;li++){
+      var u=li/nLat*Math.PI*2;
+      var cosU=Math.cos(u),sinU=Math.sin(u);
+      ctx.beginPath();var fst=true;
+      for(var k=0;k<=NP;k++){
+        var v=k/NP*Math.PI*2;
+        var xT=(TR+tr*Math.cos(v))*cosU;
+        var yT=tr*Math.sin(v)*flat;
+        var zT=(TR+tr*Math.cos(v))*sinU;
+        var pp=proj(xT,yT,zT);
+        fst?ctx.moveTo(pp.sx,pp.sy):ctx.lineTo(pp.sx,pp.sy);fst=false;
+      }
+      var pr=li/nLat;
+      ctx.strokeStyle=pr<.5?colA(pr*2):colB((pr-.5)*2);
+      ctx.lineWidth=.45;ctx.globalAlpha=aLat;ctx.stroke();
+    }
+  }
+
+  // ── PHASE 2 (p>0.18) : Cercles méridiens — sections verticales du tore
+  // Révèle la structure donut / dôme du handpan
+  if(p>.18){
+    var nMer=24,aMer=Math.min(1,(p-.18)*4)*.11;
+    for(var mi=0;mi<nMer;mi++){
+      var v=mi/nMer*Math.PI*2;
+      var cosV=Math.cos(v),sinV=Math.sin(v);
+      ctx.beginPath();var fst=true;
+      for(var k=0;k<=NP;k++){
+        var u=k/NP*Math.PI*2;
+        var xT=(TR+tr*cosV)*Math.cos(u);
+        var yT=tr*sinV*flat;
+        var zT=(TR+tr*cosV)*Math.sin(u);
+        var pp=proj(xT,yT,zT);
+        fst?ctx.moveTo(pp.sx,pp.sy):ctx.lineTo(pp.sx,pp.sy);fst=false;
+      }
+      var pr=mi/nMer;
+      ctx.strokeStyle=pr<.5?colA(pr*2):colB((pr-.5)*2);
+      ctx.lineWidth=.38;ctx.globalAlpha=aMer;ctx.stroke();
+    }
+  }
+
+  // ── PHASE 3 (p>0.3) : Doubles hélices toroïdales
+  // Les brins de l'hélice enroulent la surface du tore — c'est ici que la
+  // double hélice se referme sur elle-même et forme le champ fermé
+  if(p>.3){
+    var aHel=Math.min(1,(p-.3)*2.8)*.82;
+    var nWind=9; // 9 enroulements autour du tube pour 1 tour complet (9=3²)
+    var nSeg=420;
+    var prevBlur=-1;
+
+    for(var strand=0;strand<2;strand++){
+      // Les deux brins tournent en sens opposés = polarité toroïdale
+      var spinDir=strand===0?1:-1;
+      for(var k=0;k<nSeg;k++){
+        var t1=k/nSeg,t2=(k+1)/nSeg,tM=(t1+t2)*.5;
+        // u : tour autour de l'axe principal (0→2π = 1 révolution complète)
+        var u1=t1*Math.PI*2+V.t*V.spd*.18*spinDir;
+        var u2=t2*Math.PI*2+V.t*V.spd*.18*spinDir;
+        // v : tour autour du tube (nWind fois par révolution = enroulement hélicoïdal)
+        var vOff=strand*Math.PI+V.t*V.spd*.06;
+        var v1=t1*Math.PI*2*nWind+vOff;
+        var v2=t2*Math.PI*2*nWind+vOff;
+
+        var x1=(TR+tr*Math.cos(v1))*Math.cos(u1);
+        var y1=tr*Math.sin(v1)*flat;
+        var z1=(TR+tr*Math.cos(v1))*Math.sin(u1);
+        var x2=(TR+tr*Math.cos(v2))*Math.cos(u2);
+        var y2=tr*Math.sin(v2)*flat;
+        var z2=(TR+tr*Math.cos(v2))*Math.sin(u2);
+
+        var pp1=proj(x1,y1,z1),pp2=proj(x2,y2,z2);
+        var avgFov=(pp1.fov+pp2.fov)*.5;
+        var col=strand===0?colA(tM):colB(tM);
+        var alpha=Math.min(.92,aHel*Math.max(.08,avgFov*.85));
+
+        var gb=avgFov>.84&&HP.gl>.1?Math.round(HP.gl*10):0;
+        if(gb!==prevBlur){ctx.shadowBlur=gb;if(gb>0)ctx.shadowColor=col;prevBlur=gb;}
+        ctx.strokeStyle=col;
+        ctx.lineWidth=Math.max(.5,1.55*avgFov*V.zoom);
+        ctx.globalAlpha=alpha;
+        ctx.beginPath();ctx.moveTo(pp1.sx,pp1.sy);ctx.lineTo(pp2.sx,pp2.sy);ctx.stroke();
+      }
+      ctx.shadowBlur=0;
+    }
+  }
+
+  // ── PHASE 4 (p>0.55) : Particules toroïdales — flux visible sur la surface
+  // Expansion sur le dôme extérieur, contraction par le canal intérieur
+  if(p>.55){
+    var nTorPt=28,aTor=Math.min(1,(p-.55)*3.5);
+    for(var i=0;i<nTorPt;i++){
+      var phase=(V.t*V.spd*.22+i/nTorPt*Math.PI*2)%(Math.PI*2);
+      var isExp=i<nTorPt/2; // expansion=dessus, contraction=dessous
+      // Expansion : v de 0→π (dôme extérieur)  Contraction : v de π→2π (intérieur)
+      var vBase=isExp?0:Math.PI;
+      var v=vBase+phase%(Math.PI);
+      var u=i/nTorPt*Math.PI*2+V.t*V.spd*.12*(isExp?1:-1);
+      var xT=(TR+tr*Math.cos(v))*Math.cos(u);
+      var yT=tr*Math.sin(v)*flat;
+      var zT=(TR+tr*Math.cos(v))*Math.sin(u);
+      var pp=proj(xT,yT,zT);
+      var col=isExp?colA(v/Math.PI):colB(1-v/Math.PI);
+      var pulsePt=.7+.3*Math.sin(V.t*4+i);
+      ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=8*aTor;
+      ctx.globalAlpha=aTor*Math.max(.1,pp.fov*.7)*pulsePt;
+      ctx.beginPath();ctx.arc(pp.sx,pp.sy,2.2*pp.fov*pulsePt,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+  }
+
+  // ── PHASE 5 (p>0.75) : Labels toroïdaux flottants
+  if(p>.75){
+    var lblA=Math.min(1,(p-.75)*4)*.6;
+    var lbls=[
+      {u:0,v:0,txt:'432',col:'rgba(232,160,32,.9)'},
+      {u:Math.PI/2,v:Math.PI,txt:'360',col:'rgba(0,204,255,.75)'},
+      {u:Math.PI,v:0,txt:'∞',col:'rgba(255,215,0,.6)'},
+      {u:Math.PI*3/2,v:Math.PI,txt:'72Ω',col:'rgba(255,0,102,.65)'},
+    ];
+    ctx.font="10px 'Share Tech Mono'";
+    lbls.forEach(function(lb){
+      var xT=(TR+tr*Math.cos(lb.v))*Math.cos(lb.u+V.t*V.spd*.18);
+      var yT=tr*Math.sin(lb.v)*flat;
+      var zT=(TR+tr*Math.cos(lb.v))*Math.sin(lb.u+V.t*V.spd*.18);
+      var pp=proj(xT,yT,zT);
+      ctx.fillStyle=lb.col;ctx.globalAlpha=lblA*Math.max(0,pp.fov*.8);
+      ctx.fillText(lb.txt,pp.sx+6,pp.sy-5);
+    });
+  }
+
+  ctx.globalAlpha=1;
+}
+
+// ─── MODES ───────────────────────────────────────────────────────
+var MODES={
+  exp1:{lbl:'Expansion T=432 / 6/5',ratio:432/360,col:'#00ff88',T:432},
+  exp2:{lbl:'Expansion T=864 / 12/5',ratio:864/360,col:'#80ff60',T:864},
+  exp3:{lbl:'Formation Toroïdale T=1296',ratio:1296/360,col:'#ffd700',T:1296},
+  cnt1:{lbl:'Contraction 360/432',ratio:360/432,col:'#ff6600',T:360},
+  cnt2:{lbl:'Contraction 360/864',ratio:360/864,col:'#ff4400',T:360},
+  flux:{lbl:'Flux Libre',ratio:1,col:'#ff0066',T:432},
+  breath:{lbl:'Respiration Omcha',ratio:1,col:'#00ff88',T:432},
+  maxexp:{lbl:'360 × 432^∞',ratio:1,col:'#ffd700',T:1296},
+};
+
+function setBaseT(val){
+  baseT=Math.max(360,Math.min(1296,val));
+  TF.target=Math.max(0,Math.min(1,(baseT-864)/432));
+  var rTel=document.getElementById('rT');if(rTel)rTel.value=baseT;
+  var pvTel=document.getElementById('pvT');if(pvTel)pvTel.textContent=Math.round(baseT);
+  var tfPct=Math.round(TF.target*100);
+  var tfEl=document.getElementById('ibTF');
+  if(tfEl){tfEl.textContent=tfPct>0?'⬡ '+tfPct+'%':'0%';tfEl.style.color='rgba(255,215,0,'+(0.3+tfPct/100*.7)+')';}
+  var ibTel=document.getElementById('ibT');if(ibTel)ibTel.textContent=Math.round(baseT);
+}
+
+function setMode(id){
+  if(V.mode===id){
+    V.mode=null;V.msT=1;TF.target=0;
+    document.querySelectorAll('.mrow').forEach(function(r){r.classList.remove('on');});
+    var ibM=document.getElementById('ibMode');if(ibM)ibM.textContent='Neutre';
+    var hdrR=document.getElementById('hdr-ratio');if(hdrR)hdrR.textContent='432 / 360 = 6/5 · expansion organique infinie';
+    return;
+  }
+  V.mode=id;
+  var m=MODES[id];V.msT=m?m.ratio:1;
+  if(id==='maxexp'){startMx();return;}
+  // Mettre à jour T depuis le mode
+  if(m&&m.T)setBaseT(m.T);
+  document.querySelectorAll('.mrow').forEach(function(r){r.classList.toggle('on',r.dataset.m===id);});
+  if(m){
+    document.getElementById('ibMode').textContent=m.lbl;
+    document.getElementById('hdr-ratio').textContent=m.lbl+' · ×'+m.ratio.toFixed(3);
+    flash(m.lbl,m.col);
+  }
+}
+
+function flash(txt,col){
+  var el=document.getElementById('mflash');
+  el.textContent=txt;el.style.color=col;
+  el.style.borderColor=col+'38';el.style.background=col+'12';
+  el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2100);
+}
+
+// ─── AUDIO ───────────────────────────────────────────────────────
+var AC=null,mGain=null,oscL=null,oscR=null,bGain=null,bMerge=null,binOn=false;
+
+function ensureAC(){
+  if(AC)return;
+  AC=new(window.AudioContext||window.webkitAudioContext)();
+  mGain=AC.createGain();mGain.gain.value=.65;mGain.connect(AC.destination);
+}
+function resumeAC(){if(AC&&AC.state==='suspended')AC.resume();}
+
+function startBin(){
+  if(binOn)return;ensureAC();resumeAC();
+  bMerge=AC.createChannelMerger(2);bGain=AC.createGain();bGain.gain.value=.24;
+  oscL=AC.createOscillator();oscL.type='sine';oscL.frequency.value=360;
+  oscR=AC.createOscillator();oscR.type='sine';oscR.frequency.value=432;
+  oscL.connect(bMerge,0,0);oscR.connect(bMerge,0,1);
+  bMerge.connect(bGain);bGain.connect(mGain);
+  oscL.start();oscR.start();binOn=true;
+  document.getElementById('binPlay').textContent='◼ Arrêter 360/432';
+  document.getElementById('binPlay').classList.add('on');
+}
+function stopBin(){
+  [oscL,oscR].forEach(function(o){if(o){try{o.stop();}catch(e){}o.disconnect();}});
+  oscL=oscR=null;if(bGain){bGain.disconnect();bGain=null;}if(bMerge){bMerge.disconnect();bMerge=null;}
+  binOn=false;
+  document.getElementById('binPlay').textContent='▶ Activer 360 / 432 Ω';
+  document.getElementById('binPlay').classList.remove('on');
+}
+
+// ─── POLARITY GAUGE ──────────────────────────────────────────────
+function updatePol(){
+  var a=V.t*V.spd*.28;
+  var pol=Math.cos(a+V.ry);
+  var fill=document.getElementById('polFill');
+  if(!fill)return;
+  if(pol>=0){
+    fill.style.left='50%';fill.style.width=(pol*50)+'%';
+    fill.style.background='linear-gradient(90deg,rgba(0,255,136,0),var(--cexp))';
+  }else{
+    var w=(-pol*50);
+    fill.style.left=(50-w)+'%';fill.style.width=w+'%';
+    fill.style.background='linear-gradient(90deg,var(--cflux),rgba(255,0,102,0))';
+  }
+  // Mise à jour label polarité dans l'infobar via ibWi (réutilisé)
+  var tfPct=Math.round(TF.val*100);
+  var tfEl=document.getElementById('ibTF');
+  if(tfEl){
+    if(tfPct>0){
+      tfEl.textContent='⬡ '+tfPct+'%';
+      tfEl.style.color='rgba(255,215,0,'+(0.3+tfPct/100*.7)+')';
+    } else {
+      var polLbl=pol>0?'A ↑ exp':'B ↓ cont';
+      tfEl.textContent=polLbl;
+      tfEl.style.color=pol>0?'var(--cexp)':'var(--cflux)';
+    }
+  }
+}
+
+// ─── MAIN LOOP ───────────────────────────────────────────────────
+function draw(){
+  requestAnimationFrame(draw);
+  drawMandala();
+
+  ctx.fillStyle='rgba(1,3,6,.21)';ctx.fillRect(0,0,W,Ht);
+
+  V.rx+=(V.trx-V.rx)*.06;V.ry+=(V.try_-V.ry)*.06;V.zoom+=(V.tzoom-V.zoom)*.08;
+  if(V.autoRot)V.try_+=.003*V.spd;
+  V.ms+=(V.msT-V.ms)*.04;
+
+  // Lissage du facteur toroïdal — transition organique hélice→tore
+  TF.val+=(TF.target-TF.val)*.022;
+
+  // Omcha breathe
+  HP.breathe=1+.08*Math.sin(V.t*.5);
+
+  drawHelix();
+  drawBridges();
+  drawMx();
+  drawCenter();
+  drawParts();
+  drawLabels();
+  updatePol();
+
+  // Info bar live update
+  var tfPct=Math.round(TF.val*100);
+  var tfEl=document.getElementById('ibTF');
+  if(tfEl&&tfPct>0){
+    tfEl.textContent='⬡ '+tfPct+'%';
+    tfEl.style.color='rgba(255,215,0,'+(0.3+tfPct/100*.7)+')';
+  }
+
+  V.t+=.016*V.spd;
+}
+
+// ─── DRAG / ZOOM ─────────────────────────────────────────────────
+FC.addEventListener('mousedown',function(e){if(e.target!==FC)return;V.drag=true;V.lmx=e.clientX;V.lmy=e.clientY;V.autoRot=false;document.getElementById('ckRot').checked=false;});
+window.addEventListener('mouseup',function(){V.drag=false;});
+window.addEventListener('mousemove',function(e){if(!V.drag)return;V.try_+=(e.clientX-V.lmx)*.008;V.trx=Math.max(-1.4,Math.min(1.4,V.trx+(e.clientY-V.lmy)*.008));V.lmx=e.clientX;V.lmy=e.clientY;});
+FC.addEventListener('wheel',function(e){e.preventDefault();V.tzoom=Math.max(.3,Math.min(3,V.tzoom*(e.deltaY>0?.92:1.09)));},{passive:false});
+
+var ltd=0;
+FC.addEventListener('touchstart',function(e){if(e.touches.length===1){V.drag=true;V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;V.autoRot=false;document.getElementById('ckRot').checked=false;}else if(e.touches.length===2){ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}},{passive:true});
+FC.addEventListener('touchmove',function(e){e.preventDefault();if(e.touches.length===1&&V.drag){V.try_+=(e.touches[0].clientX-V.lmx)*.008;V.trx+=(e.touches[0].clientY-V.lmy)*.008;V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;}else if(e.touches.length===2){var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);V.tzoom=Math.max(.3,Math.min(3,V.tzoom*d/ltd));ltd=d;}},{passive:false});
+FC.addEventListener('touchend',function(){V.drag=false;});
+
+// ─── KEYBOARD ────────────────────────────────────────────────────
+window.addEventListener('keydown',function(e){
+  if((e.key==='f'||e.key==='F')&&!e.ctrlKey){document.getElementById('tFS').click();return;}
+  if(e.key==='Escape'){V.trx=.22;V.try_=0;V.tzoom=1;if(ME.on)stopMx();return;}
+  if(e.shiftKey){var mm={'1':'exp1','2':'exp2','3':'exp3','4':'cnt1','5':'cnt2','6':'flux','7':'breath','8':'maxexp'};if(mm[e.key])setMode(mm[e.key]);}
+});
+
+// ─── UI EVENTS ───────────────────────────────────────────────────
+function tPanel(pid,bid){var p=document.getElementById(pid),b=document.getElementById(bid);var o=p.classList.toggle('open');b.classList.toggle('on',o);}
+document.getElementById('tModes').addEventListener('click',function(){tPanel('panModes','tModes');});
+document.getElementById('tBin').addEventListener('click',function(){tPanel('panBin','tBin');});
+document.getElementById('tParams').addEventListener('click',function(){tPanel('panParams','tParams');});
+document.getElementById('tFS').addEventListener('click',function(){var el=document.documentElement;if(document.fullscreenElement||(document.webkitFullscreenElement)){(document.exitFullscreen||document.webkitExitFullscreen).call(document);}else{(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}});
+document.addEventListener('fullscreenchange',function(){setTimeout(resize,100);});
+
+document.querySelectorAll('.mrow').forEach(function(r){r.addEventListener('click',function(){setMode(r.dataset.m);});});
+document.getElementById('binPlay').addEventListener('click',function(){binOn?stopBin():startBin();});
+
+// Sliders
+document.getElementById('rT').addEventListener('input',function(){
+  setBaseT(parseInt(this.value));
+  // Affichage de la progression vers le tore
+  var tfPct=Math.round(TF.target*100);
+  document.getElementById('pvT').textContent=baseT+(tfPct>0?' (⬡'+tfPct+'%)':'');
+  document.getElementById('ibWi').textContent=HP.wi.toFixed(1)+'×';
+});
+document.getElementById('rWi').addEventListener('input',function(){HP.wi=this.value/10;document.getElementById('pvWi').textContent=HP.wi.toFixed(1)+'×';document.getElementById('ibWi').textContent=HP.wi.toFixed(1)+'×';});
+document.getElementById('rNs').addEventListener('input',function(){HP.ns=parseInt(this.value);document.getElementById('pvNs').textContent=this.value;});
+document.getElementById('rEx').addEventListener('input',function(){HP.ex=this.value/100;document.getElementById('pvEx').textContent=HP.ex.toFixed(2);});
+document.getElementById('rTM').addEventListener('input',function(){HP.tM=this.value/10;document.getElementById('pvTM').textContent=HP.tM.toFixed(1);});
+document.getElementById('rSp').addEventListener('input',function(){V.spd=this.value/10;document.getElementById('pvSp').textContent=V.spd.toFixed(1)+'×';});
+document.getElementById('rGl').addEventListener('input',function(){HP.gl=this.value/100;document.getElementById('pvGl').textContent=this.value+'%';});
+document.getElementById('rPo').addEventListener('input',function(){HP.po=this.value/100;document.getElementById('pvPo').textContent=this.value;});
+document.getElementById('ckRot').addEventListener('change',function(){V.autoRot=this.checked;});
+document.getElementById('ckBr').addEventListener('change',function(){HP.br=this.checked;});
+document.getElementById('ckPa').addEventListener('change',function(){HP.pa=this.checked;});
+document.getElementById('ckMa').addEventListener('change',function(){HP.ma=this.checked;});
+document.getElementById('ckLa').addEventListener('change',function(){HP.la=this.checked;});
+
+// ─── INIT ────────────────────────────────────────────────────────
+resize();
+initParts();
+draw();
+</script>
+</body>
+</html>
