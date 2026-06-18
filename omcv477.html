@@ -73,7 +73,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <div id="heure">
     <div id="h-num">216.0</div>
     <span id="h-geo">Métatron</span>
-    <span id="h-seuil">Tiphereth</span>
+    <span id="h-seuil">216</span>
   </div>
   <div id="gauges">
     <div class="gauge"><div class="g-val" id="gv-freq">1.0</div><div class="g-bar" style="height:68px"><div class="g-fill" id="gf-freq"></div></div><div class="g-lbl">Fréq</div></div>
@@ -134,9 +134,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 const TAU=Math.PI*2;
 
 const SEUILS=[
-  {v:0,  h:280,s:'Kether'},  {v:54, h:250,s:'Chokhmah'},{v:108,h:200,s:'Binah'},
-  {v:162,h:155,s:'Chesed'},  {v:216,h:48, s:'Tiphereth'},{v:270,h:88, s:'Netzach'},
-  {v:324,h:32, s:'Hod'},     {v:378,h:5,  s:'Yesod'},    {v:432,h:295,s:'Malkuth'},
+  {v:0,  h:280,s:'0'},   {v:54, h:250,s:'54'},  {v:108,h:200,s:'108'},
+  {v:162,h:155,s:'162'}, {v:216,h:48, s:'216'}, {v:270,h:88, s:'270'},
+  {v:324,h:32, s:'324'}, {v:378,h:5,  s:'378'}, {v:432,h:295,s:'432'},
 ];
 function getHue(ut){
   for(let i=0;i<SEUILS.length-1;i++){
