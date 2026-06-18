@@ -6,502 +6,372 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>0mcha 396 · UT432</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 button{border:none;outline:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Share Tech Mono',monospace;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:monospace;background:#000;color:#fff;}
 
-/* ── COSMIC BACKGROUND — no black ─────────────────────── */
-body{
-  background:
-    radial-gradient(ellipse at 28% 12%,rgba(180,40,255,.60) 0%,transparent 48%),
-    radial-gradient(ellipse at 78% 88%,rgba(40,80,255,.48) 0%,transparent 50%),
-    radial-gradient(ellipse at 70% 20%,rgba(0,160,220,.30) 0%,transparent 42%),
-    radial-gradient(ellipse at 18% 78%,rgba(255,70,40,.22) 0%,transparent 44%),
-    linear-gradient(148deg,#1c0640 0%,#07102f 34%,#041e2c 62%,#1a0820 100%);
-  background-attachment:fixed;
-}
-
-/* ── CANVAS LAYERS ─────────────────────────────────────── */
-#cv-bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
-#cv-ring{position:fixed;inset:0;z-index:1;pointer-events:none;}
-
-/* ── SPHERE CENTER ──────────────────────────────────────── */
+/* SPHERE */
 #sphere-wrap{
   position:fixed;top:50%;left:50%;
   transform:translate(-50%,-56%);
   z-index:10;pointer-events:all;
   perspective:600px;
 }
-.sphere-gold{
-  width:clamp(90px,24vmin,150px);
-  height:clamp(90px,24vmin,150px);
+#sphere{
+  width:clamp(90px,22vmin,140px);height:clamp(90px,22vmin,140px);
   border-radius:50%;
-  background:radial-gradient(circle at 35% 30%,
-    rgba(255,252,200,.98) 0%,rgba(255,215,80,.94) 18%,
-    rgba(220,158,28,.87) 50%,rgba(160,100,8,.78) 78%,rgba(80,38,0,.66) 100%);
-  box-shadow:
-    0 0 32px rgba(255,200,50,.55),0 0 65px rgba(255,160,20,.28),
-    inset -7px -7px 22px rgba(0,0,0,.38),inset 7px 7px 16px rgba(255,255,200,.28);
+  background:#000;border:1px solid #333;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;
-  transform-style:preserve-3d;
+  cursor:pointer;transform-style:preserve-3d;
   animation:breathe 4.8s ease-in-out infinite;
-  position:relative;overflow:hidden;
 }
-/* Specular highlight */
-.sphere-gold::before{
-  content:'';position:absolute;
-  width:45%;height:35%;top:12%;left:18%;
-  background:radial-gradient(ellipse,rgba(255,255,240,.55) 0%,transparent 75%);
-  border-radius:50%;pointer-events:none;
-}
-@keyframes breathe{
-  0%,100%{transform:scale(1);}
-  50%{transform:scale(1.045);}
-}
-.sphere-time{
-  font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4.5vmin,1.9rem);
-  font-weight:400;color:#FF2E2E;text-align:center;line-height:1;
-  text-shadow:
-    0 -1px 0 rgba(255,180,180,.65),0 1px 0 rgba(255,120,120,1),
-    0 2px 0 rgba(210,28,28,.96),0 3px 0 rgba(170,8,8,.86),
-    0 4px 0 rgba(130,0,0,.72),0 5px 5px rgba(80,0,0,.52),
-    0 0 18px rgba(255,80,80,.58),0 0 42px rgba(255,0,0,.22);
-  position:relative;z-index:1;
-}
-.sphere-lbl{
-  font-family:'Cinzel',serif;font-size:clamp(.44rem,1.7vmin,.70rem);
-  letter-spacing:.22em;color:rgba(255,200,80,.82);text-transform:uppercase;
-  margin-top:.28em;position:relative;z-index:1;
-}
-.sphere-seuil{
-  font-size:clamp(.38rem,1.3vmin,.58rem);letter-spacing:.16em;
-  color:rgba(255,200,80,.52);text-transform:uppercase;
-  margin-top:.14em;position:relative;z-index:1;
-}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+.sphere-time{font-size:clamp(1.1rem,4.5vmin,1.8rem);color:#fff;line-height:1;}
+.sphere-lbl{font-size:.55rem;color:#555;margin-top:.25em;letter-spacing:.2em;}
+.sphere-seuil{font-size:.5rem;color:#444;margin-top:.1em;letter-spacing:.1em;}
 
-/* ── MASTER FREQ DISPLAY (bottom center) ─────────────── */
+/* MASTER FREQ */
 #freq-display{
   position:fixed;bottom:52px;left:50%;transform:translateX(-50%);
-  z-index:20;pointer-events:all;cursor:pointer;text-align:center;
-  user-select:none;
+  z-index:20;cursor:pointer;text-align:center;user-select:none;
 }
-#freq-val{
-  font-family:'Cinzel Decorative',serif;font-size:clamp(1.6rem,6vmin,2.8rem);
-  font-weight:400;color:#FF3030;line-height:1;
-  text-shadow:
-    0 -1px 0 rgba(255,180,180,.6),0 1px 0 rgba(255,120,120,1),
-    0 2px 0 rgba(210,30,30,.95),0 3px 0 rgba(170,10,10,.85),
-    0 5px 5px rgba(80,0,0,.5),0 0 18px rgba(255,80,80,.55),
-    0 0 40px rgba(255,0,0,.20);
-}
-#freq-label{
-  font-size:8px;letter-spacing:.26em;color:rgba(255,160,100,.52);
-  text-transform:uppercase;margin-top:4px;
-}
+#freq-val{font-size:clamp(1.6rem,6vmin,2.6rem);color:#f00;line-height:1;}
+#freq-label{font-size:8px;letter-spacing:.22em;color:#444;text-transform:uppercase;margin-top:5px;}
 
-/* ── FLUX TOGGLE ─────────────────────────────────────── */
+/* FLUX TOGGLE */
 #btn-flux{
   position:fixed;top:16px;left:50%;transform:translateX(-50%);
   z-index:30;padding:6px 22px;border-radius:20px;
-  background:rgba(60,255,140,.14);border:1.5px solid rgba(60,255,140,.45);
-  color:rgba(80,255,160,.95);font-family:'Share Tech Mono',monospace;
+  background:rgba(0,255,100,.08);border:1px solid rgba(0,255,100,.38);
+  color:rgba(0,255,120,.88);font-family:monospace;
   font-size:11px;letter-spacing:.20em;text-transform:uppercase;transition:all .28s;
 }
 #btn-flux.flux-off{
   top:auto;bottom:16px;
-  background:rgba(255,60,60,.12);border-color:rgba(255,80,80,.38);
-  color:rgba(255,100,100,.88);
+  background:rgba(255,60,60,.08);border-color:rgba(255,80,80,.35);
+  color:rgba(255,100,100,.85);
 }
 
-/* ── +/- FREQ BUTTONS ────────────────────────────────── */
+/* +/- BUTTONS */
 #btn-minus,#btn-plus{
   position:fixed;top:50%;transform:translateY(-70%);
   z-index:30;width:34px;height:34px;border-radius:50%;
-  background:rgba(80,140,255,.16);border:1.5px solid rgba(100,160,255,.42);
-  color:rgba(160,210,255,.92);font-size:20px;
+  background:rgba(80,80,180,.12);border:1px solid rgba(100,120,255,.38);
+  color:rgba(150,190,255,.88);font-size:20px;
   display:flex;align-items:center;justify-content:center;transition:all .18s;
 }
 #btn-minus{left:62px;}
 #btn-plus{right:62px;}
-#btn-minus:active,#btn-plus:active{background:rgba(80,140,255,.32);transform:translateY(-70%) scale(.94);}
+#btn-minus:active,#btn-plus:active{background:rgba(80,80,180,.28);transform:translateY(-70%) scale(.93);}
 
-/* ── LEFT PANEL BUTTON ───────────────────────────────── */
+/* LEFT PANEL BUTTON */
 #btn-left{
   position:fixed;left:14px;top:50%;transform:translateY(-70%);
   z-index:30;width:42px;height:42px;border-radius:50%;
-  background:rgba(160,60,255,.20);border:1.5px solid rgba(180,100,255,.48);
-  color:rgba(210,170,255,.92);font-size:19px;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .20s;box-shadow:0 0 16px rgba(140,60,255,.32);
+  background:rgba(80,40,180,.12);border:1px solid rgba(140,80,255,.38);
+  color:rgba(180,140,255,.88);font-size:18px;
+  display:flex;align-items:center;justify-content:center;transition:all .20s;
 }
-#btn-left:hover{background:rgba(160,60,255,.38);}
 
-/* ── MENU BUTTON (top right) ─────────────────────────── */
+/* MENU BUTTON */
 #btn-menu{
   position:fixed;top:14px;right:14px;z-index:30;
   width:36px;height:36px;border-radius:9px;
-  background:rgba(160,100,255,.16);border:1px solid rgba(180,120,255,.32);
-  color:rgba(200,162,255,.82);font-size:17px;
+  background:rgba(60,60,140,.10);border:1px solid rgba(120,100,255,.28);
+  color:rgba(180,150,255,.78);font-size:17px;
   display:flex;align-items:center;justify-content:center;transition:all .18s;
 }
 
-/* ── BINAURAL BUBBLE (bottom right) ─────────────────── */
+/* BINAURAL BUBBLE */
 #bin-bubble{
   position:fixed;bottom:16px;right:16px;z-index:25;
   width:50px;height:50px;border-radius:50%;
-  background:rgba(0,200,255,.13);border:1.5px solid rgba(0,200,255,.40);
-  color:rgba(0,220,255,.90);font-size:10px;letter-spacing:.08em;
+  background:rgba(0,160,255,.08);border:1px solid rgba(0,190,255,.32);
+  color:rgba(0,210,255,.88);font-size:10px;letter-spacing:.06em;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .26s;font-family:'Share Tech Mono',monospace;
+  cursor:pointer;transition:all .26s;font-family:monospace;
 }
 #bin-bubble.active{
-  background:rgba(255,80,80,.16);border-color:rgba(255,100,80,.58);
-  color:rgba(255,140,80,.96);box-shadow:0 0 22px rgba(255,60,60,.28);
+  background:rgba(255,80,40,.10);border-color:rgba(255,100,60,.48);
+  color:rgba(255,140,80,.95);
   animation:bubPulse 2.2s ease-in-out infinite;
 }
-@keyframes bubPulse{0%,100%{box-shadow:0 0 22px rgba(255,60,60,.28);}50%{box-shadow:0 0 36px rgba(255,60,60,.50);}}
+@keyframes bubPulse{0%,100%{box-shadow:0 0 14px rgba(255,60,20,.25);}50%{box-shadow:0 0 28px rgba(255,60,20,.48);}}
 #bin-bubble-top{font-size:16px;line-height:1;}
-#bin-bubble-sub{font-size:7px;letter-spacing:.06em;margin-top:1px;opacity:.7;}
+#bin-bubble-sub{font-size:7px;letter-spacing:.06em;margin-top:1px;opacity:.6;}
 
-/* ── LEFT PANEL (BINAURAL/FX) ────────────────────────── */
+/* PANELS */
 #pan-left{
   position:fixed;top:0;left:0;bottom:0;width:272px;
-  background:linear-gradient(168deg,rgba(22,5,52,.97),rgba(6,14,42,.98));
-  border-right:1px solid rgba(160,100,255,.18);
-  backdrop-filter:blur(24px);
+  background:#080808;border-right:1px solid #1a1a1a;
   transform:translateX(-272px);transition:transform .34s cubic-bezier(.4,0,.2,1);
-  z-index:100;overflow-y:auto;scrollbar-width:thin;
-  scrollbar-color:rgba(160,100,255,.22) transparent;
-  display:flex;flex-direction:column;
+  z-index:100;overflow-y:auto;display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:#222 transparent;
 }
 #pan-left.open{transform:translateX(0);}
-#pan-left::-webkit-scrollbar{width:2px;}
-#pan-left::-webkit-scrollbar-thumb{background:rgba(160,100,255,.24);border-radius:2px;}
-
-/* ── RIGHT PANEL (MENU/NAV) ──────────────────────────── */
 #pan-right{
   position:fixed;top:0;right:0;bottom:0;width:275px;
-  background:linear-gradient(168deg,rgba(22,5,52,.97),rgba(6,14,42,.98));
-  border-left:1px solid rgba(160,100,255,.18);
-  backdrop-filter:blur(24px);
+  background:#080808;border-left:1px solid #1a1a1a;
   transform:translateX(275px);transition:transform .34s cubic-bezier(.4,0,.2,1);
-  z-index:100;overflow-y:auto;scrollbar-width:thin;
-  scrollbar-color:rgba(160,100,255,.22) transparent;
+  z-index:100;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:#222 transparent;
 }
 #pan-right.open{transform:translateX(0);}
-#pan-right::-webkit-scrollbar{width:2px;}
-#pan-right::-webkit-scrollbar-thumb{background:rgba(160,100,255,.24);border-radius:2px;}
 
-/* ── PANEL COMMON ────────────────────────────────────── */
 .pan-hd{
-  padding:14px 13px 11px;border-bottom:1px solid rgba(255,255,255,.06);
+  padding:14px 13px 11px;border-bottom:1px solid #111;
   display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-  position:sticky;top:0;background:inherit;z-index:2;
+  position:sticky;top:0;background:#080808;z-index:2;
 }
-.pan-title{
-  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.36em;
-  text-transform:uppercase;color:rgba(200,162,255,.68);
-}
+.pan-title{font-size:.58rem;letter-spacing:.32em;text-transform:uppercase;color:#444;}
 .pan-close{
   width:24px;height:24px;border-radius:6px;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
-  color:rgba(200,162,255,.48);font-size:12px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:color .18s;
+  background:transparent;border:1px solid #1e1e1e;
+  color:#333;font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:color .16s;
 }
-.pan-close:hover{color:rgba(255,200,100,.85);}
-.psec{padding:11px 13px;border-bottom:1px solid rgba(255,255,255,.04);}
-.psec-h{font-size:.48rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(200,162,255,.38);margin-bottom:8px;}
+.pan-close:hover{color:#888;}
+.psec{padding:11px 13px;border-bottom:1px solid #0e0e0e;}
+.psec-h{font-size:.45rem;letter-spacing:.28em;text-transform:uppercase;color:#2e2e2e;margin-bottom:8px;}
 
-/* ── FREQ ROWS ───────────────────────────────────────── */
-.freq-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+/* FREQ ROWS */
+.freq-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid #0e0e0e;}
 .freq-row:last-child{border-bottom:none;}
-.freq-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.freq-name{font-size:.58rem;color:rgba(210,195,255,.58);flex:1;letter-spacing:.06em;}
-.freq-hz{font-size:.64rem;min-width:52px;text-align:right;font-family:'Cinzel',serif;}
-.freq-row.is-active{background:rgba(255,255,255,.06);border-radius:4px;padding:4px 5px;}
+.freq-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.freq-name{font-size:.52rem;color:#444;flex:1;letter-spacing:.04em;}
+.freq-hz{font-size:.58rem;min-width:52px;text-align:right;}
+.freq-row.is-active{background:#111;border-radius:4px;padding:4px 5px;}
 
-/* ── SLIDERS ─────────────────────────────────────────── */
+/* SLIDERS */
 .sl-wrap{margin:5px 0;}
-.sl-lbl{display:flex;justify-content:space-between;font-size:.54rem;color:rgba(200,180,255,.45);margin-bottom:3px;letter-spacing:.06em;}
-.sl-lbl span{color:rgba(255,200,80,.68);}
-input[type=range]{
-  width:100%;height:2px;-webkit-appearance:none;
-  background:rgba(160,100,255,.20);border-radius:2px;cursor:pointer;outline:none;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
-  background:rgba(200,162,255,.88);cursor:pointer;
-  box-shadow:0 0 6px rgba(160,100,255,.58);
-}
+.sl-lbl{display:flex;justify-content:space-between;font-size:.50rem;color:#333;margin-bottom:3px;letter-spacing:.04em;}
+.sl-lbl span{color:#666;}
+input[type=range]{width:100%;height:2px;-webkit-appearance:none;background:#1a1a1a;border-radius:2px;cursor:pointer;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#444;cursor:pointer;}
 
-/* ── BINAURAL PLAY BTN ───────────────────────────────── */
+/* BINAURAL BTN */
 .bin-btn{
   width:100%;padding:8px;margin-top:5px;
-  font-family:'Share Tech Mono',monospace;font-size:.58rem;
-  letter-spacing:.18em;text-transform:uppercase;
+  font-family:monospace;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;
   border-radius:6px;cursor:pointer;transition:all .22s;
-  background:rgba(0,200,255,.09);border:1px solid rgba(0,200,255,.30);
-  color:rgba(0,220,255,.90);
+  background:rgba(0,170,255,.07);border:1px solid rgba(0,190,255,.22);
+  color:rgba(0,210,255,.82);
 }
-.bin-btn.on{background:rgba(255,60,60,.13);border-color:rgba(255,80,80,.48);color:rgba(255,130,80,.96);}
+.bin-btn.on{background:rgba(255,80,50,.08);border-color:rgba(255,100,70,.30);color:rgba(255,140,100,.88);}
 
-/* ── MENU ITEMS (right panel) ────────────────────────── */
+/* MENU ITEMS */
 .menu-item{
-  padding:13px 13px;display:flex;align-items:center;gap:10px;
-  border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;
-  transition:background .18s;
+  display:flex;align-items:center;gap:11px;
+  padding:13px;border-bottom:1px solid #0e0e0e;cursor:pointer;transition:background .15s;
 }
-.menu-item:hover{background:rgba(160,100,255,.09);}
-.mi-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.mi-txt{font-size:.68rem;color:rgba(218,200,255,.75);letter-spacing:.06em;}
-.mi-sub{font-size:.52rem;color:rgba(200,180,255,.38);margin-top:2px;letter-spacing:.10em;}
+.menu-item:active{background:#0e0e0e;}
+.mi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mi-txt{font-size:.62rem;color:#bbb;letter-spacing:.06em;}
+.mi-sub{font-size:.48rem;color:#333;margin-top:2px;letter-spacing:.03em;}
 
-/* ── IFRAME OVERLAY ──────────────────────────────────── */
+/* IFRAME OVERLAY */
 #iframe-overlay{
-  position:fixed;inset:0;z-index:200;
-  background:rgba(6,10,32,.97);
-  display:none;flex-direction:column;
+  position:fixed;inset:0;z-index:200;background:#000;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .38s cubic-bezier(.4,0,.2,1);
 }
-#iframe-overlay.open{display:flex;}
+#iframe-overlay.open{transform:translateY(0);}
 #iframe-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;border-bottom:1px solid rgba(160,100,255,.18);flex-shrink:0;
-  background:rgba(18,6,42,.92);
-}
-#iframe-title{
-  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.30em;
-  text-transform:uppercase;color:rgba(200,162,255,.72);
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;background:#080808;border-bottom:1px solid #1a1a1a;flex-shrink:0;
 }
 #iframe-back{
-  padding:5px 16px;border-radius:16px;cursor:pointer;transition:all .18s;
-  background:rgba(160,100,255,.14);border:1px solid rgba(180,120,255,.34);
-  color:rgba(200,162,255,.75);font-size:.58rem;letter-spacing:.14em;font-family:'Share Tech Mono',monospace;
+  padding:5px 12px;border-radius:8px;border:1px solid #222;
+  background:transparent;color:#888;font-size:12px;cursor:pointer;font-family:monospace;
 }
-#iframe-back:hover{background:rgba(255,200,100,.16);color:rgba(255,200,100,.92);}
-#iframe-frame{flex:1;border:none;background:#071021;}
+#iframe-title{font-size:.60rem;color:#555;letter-spacing:.06em;}
+#iframe-frame{flex:1;border:none;background:#000;}
 
-/* ── INFO FLASH ──────────────────────────────────────── */
-#flash{
-  position:fixed;top:48%;left:50%;transform:translate(-50%,-50%);
-  font-family:'Cinzel',serif;font-size:11px;font-weight:300;
-  letter-spacing:.40em;text-transform:uppercase;
-  color:rgba(255,200,80,.88);text-shadow:0 0 28px rgba(255,200,80,.55);
-  opacity:0;transition:opacity .5s;pointer-events:none;z-index:50;white-space:nowrap;
-}
-#flash.show{opacity:1;}
+/* FLASH */
+#flash{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .3s;}
+#flash.show{opacity:1;background:rgba(255,255,255,.05);}
 
-/* ── INFO BOTTOM BAR ─────────────────────────────────── */
+/* INFO BAR */
 #info-bar{
-  position:fixed;bottom:0;left:0;right:0;height:36px;
+  position:fixed;bottom:0;left:0;right:0;z-index:20;
+  padding:3px 10px;background:#000;border-top:1px solid #0e0e0e;
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 14px;background:rgba(10,5,30,.70);
-  border-top:1px solid rgba(160,100,255,.10);
-  font-size:8px;letter-spacing:.18em;
-  color:rgba(200,180,255,.35);pointer-events:none;
+  font-size:.44rem;color:#2a2a2a;letter-spacing:.05em;pointer-events:none;
 }
-#info-bar span{color:rgba(255,200,80,.60);}
 </style>
 </head>
 <body>
 
-<canvas id="cv-bg"></canvas>
-<canvas id="cv-ring"></canvas>
-
-<!-- SPHERE CENTER -->
+<!-- SPHERE -->
 <div id="sphere-wrap">
-  <div class="sphere-gold" id="sphere" title="Tap = Aléatoire">
-    <div class="sphere-time" id="sphere-time">216.0</div>
-    <div class="sphere-lbl" id="sphere-lbl">UT432</div>
-    <div class="sphere-seuil" id="sphere-seuil">Tiphereth</div>
+  <div id="sphere">
+    <span class="sphere-time" id="sphere-time">432</span>
+    <span class="sphere-lbl" id="sphere-lbl">UT432</span>
+    <span class="sphere-seuil" id="sphere-seuil">216</span>
   </div>
 </div>
 
-<!-- FLUX TOGGLE -->
-<button id="btn-flux" class="flux-off" title="Flux On/Off">▶ FLUX ON</button>
-
-<!-- MASTER FREQ DISPLAY -->
-<div id="freq-display" title="Cliquer pour changer la fréquence maître">
+<!-- MASTER FREQ -->
+<div id="freq-display">
   <div id="freq-val">432 Hz</div>
-  <div id="freq-label">fréquence maître · clic = cycle</div>
+  <div id="freq-label">Fréquence Maître · clic = cycle</div>
 </div>
 
-<!-- +/- BUTTONS -->
-<button id="btn-minus" title="−9 Hz">−</button>
-<button id="btn-plus" title="+9 Hz">+</button>
+<!-- FLUX -->
+<button id="btn-flux" class="flux-off">▶ FLUX ON</button>
 
-<!-- LEFT PANEL BUTTON -->
-<button id="btn-left" title="Binaural / FX">⬡</button>
+<!-- +/- -->
+<button id="btn-minus">−</button>
+<button id="btn-plus">+</button>
 
-<!-- MENU BUTTON -->
-<button id="btn-menu" title="Menu">≡</button>
+<!-- LEFT PANEL OPEN -->
+<button id="btn-left">⬡</button>
+
+<!-- MENU -->
+<button id="btn-menu">☰</button>
 
 <!-- BINAURAL BUBBLE -->
-<div id="bin-bubble" title="Binaural">
-  <div id="bin-bubble-top">∿</div>
-  <div id="bin-bubble-sub">binn.</div>
+<div id="bin-bubble">
+  <span id="bin-bubble-top">∿</span>
+  <span id="bin-bubble-sub">binn.</span>
 </div>
 
-<!-- LEFT PANEL: BINAURAL + FX -->
+<!-- LEFT PANEL -->
 <div id="pan-left">
   <div class="pan-hd">
-    <div class="pan-title">⬡ Binaural · FX</div>
+    <span class="pan-title">Binaural · FX</span>
     <button class="pan-close" onclick="closePanLeft()">✕</button>
   </div>
-
   <div class="psec">
-    <div class="psec-h">Battement Actif</div>
-    <div id="bin-active-display" style="font-size:.62rem;line-height:1.9;color:rgba(220,200,255,.70);letter-spacing:.06em;padding:3px 0;">—</div>
-    <button class="bin-btn" id="bin-play-btn" onclick="toggleBinaural()">▶ Activer Binaural</button>
+    <div class="psec-h">Volume Maître</div>
+    <div class="sl-wrap">
+      <div class="sl-lbl">Vol <span id="sv-vol">75%</span></div>
+      <input type="range" min="0" max="100" value="75" oninput="setMasterVol(this.value/100)">
+    </div>
+    <div class="sl-wrap">
+      <div class="sl-lbl">Réverb <span id="sv-rev">28%</span></div>
+      <input type="range" min="0" max="100" value="28" oninput="setReverb(this.value/100)">
+    </div>
+    <div class="sl-wrap">
+      <div class="sl-lbl">Profondeur <span id="sv-dep">100%</span></div>
+      <input type="range" min="10" max="100" value="100" oninput="setBinDepth(this.value/100)">
+    </div>
+    <div class="sl-wrap">
+      <div class="sl-lbl">Auto-aléatoire <span id="sv-auto">off</span></div>
+      <input type="range" min="0" max="10" value="0" step="1" oninput="setAutoRandom(this.value)">
+    </div>
   </div>
-
   <div class="psec">
-    <div class="psec-h">7 Fréquences · Gauche</div>
+    <div class="psec-h">Onde gauche (L)</div>
     <div id="freq-left-list"></div>
   </div>
-
   <div class="psec">
-    <div class="psec-h">7 Fréquences · Droite</div>
+    <div class="psec-h">Onde droite (R)</div>
     <div id="freq-right-list"></div>
   </div>
-
   <div class="psec">
-    <div class="psec-h">Master Volume</div>
-    <div class="sl-wrap">
-      <div class="sl-lbl">Volume <span id="sv-vol">75%</span></div>
-      <input type="range" id="sl-vol" min="0" max="100" value="75" oninput="setMasterVol(this.value/100)">
-    </div>
-  </div>
-
-  <div class="psec">
-    <div class="psec-h">FX · Reverb</div>
-    <div class="sl-wrap">
-      <div class="sl-lbl">Réverbération <span id="sv-rev">28%</span></div>
-      <input type="range" id="sl-rev" min="0" max="100" value="28" oninput="setReverb(this.value/100)">
-    </div>
-    <div class="sl-wrap">
-      <div class="sl-lbl">Profondeur binaurale <span id="sv-dep">100%</span></div>
-      <input type="range" id="sl-dep" min="10" max="100" value="100" oninput="setBinDepth(this.value/100)">
-    </div>
-  </div>
-
-  <div class="psec" style="padding-bottom:16px">
-    <div class="psec-h">Binaural Auto · UT432</div>
-    <div style="font-size:.55rem;color:rgba(200,180,255,.45);line-height:1.7;letter-spacing:.06em;">
-      L'heure UT432 pilote automatiquement la sélection des battements binauraux selon les 9 seuils kabbalistiques.
-    </div>
-    <div class="sl-wrap" style="margin-top:8px">
-      <div class="sl-lbl">Intervalle aléatoire auto <span id="sv-auto">off</span></div>
-      <input type="range" id="sl-auto" min="0" max="10" value="0" step="1" oninput="setAutoRandom(parseInt(this.value))">
-    </div>
+    <div id="bin-active-display" style="font-size:.52rem;color:#666;min-height:36px;line-height:1.6;"></div>
+    <button class="bin-btn" id="bin-play-btn" onclick="toggleBinaural()">▶ Activer Binaural</button>
   </div>
 </div>
 
-<!-- RIGHT PANEL: MENU -->
+<!-- RIGHT PANEL -->
 <div id="pan-right">
   <div class="pan-hd">
-    <div class="pan-title">≡ Navigation</div>
+    <span class="pan-title">Modules</span>
     <button class="pan-close" onclick="closePanRight()">✕</button>
   </div>
-
   <div class="menu-item" onclick="openIframe('Théorie UT36 · 360 · 396 · 432','ut36_theory.html')">
-    <span class="mi-dot" style="background:#7dd3fc"></span>
-    <div><div class="mi-txt">Théorie UT36</div><div class="mi-sub">360 · 396 · 432 · Grille 36 cartes</div></div>
+    <span class="mi-dot" style="background:#ff6060"></span>
+    <div><div class="mi-txt">Théorie UT</div><div class="mi-sub">36 · 360 · 396 · 432</div></div>
   </div>
   <div class="menu-item" onclick="openIframe('UTC432 · Horloge Cosmique','utc432project.html')">
-    <span class="mi-dot" style="background:#F0C060"></span>
-    <div><div class="mi-txt">Horloge UTC432</div><div class="mi-sub">3 anneaux · 36 nœuds · Phases · Souffles</div></div>
+    <span class="mi-dot" style="background:#ff9050"></span>
+    <div><div class="mi-txt">UTC432 · Horloge</div><div class="mi-sub">3 anneaux · 36 nœuds · Phases</div></div>
   </div>
-  <div class="menu-item" onclick="openIframe('OmCv · 13 Géométries Vivantes','omcv477.html')">
-    <span class="mi-dot" style="background:#A060F0"></span>
-    <div><div class="mi-txt">Géométries Vivantes</div><div class="mi-sub">13 géométries · Tore · UT432 anneau</div></div>
+  <div class="menu-item" onclick="openIframe('OmCv · 13 Géométries','omcv477.html')">
+    <span class="mi-dot" style="background:#ffcc40"></span>
+    <div><div class="mi-txt">OmCv · 13 Géométries</div><div class="mi-sub">Anneau UT432 · Vivantes</div></div>
   </div>
-  <div class="menu-item" onclick="openIframe('OMCHA 432 · Flux Hélicoïdal','omcha432flux.html')">
-    <span class="mi-dot" style="background:#00ff88"></span>
-    <div><div class="mi-txt">Flux Hélicoïdal</div><div class="mi-sub">Double hélice · Tore · Expansion ∞</div></div>
+  <div class="menu-item" onclick="openIframe('OMCHA 432 · Flux','omcha432flux.html')">
+    <span class="mi-dot" style="background:#60ff90"></span>
+    <div><div class="mi-txt">OMCHA 432 · Flux</div><div class="mi-sub">Double hélice · Torus</div></div>
   </div>
   <div class="menu-item" onclick="openIframe('Cycle 432','cycle432.html')">
-    <span class="mi-dot" style="background:#ff8060"></span>
-    <div><div class="mi-txt">Cycle 432</div><div class="mi-sub">Documentation du cycle cosmique</div></div>
+    <span class="mi-dot" style="background:#40ccff"></span>
+    <div><div class="mi-txt">Cycle 432</div><div class="mi-sub">J0 · Saisons · 12 axes</div></div>
   </div>
   <div class="menu-item" onclick="openIframe('Sphère 432 · Max Expansion','sphere432max.html')">
     <span class="mi-dot" style="background:#00ccff"></span>
-    <div><div class="mi-txt">Sphère 432 Max</div><div class="mi-sub">Expansion · BPM · Binaural · Canvas</div></div>
+    <div><div class="mi-txt">Sphère 432 Max</div><div class="mi-sub">Expansion · BPM · Binaural</div></div>
   </div>
-  <div class="menu-item" onclick="openIframe('OMCHA V2 · Thème Cosmique','theme432.html')">
+  <div class="menu-item" onclick="openIframe('OMCHA V2 · Thème','theme432.html')">
     <span class="mi-dot" style="background:#ff60c0"></span>
     <div><div class="mi-txt">OMCHA V2 · Thème</div><div class="mi-sub">Respiration · Sphères · UT432</div></div>
   </div>
-  <div class="menu-item" onclick="openIframe('OmCv 450 · Géométrie Sacrée','omcv450.html')">
+  <div class="menu-item" onclick="openIframe('OmCv 450 · Géométrie','omcv450.html')">
     <span class="mi-dot" style="background:#ffd700"></span>
-    <div><div class="mi-txt">OmCv 450 · Sacré</div><div class="mi-sub">13 géométries · Anneau 36 phases · Aura</div></div>
-  </div>
-
-  <div class="psec" style="margin-top:6px">
-    <div class="psec-h">Session Info</div>
-    <div style="font-size:.58rem;line-height:2;color:rgba(200,180,255,.48);letter-spacing:.06em;">
-      <div>Fréq. maître : <span id="info-mf" style="color:rgba(255,170,80,.82)">432 Hz</span></div>
-      <div>UT432 actuel : <span id="info-ut" style="color:rgba(255,210,80,.82)">—</span></div>
-      <div>Seuil actif : <span id="info-seuil" style="color:rgba(200,160,255,.82)">—</span></div>
-      <div>Battement : <span id="info-beat" style="color:rgba(140,255,160,.82)">—</span></div>
-    </div>
+    <div><div class="mi-txt">OmCv 450 · Géométrie</div><div class="mi-sub">13 formes · Anneau 36 phases</div></div>
   </div>
 </div>
 
-<!-- IFRAME OVERLAY -->
+<!-- IFRAME -->
 <div id="iframe-overlay">
   <div id="iframe-bar">
-    <div id="iframe-title">—</div>
     <button id="iframe-back" onclick="closeIframe()">← Retour</button>
+    <span id="iframe-title"></span>
   </div>
-  <iframe id="iframe-frame" allow="autoplay" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+  <iframe id="iframe-frame" sandbox="allow-scripts allow-same-origin allow-forms" allow="autoplay"></iframe>
 </div>
 
-<!-- FLASH FEEDBACK -->
-<div id="flash">∿ Aléatoire</div>
+<!-- FLASH -->
+<div id="flash"></div>
 
 <!-- INFO BAR -->
 <div id="info-bar">
-  <div>0mcha 396 · UT432</div>
-  <div id="ib-ut">—</div>
-  <div id="ib-mode">—</div>
+  <span>Omcha 396 · UT432</span>
+  <span id="ib-ut">—</span>
+  <span id="ib-mode">—</span>
+  <span id="info-mf">432 Hz</span>
+  <span id="info-beat">—</span>
+  <span id="info-ut" style="display:none"></span>
+  <span id="info-seuil" style="display:none"></span>
 </div>
 
 <script>
 'use strict';
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  CONSTANTES
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 const TAU=Math.PI*2;
 const LON_D=2.35, LAT_R=48.85*Math.PI/180;
 
+// 9 seuils UT432 — nommés par leur valeur numérique
 const SEUILS=[
-  {v:0,  h:280,s:'Kether'},   {v:54, h:250,s:'Chokhmah'},
-  {v:108,h:200,s:'Binah'},    {v:162,h:155,s:'Chesed'},
-  {v:216,h:48, s:'Tiphereth'},{v:270,h:88, s:'Netzach'},
-  {v:324,h:32, s:'Hod'},      {v:378,h:5,  s:'Yesod'},
-  {v:432,h:295,s:'Malkuth'},
+  {v:0,  h:280,s:'0'},   {v:54, h:250,s:'54'},
+  {v:108,h:200,s:'108'}, {v:162,h:155,s:'162'},
+  {v:216,h:48, s:'216'}, {v:270,h:88, s:'270'},
+  {v:324,h:32, s:'324'}, {v:378,h:5,  s:'378'},
+  {v:432,h:295,s:'432'},
 ];
 
-// 7 paires binaurales — ratios 10:11:12
+// 7 paires binaurales — ratios 10:11:12 — libellés neutres
 const RATIOS=[
-  {name:'Kether',   rL:1,      rR:11/10,  color:'#ff6060'},
-  {name:'Chokhmah', rL:10/11,  rR:1,      color:'#ff9050'},
-  {name:'Binah',    rL:11/12,  rR:1,      color:'#ffcc40'},
-  {name:'Chesed',   rL:1,      rR:12/11,  color:'#60ff90'},
-  {name:'Netzach',  rL:10/12,  rR:1,      color:'#40ccff'},
-  {name:'Hod',      rL:12/11,  rR:1,      color:'#8060ff'},
-  {name:'Yesod',    rL:11/10,  rR:12/10,  color:'#cc60ff'},
+  {name:'Δ1 · 10:11',    rL:1,      rR:11/10,  color:'#ff6060'},
+  {name:'Δ2 · 10:11',    rL:10/11,  rR:1,      color:'#ff9050'},
+  {name:'Δ3 · 11:12',    rL:11/12,  rR:1,      color:'#ffcc40'},
+  {name:'Δ4 · 11:12',    rL:1,      rR:12/11,  color:'#60ff90'},
+  {name:'Δ5 · 10:12',    rL:10/12,  rR:1,      color:'#40ccff'},
+  {name:'Δ6 · 12:11',    rL:12/11,  rR:1,      color:'#8060ff'},
+  {name:'Δ7 · 11+12:10', rL:11/10,  rR:12/10,  color:'#cc60ff'},
 ];
 
 const FREQ_PRESETS=[108,216,288,360,396,432,528,639,741,852,963];
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  ÉTAT GLOBAL
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 let masterFreq=432;
 let masterVol=0.75;
 let reverbAmt=0.28;
@@ -513,15 +383,14 @@ let _autoTimer=null;
 let _autoIntervalMin=0;
 let _freqPresetIdx=5; // 432
 
-// Sphère rotation
 let sphOmegaX=0.10, sphOmegaY=0.17;
 let sphAngleX=0, sphAngleY=0;
 let sphDir=1;
 let _lastHue=48;
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  UT432 CLOCK
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 function lastSunOf(y,m){
   let d=new Date(Date.UTC(y,m+1,0));
   while(d.getUTCDay()!==0)d.setUTCDate(d.getUTCDate()-1);
@@ -565,15 +434,10 @@ function getCurSeuil(ut){
   for(const s of SEUILS)if(ut>=s.v)c=s;
   return c;
 }
-// UT432 → binaural pair index (0–8 → 0–6 via mod)
-function ut432ToPairIdx(ut){
-  const seuilIdx=SEUILS.findIndex(s=>getCurSeuil(ut).s===s.s);
-  return Math.max(0,seuilIdx)%RATIOS.length;
-}
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  AUDIO ENGINE — ANTI-CRACK OBLIGATOIRE
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 let _actx=null,_limiter=null,_masterGain=null;
 let _dryGain=null,_wetGain=null;
 let _binL=null,_binR=null,_binGL=null,_binGR=null,_merger=null;
@@ -592,21 +456,14 @@ function _initAudio(){
   _limiter.release.value=0.05;
   _limiter.connect(_actx.destination);
 
-  // Master gain
   _masterGain=_actx.createGain();
   _masterGain.gain.value=masterVol;
 
-  // Dry / Wet (reverb simulé par filtre passe-bas + delay)
-  _dryGain=_actx.createGain();
-  _dryGain.gain.value=1-reverbAmt;
-  _wetGain=_actx.createGain();
-  _wetGain.gain.value=reverbAmt;
+  _dryGain=_actx.createGain();_dryGain.gain.value=1-reverbAmt;
+  _wetGain=_actx.createGain();_wetGain.gain.value=reverbAmt;
 
-  // Reverb via delay court (simulate room)
-  const _delay=_actx.createDelay(2.0);
-  _delay.delayTime.value=0.12;
-  const _fb=_actx.createGain();
-  _fb.gain.value=0.38;
+  const _delay=_actx.createDelay(2.0);_delay.delayTime.value=0.12;
+  const _fb=_actx.createGain();_fb.gain.value=0.38;
   const _lpf=_actx.createBiquadFilter();
   _lpf.type='lowpass';_lpf.frequency.value=1800;_lpf.Q.value=0.5;
 
@@ -637,7 +494,6 @@ function _startBinaural(idx){
 
   _merger=_actx.createChannelMerger(2);
   _merger.connect(_masterGain);
-
   _binGL=_actx.createGain();_binGL.gain.value=0;
   _binGR=_actx.createGain();_binGR.gain.value=0;
   _binGL.connect(_merger,0,0);
@@ -684,14 +540,13 @@ function _updateBinauralFreqs(idx){
   const safeL=Math.max(36,Math.min(864,masterFreq*pair.rL));
   const safeR=Math.max(36,Math.min(864,masterFreq*pair.rR));
   const now=_actx.currentTime;
-  // Transition douce — exponentialRampToValueAtTime pour les fréquences
   _binL.frequency.setTargetAtTime(safeL,now,0.30);
   _binR.frequency.setTargetAtTime(safeR,now,0.30);
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  ACTIONS PUBLIQUES
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 function setMasterVol(v){
   masterVol=Math.max(0,Math.min(1,v));
   if(_masterGain&&_audioReady)_ramp(_masterGain.gain,masterVol,0.06);
@@ -753,7 +608,6 @@ function toggleFlux(){
   }
 }
 
-// UT432-driven binaural (auto, no manual override)
 let _prevSeuilIdx=-1;
 function _applyUT432Binaural(ut432){
   const seuilIdx=SEUILS.findIndex(s=>s.s===getCurSeuil(ut432).s);
@@ -766,17 +620,12 @@ function _applyUT432Binaural(ut432){
   _prevSeuilIdx=seuilIdx;
 }
 
-// TAP = full random (masterFreq reste inchangé)
 function doFullRandom(){
   activePairIdx=Math.floor(Math.random()*RATIOS.length);
-  if(binauralActive&&_audioReady){
-    _startBinaural(activePairIdx);
-  }
-  // New sphere rotation — opposite direction
+  if(binauralActive&&_audioReady)_startBinaural(activePairIdx);
   sphDir*=-1;
   sphOmegaX=(Math.random()*0.22+0.08)*sphDir;
   sphOmegaY=(Math.random()*0.38+0.14)*sphDir;
-
   const fl=document.getElementById('flash');
   fl.classList.add('show');
   setTimeout(()=>fl.classList.remove('show'),1100);
@@ -796,9 +645,9 @@ function setAutoRandom(val){
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  UI PANELS
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 let _leftOpen=false,_rightOpen=false;
 function toggleLeft(){
   _leftOpen=!_leftOpen;
@@ -824,9 +673,9 @@ function closeIframe(){
   setTimeout(()=>{document.getElementById('iframe-frame').src='';},350);
 }
 
-// ═══════════════════════════════════════════════════════════
-//  FREQ LISTS DISPLAY
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  FREQ LISTS
+// ═══════════════════════════════════════════════════
 function updateFreqLists(){
   const lEl=document.getElementById('freq-left-list');
   const rEl=document.getElementById('freq-right-list');
@@ -837,7 +686,6 @@ function updateFreqLists(){
   RATIOS.forEach((r,i)=>{
     const fL=(masterFreq*r.rL).toFixed(1);
     const fR=(masterFreq*r.rR).toFixed(1);
-    const beat=Math.abs(masterFreq*r.rR-masterFreq*r.rL).toFixed(2);
     const active=i===activePairIdx;
 
     const mkRow=(hz,col)=>{
@@ -858,185 +706,21 @@ function updateFreqLists(){
     rEl.appendChild(mkRow(fR,r.color));
 
     if(active&&adEl){
-      const pair=RATIOS[i];
-      const fLL=(masterFreq*pair.rL).toFixed(1);
-      const fRR=(masterFreq*pair.rR).toFixed(1);
-      const bt=Math.abs(masterFreq*pair.rR-masterFreq*pair.rL).toFixed(2);
-      adEl.innerHTML=`<span style="color:${pair.color}">${pair.name}</span><br>`+
-        `L: <b>${fLL} Hz</b> · R: <b>${fRR} Hz</b><br>`+
-        `<span style="color:rgba(255,200,80,.75)">Battement: ${bt} Hz</span>`;
-      document.getElementById('info-beat').textContent=bt+' Hz · '+pair.name;
+      const bt=Math.abs(masterFreq*r.rR-masterFreq*r.rL).toFixed(2);
+      adEl.innerHTML=`<span style="color:${r.color}">${r.name}</span><br>`+
+        `L: <b>${fL} Hz</b> · R: <b>${fR} Hz</b><br>`+
+        `<span style="color:#666">Battement: ${bt} Hz</span>`;
+      document.getElementById('info-beat').textContent=bt+' Hz';
     }
   });
 }
 
-// ═══════════════════════════════════════════════════════════
-//  CANVAS
-// ═══════════════════════════════════════════════════════════
-const cvBg=document.getElementById('cv-bg');
-const cvRing=document.getElementById('cv-ring');
-const B=cvBg.getContext('2d');
-const X=cvRing.getContext('2d');
-let W,H,CX,CY,R;
-const t0=performance.now();
-
-function resize(){
-  W=window.innerWidth;H=window.innerHeight;
-  cvBg.width=cvRing.width=W;
-  cvBg.height=cvRing.height=H;
-  CX=W/2;CY=H/2;
-  R=Math.min(W,H)*.42;
-  drawStaticBg();
-}
-window.addEventListener('resize',resize);
-
-function drawStaticBg(){
-  // Nebulae layers
-  const g1=B.createRadialGradient(W*.3,H*.15,0,W*.3,H*.15,W*.5);
-  g1.addColorStop(0,'rgba(180,40,255,.18)');g1.addColorStop(1,'rgba(0,0,0,0)');
-  const g2=B.createRadialGradient(W*.75,H*.82,0,W*.75,H*.82,W*.42);
-  g2.addColorStop(0,'rgba(40,80,255,.14)');g2.addColorStop(1,'rgba(0,0,0,0)');
-  const g3=B.createRadialGradient(CX,CY,0,CX,CY,R*1.6);
-  g3.addColorStop(0,'rgba(80,20,160,.30)');g3.addColorStop(1,'rgba(0,0,0,0)');
-  B.clearRect(0,0,W,H);
-  B.fillStyle=g1;B.fillRect(0,0,W,H);
-  B.fillStyle=g2;B.fillRect(0,0,W,H);
-  B.fillStyle=g3;B.fillRect(0,0,W,H);
-  // Starfield
-  for(let i=0;i<140;i++){
-    const sx=Math.random()*W,sy=Math.random()*H;
-    const sa=(Math.random()*.28+.04),sr=(Math.random()*.9+.15);
-    B.beginPath();B.arc(sx,sy,sr,0,TAU);
-    B.fillStyle=`rgba(220,210,255,${sa})`;B.fill();
-  }
-  // Sacred geometry mandala ring (very subtle)
-  B.save();B.translate(CX,CY);
-  const al=0.038;
-  for(let ri=1;ri<=8;ri++){
-    const rr=R*ri/8.5;
-    B.beginPath();B.arc(0,0,rr,0,TAU);
-    B.strokeStyle=`rgba(120,80,220,${al*(1-ri/10)})`;B.lineWidth=.4;B.stroke();
-  }
-  B.restore();
-}
-
-function drawRing(ut432,t){
-  X.clearRect(0,0,W,H);
-  const hue=getHue(ut432);
-  _lastHue+=(hue-_lastHue)*0.035;
-
-  // ── Outer UT432 ring (rainbow)
-  const OR=R*.90;
-  const steps=240;
-  for(let i=0;i<steps;i++){
-    const a0=(i/steps)*TAU-Math.PI/2;
-    const a1=((i+1)/steps)*TAU-Math.PI/2+.028;
-    X.beginPath();X.arc(CX,CY,OR,a0,a1);
-    const h=(_lastHue+i/steps*320)%360;
-    X.strokeStyle=`hsla(${h},78%,62%,.32)`;
-    X.lineWidth=5.5;X.stroke();
-  }
-
-  // ── Middle ring
-  const MR=R*.74;
-  for(let i=0;i<steps;i++){
-    const a0=(i/steps)*TAU-Math.PI/2;
-    const a1=((i+1)/steps)*TAU-Math.PI/2+.028;
-    X.beginPath();X.arc(CX,CY,MR,a0,a1);
-    const h=(_lastHue+120+i/steps*280)%360;
-    X.strokeStyle=`hsla(${h},65%,55%,.18)`;
-    X.lineWidth=3;X.stroke();
-  }
-
-  // ── SEUIL tick marks
-  for(let i=0;i<SEUILS.length-1;i++){
-    const s=SEUILS[i];
-    const sa=s.v/432*TAU-Math.PI/2;
-    const isCur=getCurSeuil(ut432).s===s.s;
-    const r0=OR-12,r1=OR+14;
-    X.beginPath();
-    X.moveTo(CX+Math.cos(sa)*r0,CY+Math.sin(sa)*r0);
-    X.lineTo(CX+Math.cos(sa)*r1,CY+Math.sin(sa)*r1);
-    X.strokeStyle=isCur?`hsla(${s.h},88%,72%,.95)`:`hsla(${s.h},68%,55%,.35)`;
-    X.lineWidth=isCur?2.2:1;X.stroke();
-
-    const lr=OR+28;
-    const fs=Math.max(7,R*.0175|0);
-    X.font=`${isCur?'500':'300'} ${fs}px 'Cinzel',serif`;
-    X.fillStyle=isCur?`hsla(${s.h},90%,76%,.96)`:`hsla(${s.h},68%,55%,.32)`;
-    X.textAlign='center';X.textBaseline='middle';
-    X.fillText(s.s,CX+Math.cos(sa)*lr,CY+Math.sin(sa)*lr);
-  }
-
-  // ── UT432 position marker
-  const ua=ut432/432*TAU-Math.PI/2;
-  const mx=CX+Math.cos(ua)*OR,my=CY+Math.sin(ua)*OR;
-  const mg=X.createRadialGradient(mx,my,0,mx,my,20);
-  mg.addColorStop(0,`hsla(${_lastHue},92%,72%,.88)`);
-  mg.addColorStop(1,`hsla(${_lastHue},92%,72%,0)`);
-  X.fillStyle=mg;X.beginPath();X.arc(mx,my,20,0,TAU);X.fill();
-  X.beginPath();X.arc(mx,my,5.5,0,TAU);
-  X.fillStyle=`hsla(${_lastHue},95%,85%,.96)`;X.fill();
-  X.beginPath();X.arc(mx,my,2.5,0,TAU);
-  X.fillStyle='rgba(255,255,255,.98)';X.fill();
-
-  // ── Mandala inner rings (slow rotate)
-  X.save();X.translate(CX,CY);X.rotate(t*0.00012*TAU);
-  const r1=R*.50;
-  X.beginPath();X.arc(0,0,r1,0,TAU);
-  X.strokeStyle=`hsla(${_lastHue},55%,55%,.058)`;X.lineWidth=.5;X.stroke();
-  for(let i=0;i<6;i++){
-    const a=i*Math.PI/3;
-    X.beginPath();X.arc(Math.cos(a)*r1,Math.sin(a)*r1,r1,0,TAU);
-    X.strokeStyle=`hsla(${_lastHue},55%,55%,.042)`;X.lineWidth=.4;X.stroke();
-  }
-  X.restore();
-
-  X.save();X.translate(CX,CY);X.rotate(-t*0.000075*TAU);
-  const r2=R*.68;
-  for(let i=0;i<12;i++){
-    const a=i*Math.PI/6;
-    X.beginPath();X.arc(Math.cos(a)*r2,Math.sin(a)*r2,r2*.30,0,TAU);
-    X.strokeStyle=`hsla(${(_lastHue+60)%360},55%,50%,.032)`;X.lineWidth=.35;X.stroke();
-  }
-  X.restore();
-
-  // ── 12 radial guide lines
-  for(let i=0;i<12;i++){
-    const a=i/12*TAU-Math.PI/2;
-    X.beginPath();
-    X.moveTo(CX+Math.cos(a)*(R*.52),CY+Math.sin(a)*(R*.52));
-    X.lineTo(CX+Math.cos(a)*OR,CY+Math.sin(a)*OR);
-    X.strokeStyle=`hsla(${_lastHue},45%,50%,.055)`;X.lineWidth=.38;X.stroke();
-  }
-}
-
-function updateSphereCenter(ut432){
-  const seuil=getCurSeuil(ut432);
-  const hue=getHue(ut432);
-  document.getElementById('sphere-time').textContent=ut432.toFixed(1);
-  document.getElementById('sphere-seuil').textContent=seuil.s;
-  document.getElementById('sphere-lbl').textContent='UT432';
-  document.getElementById('info-ut').textContent=ut432.toFixed(1);
-  document.getElementById('info-seuil').textContent=seuil.s;
-
-  // Sphere glow matches SEUIL hue
-  const sp=document.getElementById('sphere');
-  sp.style.boxShadow=`0 0 32px hsla(${hue},80%,62%,.58),0 0 65px hsla(${hue},70%,52%,.28),`+
-    `inset -7px -7px 22px rgba(0,0,0,.38),inset 7px 7px 16px rgba(255,255,200,.28)`;
-
-  // Info bar
-  const{date:fd}=frNow();
-  const hh=String(fd.getUTCHours()).padStart(2,'0'),mm=String(fd.getUTCMinutes()).padStart(2,'0'),ss=String(fd.getUTCSeconds()).padStart(2,'0');
-  document.getElementById('ib-ut').textContent=`${ut432.toFixed(1)} · ${hh}:${mm}:${ss}`;
-  document.getElementById('ib-mode').textContent=seuil.s;
-}
-
-// Sphere 3D rotation animation
+// ═══════════════════════════════════════════════════
+//  SPHERE ROTATION
+// ═══════════════════════════════════════════════════
 function updateSphereRot(dt){
   sphAngleX+=sphOmegaX*dt;
   sphAngleY+=sphOmegaY*dt;
-  // Organic damping → base gentle drift
   sphOmegaX+=(0.08*sphDir-sphOmegaX)*0.0008;
   sphOmegaY+=(0.14*sphDir-sphOmegaY)*0.0008;
   const wrap=document.getElementById('sphere-wrap');
@@ -1045,28 +729,50 @@ function updateSphereRot(dt){
   wrap.style.transform=`translate(-50%,-56%) perspective(600px) rotateX(${degX}deg) rotateY(${degY}deg)`;
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  DISPLAY UPDATE
+// ═══════════════════════════════════════════════════
+function updateDisplay(ut432){
+  const seuil=getCurSeuil(ut432);
+  const hue=getHue(ut432);
+  _lastHue+=((hue-_lastHue)*0.04);
+
+  document.getElementById('sphere-time').textContent=ut432.toFixed(1);
+  document.getElementById('sphere-seuil').textContent=seuil.s;
+
+  // Sphère : bordure + lueur colorée selon UT432
+  const sp=document.getElementById('sphere');
+  sp.style.borderColor=`hsla(${_lastHue},70%,50%,.45)`;
+  sp.style.boxShadow=`0 0 18px hsla(${_lastHue},80%,55%,.22)`;
+
+  const{date:fd}=frNow();
+  const hh=String(fd.getUTCHours()).padStart(2,'0');
+  const mm=String(fd.getUTCMinutes()).padStart(2,'0');
+  const ss=String(fd.getUTCSeconds()).padStart(2,'0');
+  document.getElementById('ib-ut').textContent=`${ut432.toFixed(1)} · ${hh}:${mm}:${ss}`;
+  document.getElementById('ib-mode').textContent=seuil.s;
+}
+
+// ═══════════════════════════════════════════════════
 //  MAIN LOOP
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 let _prevT=performance.now();
 function loop(){
   const now=performance.now();
   const dt=(now-_prevT)/1000;
   _prevT=now;
-  const t=(now-t0)/1000;
 
   const ut432=calcUT432();
-  drawRing(ut432,t);
-  updateSphereCenter(ut432);
+  updateDisplay(ut432);
   updateSphereRot(dt);
   _applyUT432Binaural(ut432);
 
   requestAnimationFrame(loop);
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  EVENTS
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 document.getElementById('btn-flux').addEventListener('click',toggleFlux);
 document.getElementById('btn-left').addEventListener('click',toggleLeft);
 document.getElementById('btn-menu').addEventListener('click',toggleMenu);
@@ -1074,7 +780,6 @@ document.getElementById('bin-bubble').addEventListener('click',toggleBinaural);
 document.getElementById('btn-minus').addEventListener('click',()=>setMasterFreq(masterFreq-9));
 document.getElementById('btn-plus').addEventListener('click',()=>setMasterFreq(masterFreq+9));
 
-// Tap sphere = full random (masterFreq unchanged)
 document.getElementById('sphere').addEventListener('click',e=>{
   e.stopPropagation();
   _initAudio();
@@ -1082,30 +787,24 @@ document.getElementById('sphere').addEventListener('click',e=>{
   doFullRandom();
 });
 
-// Click freq display = cycle presets
 document.getElementById('freq-display').addEventListener('click',()=>{
   _freqPresetIdx=(_freqPresetIdx+1)%FREQ_PRESETS.length;
   setMasterFreq(FREQ_PRESETS[_freqPresetIdx]);
 });
 
-// Close panels on outside tap
 document.addEventListener('click',e=>{
   const pl=document.getElementById('pan-left');
   const pr=document.getElementById('pan-right');
-  if(_leftOpen&&!pl.contains(e.target)&&e.target.id!=='btn-left'){closePanLeft();}
-  if(_rightOpen&&!pr.contains(e.target)&&e.target.id!=='btn-menu'){closePanRight();}
+  if(_leftOpen&&!pl.contains(e.target)&&e.target.id!=='btn-left')closePanLeft();
+  if(_rightOpen&&!pr.contains(e.target)&&e.target.id!=='btn-menu')closePanRight();
 });
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════════════════════════════
-resize();
+// ═══════════════════════════════════════════════════
 setMasterFreq(432);
 updateFreqLists();
-
-// Initial gentle rotation
 sphOmegaX=0.10;sphOmegaY=0.17;sphDir=1;
-
 loop();
 </script>
 </body>
