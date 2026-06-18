@@ -42,6 +42,7 @@ jobs:
         run: |
           mkdir -p www
           cp ../0mcha396_v2.html www/index.html
+          [ -f ../bg_mandala.jpg ] && cp ../bg_mandala.jpg www/
           for f in ../ut36_theory.html ../utc432project.html ../omcv477.html \
                    ../omcha432flux.html ../cycle432.html ../sphere432max.html \
                    ../theme432.html ../omcv450.html; do

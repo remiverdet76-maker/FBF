@@ -9,166 +9,240 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 button{border:none;outline:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;overflow:hidden;font-family:monospace;background:#000;color:#fff;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:monospace;}
 
-/* SPHERE */
+/* ── FOND MANDALA ─────────────────────────────────────────── */
+body{
+  background:url('bg_mandala.jpg') center center/cover no-repeat fixed;
+  /* vignette légère aux bords pour la lisibilité UI */
+  position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 32%, rgba(0,0,0,.28) 100%);
+}
+
+/* ── SPHÈRE SOLAIRE ───────────────────────────────────────── */
 #sphere-wrap{
   position:fixed;top:50%;left:50%;
-  transform:translate(-50%,-56%);
   z-index:10;pointer-events:all;
-  perspective:600px;
+  transform-style:preserve-3d;
 }
-#sphere{
-  width:clamp(90px,22vmin,140px);height:clamp(90px,22vmin,140px);
-  border-radius:50%;
-  background:#000;border:1px solid #333;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transform-style:preserve-3d;
-  animation:breathe 4.8s ease-in-out infinite;
+#sphere-scene{
+  position:relative;
+  width:clamp(180px,45vmin,270px);
+  aspect-ratio:1/1;
+  margin-top:-56%;
+  /* centrage local : compensé par -50% -50% dans le JS */
+  filter:drop-shadow(0 0 40px rgba(246,183,60,.50));
 }
-@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
-.sphere-time{font-size:clamp(1.1rem,4.5vmin,1.8rem);color:#fff;line-height:1;}
-.sphere-lbl{font-size:.55rem;color:#555;margin-top:.25em;letter-spacing:.2em;}
-.sphere-seuil{font-size:.5rem;color:#444;margin-top:.1em;letter-spacing:.1em;}
+#sphere-3d{
+  width:100%;height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  animation:respire 9s ease-in-out infinite;
+}
+@keyframes respire{0%,100%{transform:scale(.96)}50%{transform:scale(1.0)}}
 
-/* MASTER FREQ */
+/* couches SVG en profondeur Z */
+.sph-c{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  transform-style:preserve-3d;
+}
+.sph-c svg{width:100%;height:100%;overflow:visible;}
+
+.sph-rayons  {--tz:-120px;transform:translateZ(-120px);animation:tA 120s linear infinite;}
+.sph-anext   {--tz:-40px; transform:translateZ(-40px); animation:tB 90s linear infinite;}
+.sph-amed    {--tz:20px;  transform:translateZ(20px);  animation:tA 70s linear infinite;}
+.sph-petales {--tz:60px;  transform:translateZ(60px);  animation:tB 55s linear infinite;}
+.sph-coeur   {--tz:110px; transform:translateZ(110px); animation:tA 40s linear infinite;}
+.sph-noyau   {--tz:160px; transform:translateZ(160px);}
+
+@keyframes tA{to{transform:translateZ(var(--tz)) rotate(360deg);}}
+@keyframes tB{to{transform:translateZ(var(--tz)) rotate(-360deg);}}
+
+/* volume sphérique (ombrage 3D) */
+#sphere-volume{
+  position:absolute;inset:8%;border-radius:50%;
+  transform:translateZ(170px);
+  background:radial-gradient(circle at 38% 32%,
+    rgba(255,253,244,.55) 0%,rgba(255,233,168,.12) 30%,
+    rgba(200,121,26,.10) 62%,rgba(154,78,14,.30) 100%);
+  mix-blend-mode:soft-light;pointer-events:none;
+}
+
+/* overlay UT432 au centre de la sphère */
+#sphere-overlay{
+  position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:20;text-align:center;pointer-events:none;
+  transform-style:preserve-3d;
+}
+#sphere-time{
+  display:block;
+  font-size:clamp(1.0rem,4vmin,1.6rem);
+  color:#2a0800;font-weight:bold;line-height:1;
+  text-shadow:0 1px 2px rgba(255,200,80,.6),0 0 8px rgba(255,160,0,.4);
+}
+#sphere-lbl{
+  display:block;font-size:.50rem;color:#5a2800;
+  letter-spacing:.22em;text-transform:uppercase;margin-top:.3em;
+}
+#sphere-seuil{
+  display:block;font-size:.44rem;color:#7a3a00;
+  letter-spacing:.14em;margin-top:.1em;
+}
+
+/* ── FRÉQUENCE MAÎTRE ────────────────────────────────────── */
 #freq-display{
   position:fixed;bottom:52px;left:50%;transform:translateX(-50%);
   z-index:20;cursor:pointer;text-align:center;user-select:none;
+  background:rgba(0,0,0,.35);padding:6px 16px;border-radius:12px;
+  backdrop-filter:blur(6px);
 }
-#freq-val{font-size:clamp(1.6rem,6vmin,2.6rem);color:#f00;line-height:1;}
-#freq-label{font-size:8px;letter-spacing:.22em;color:#444;text-transform:uppercase;margin-top:5px;}
+#freq-val{
+  font-size:clamp(1.5rem,6vmin,2.4rem);color:#f60;line-height:1;
+  text-shadow:0 0 12px rgba(255,160,0,.6);
+}
+#freq-label{font-size:7px;letter-spacing:.22em;color:rgba(255,180,80,.55);text-transform:uppercase;margin-top:4px;}
 
-/* FLUX TOGGLE */
+/* ── FLUX TOGGLE ─────────────────────────────────────────── */
 #btn-flux{
-  position:fixed;top:16px;left:50%;transform:translateX(-50%);
-  z-index:30;padding:6px 22px;border-radius:20px;
-  background:rgba(0,255,100,.08);border:1px solid rgba(0,255,100,.38);
-  color:rgba(0,255,120,.88);font-family:monospace;
-  font-size:11px;letter-spacing:.20em;text-transform:uppercase;transition:all .28s;
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  z-index:30;padding:6px 20px;border-radius:20px;
+  background:rgba(0,0,0,.4);border:1px solid rgba(60,255,120,.5);
+  color:rgba(80,255,140,.95);font-family:monospace;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  transition:all .28s;backdrop-filter:blur(6px);
 }
 #btn-flux.flux-off{
-  top:auto;bottom:16px;
-  background:rgba(255,60,60,.08);border-color:rgba(255,80,80,.35);
-  color:rgba(255,100,100,.85);
+  top:auto;bottom:14px;
+  border-color:rgba(255,80,60,.5);color:rgba(255,110,80,.95);
 }
 
-/* +/- BUTTONS */
+/* ── +/- BOUTONS ─────────────────────────────────────────── */
 #btn-minus,#btn-plus{
   position:fixed;top:50%;transform:translateY(-70%);
-  z-index:30;width:34px;height:34px;border-radius:50%;
-  background:rgba(80,80,180,.12);border:1px solid rgba(100,120,255,.38);
-  color:rgba(150,190,255,.88);font-size:20px;
-  display:flex;align-items:center;justify-content:center;transition:all .18s;
+  z-index:30;width:36px;height:36px;border-radius:50%;
+  background:rgba(0,0,0,.40);border:1px solid rgba(255,200,80,.35);
+  color:rgba(255,210,100,.90);font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;backdrop-filter:blur(4px);
 }
-#btn-minus{left:62px;}
-#btn-plus{right:62px;}
-#btn-minus:active,#btn-plus:active{background:rgba(80,80,180,.28);transform:translateY(-70%) scale(.93);}
+#btn-minus{left:14px;}
+#btn-plus{right:14px;}
+#btn-minus:active,#btn-plus:active{background:rgba(255,160,0,.20);transform:translateY(-70%) scale(.93);}
 
-/* LEFT PANEL BUTTON */
+/* ── BOUTON GAUCHE ───────────────────────────────────────── */
 #btn-left{
-  position:fixed;left:14px;top:50%;transform:translateY(-70%);
-  z-index:30;width:42px;height:42px;border-radius:50%;
-  background:rgba(80,40,180,.12);border:1px solid rgba(140,80,255,.38);
-  color:rgba(180,140,255,.88);font-size:18px;
-  display:flex;align-items:center;justify-content:center;transition:all .20s;
+  position:fixed;left:14px;bottom:80px;
+  z-index:30;width:44px;height:44px;border-radius:50%;
+  background:rgba(0,0,0,.40);border:1px solid rgba(200,120,255,.40);
+  color:rgba(220,160,255,.90);font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .20s;backdrop-filter:blur(4px);
 }
 
-/* MENU BUTTON */
+/* ── MENU BOUTON ─────────────────────────────────────────── */
 #btn-menu{
   position:fixed;top:14px;right:14px;z-index:30;
-  width:36px;height:36px;border-radius:9px;
-  background:rgba(60,60,140,.10);border:1px solid rgba(120,100,255,.28);
-  color:rgba(180,150,255,.78);font-size:17px;
-  display:flex;align-items:center;justify-content:center;transition:all .18s;
+  width:38px;height:38px;border-radius:10px;
+  background:rgba(0,0,0,.40);border:1px solid rgba(180,140,255,.32);
+  color:rgba(210,170,255,.85);font-size:17px;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
 }
 
-/* BINAURAL BUBBLE */
+/* ── BULLE BINAURAL ──────────────────────────────────────── */
 #bin-bubble{
-  position:fixed;bottom:16px;right:16px;z-index:25;
-  width:50px;height:50px;border-radius:50%;
-  background:rgba(0,160,255,.08);border:1px solid rgba(0,190,255,.32);
-  color:rgba(0,210,255,.88);font-size:10px;letter-spacing:.06em;
+  position:fixed;bottom:14px;right:14px;z-index:25;
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(0,0,0,.40);border:1.5px solid rgba(0,200,255,.40);
+  color:rgba(0,220,255,.90);font-size:10px;letter-spacing:.06em;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .26s;font-family:monospace;
+  cursor:pointer;transition:all .26s;backdrop-filter:blur(4px);font-family:monospace;
 }
 #bin-bubble.active{
-  background:rgba(255,80,40,.10);border-color:rgba(255,100,60,.48);
-  color:rgba(255,140,80,.95);
+  border-color:rgba(255,160,60,.60);color:rgba(255,180,80,.96);
   animation:bubPulse 2.2s ease-in-out infinite;
 }
-@keyframes bubPulse{0%,100%{box-shadow:0 0 14px rgba(255,60,20,.25);}50%{box-shadow:0 0 28px rgba(255,60,20,.48);}}
+@keyframes bubPulse{0%,100%{box-shadow:0 0 12px rgba(255,140,0,.30);}50%{box-shadow:0 0 28px rgba(255,140,0,.55);}}
 #bin-bubble-top{font-size:16px;line-height:1;}
 #bin-bubble-sub{font-size:7px;letter-spacing:.06em;margin-top:1px;opacity:.6;}
 
-/* PANELS */
+/* ── PANNEAUX ────────────────────────────────────────────── */
 #pan-left{
-  position:fixed;top:0;left:0;bottom:0;width:272px;
-  background:#080808;border-right:1px solid #1a1a1a;
-  transform:translateX(-272px);transition:transform .34s cubic-bezier(.4,0,.2,1);
+  position:fixed;top:0;left:0;bottom:0;width:275px;
+  background:rgba(4,2,12,.95);border-right:1px solid rgba(200,140,60,.18);
+  backdrop-filter:blur(18px);
+  transform:translateX(-275px);transition:transform .34s cubic-bezier(.4,0,.2,1);
   z-index:100;overflow-y:auto;display:flex;flex-direction:column;
-  scrollbar-width:thin;scrollbar-color:#222 transparent;
+  scrollbar-width:thin;scrollbar-color:rgba(200,140,60,.18) transparent;
 }
 #pan-left.open{transform:translateX(0);}
 #pan-right{
   position:fixed;top:0;right:0;bottom:0;width:275px;
-  background:#080808;border-left:1px solid #1a1a1a;
+  background:rgba(4,2,12,.95);border-left:1px solid rgba(200,140,60,.18);
+  backdrop-filter:blur(18px);
   transform:translateX(275px);transition:transform .34s cubic-bezier(.4,0,.2,1);
   z-index:100;overflow-y:auto;
-  scrollbar-width:thin;scrollbar-color:#222 transparent;
+  scrollbar-width:thin;scrollbar-color:rgba(200,140,60,.18) transparent;
 }
 #pan-right.open{transform:translateX(0);}
 
 .pan-hd{
-  padding:14px 13px 11px;border-bottom:1px solid #111;
+  padding:14px 13px 11px;border-bottom:1px solid rgba(200,140,60,.10);
   display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-  position:sticky;top:0;background:#080808;z-index:2;
+  position:sticky;top:0;background:rgba(4,2,12,.98);z-index:2;
 }
-.pan-title{font-size:.58rem;letter-spacing:.32em;text-transform:uppercase;color:#444;}
+.pan-title{font-size:.56rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(200,150,60,.55);}
 .pan-close{
   width:24px;height:24px;border-radius:6px;
-  background:transparent;border:1px solid #1e1e1e;
-  color:#333;font-size:12px;cursor:pointer;
+  background:transparent;border:1px solid rgba(200,140,60,.15);
+  color:rgba(200,150,60,.40);font-size:12px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:color .16s;
 }
-.pan-close:hover{color:#888;}
-.psec{padding:11px 13px;border-bottom:1px solid #0e0e0e;}
-.psec-h{font-size:.45rem;letter-spacing:.28em;text-transform:uppercase;color:#2e2e2e;margin-bottom:8px;}
+.pan-close:hover{color:rgba(255,200,80,.85);}
+.psec{padding:11px 13px;border-bottom:1px solid rgba(255,255,255,.04);}
+.psec-h{font-size:.44rem;letter-spacing:.26em;text-transform:uppercase;color:rgba(200,150,60,.28);margin-bottom:8px;}
 
 /* FREQ ROWS */
-.freq-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid #0e0e0e;}
+.freq-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);}
 .freq-row:last-child{border-bottom:none;}
 .freq-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.freq-name{font-size:.52rem;color:#444;flex:1;letter-spacing:.04em;}
-.freq-hz{font-size:.58rem;min-width:52px;text-align:right;}
-.freq-row.is-active{background:#111;border-radius:4px;padding:4px 5px;}
+.freq-name{font-size:.50rem;color:rgba(220,180,100,.45);flex:1;letter-spacing:.04em;}
+.freq-hz{font-size:.56rem;min-width:52px;text-align:right;}
+.freq-row.is-active{background:rgba(255,200,80,.06);border-radius:4px;padding:4px 5px;}
 
 /* SLIDERS */
 .sl-wrap{margin:5px 0;}
-.sl-lbl{display:flex;justify-content:space-between;font-size:.50rem;color:#333;margin-bottom:3px;letter-spacing:.04em;}
-.sl-lbl span{color:#666;}
-input[type=range]{width:100%;height:2px;-webkit-appearance:none;background:#1a1a1a;border-radius:2px;cursor:pointer;outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#444;cursor:pointer;}
+.sl-lbl{display:flex;justify-content:space-between;font-size:.48rem;color:rgba(200,160,80,.38);margin-bottom:3px;letter-spacing:.04em;}
+.sl-lbl span{color:rgba(255,200,80,.65);}
+input[type=range]{width:100%;height:2px;-webkit-appearance:none;background:rgba(200,140,60,.20);border-radius:2px;cursor:pointer;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:rgba(246,183,60,.80);cursor:pointer;}
 
 /* BINAURAL BTN */
 .bin-btn{
   width:100%;padding:8px;margin-top:5px;
-  font-family:monospace;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;
+  font-family:monospace;font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;
   border-radius:6px;cursor:pointer;transition:all .22s;
-  background:rgba(0,170,255,.07);border:1px solid rgba(0,190,255,.22);
-  color:rgba(0,210,255,.82);
+  background:rgba(0,180,255,.08);border:1px solid rgba(0,200,255,.22);
+  color:rgba(0,220,255,.80);
 }
-.bin-btn.on{background:rgba(255,80,50,.08);border-color:rgba(255,100,70,.30);color:rgba(255,140,100,.88);}
+.bin-btn.on{background:rgba(255,120,40,.10);border-color:rgba(255,140,60,.32);color:rgba(255,170,80,.90);}
 
 /* MENU ITEMS */
 .menu-item{
   display:flex;align-items:center;gap:11px;
-  padding:13px;border-bottom:1px solid #0e0e0e;cursor:pointer;transition:background .15s;
+  padding:13px;border-bottom:1px solid rgba(200,140,60,.07);
+  cursor:pointer;transition:background .15s;
 }
-.menu-item:active{background:#0e0e0e;}
+.menu-item:active{background:rgba(200,140,60,.08);}
 .mi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.mi-txt{font-size:.62rem;color:#bbb;letter-spacing:.06em;}
-.mi-sub{font-size:.48rem;color:#333;margin-top:2px;letter-spacing:.03em;}
+.mi-txt{font-size:.62rem;color:rgba(240,210,140,.88);letter-spacing:.06em;}
+.mi-sub{font-size:.48rem;color:rgba(200,160,80,.38);margin-top:2px;letter-spacing:.03em;}
 
 /* IFRAME OVERLAY */
 #iframe-overlay{
@@ -182,62 +256,67 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   padding:10px 14px;background:#080808;border-bottom:1px solid #1a1a1a;flex-shrink:0;
 }
 #iframe-back{
-  padding:5px 12px;border-radius:8px;border:1px solid #222;
-  background:transparent;color:#888;font-size:12px;cursor:pointer;font-family:monospace;
+  padding:5px 12px;border-radius:8px;border:1px solid #333;
+  background:transparent;color:#aaa;font-size:12px;cursor:pointer;font-family:monospace;
 }
-#iframe-title{font-size:.60rem;color:#555;letter-spacing:.06em;}
+#iframe-title{font-size:.60rem;color:#666;letter-spacing:.06em;}
 #iframe-frame{flex:1;border:none;background:#000;}
 
 /* FLASH */
 #flash{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .3s;}
-#flash.show{opacity:1;background:rgba(255,255,255,.05);}
+#flash.show{opacity:1;background:rgba(255,220,100,.06);}
 
 /* INFO BAR */
 #info-bar{
   position:fixed;bottom:0;left:0;right:0;z-index:20;
-  padding:3px 10px;background:#000;border-top:1px solid #0e0e0e;
+  padding:3px 10px;background:rgba(0,0,0,.60);
   display:flex;align-items:center;justify-content:space-between;
-  font-size:.44rem;color:#2a2a2a;letter-spacing:.05em;pointer-events:none;
+  font-size:.42rem;color:rgba(200,160,80,.35);letter-spacing:.05em;pointer-events:none;
 }
 </style>
 </head>
 <body>
 
-<!-- SPHERE -->
+<!-- ── SPHÈRE SOLAIRE DORÉE ──────────────────────────────── -->
 <div id="sphere-wrap">
-  <div id="sphere">
-    <span class="sphere-time" id="sphere-time">432</span>
-    <span class="sphere-lbl" id="sphere-lbl">UT432</span>
-    <span class="sphere-seuil" id="sphere-seuil">216</span>
+  <div id="sphere-scene">
+    <div id="sphere-3d">
+      <!-- couches SVG générées en JS -->
+    </div>
+    <div id="sphere-volume"></div>
+    <!-- UT432 display centré -->
+    <div id="sphere-overlay">
+      <span id="sphere-time">432</span>
+      <span id="sphere-lbl">UT432</span>
+      <span id="sphere-seuil">216</span>
+    </div>
   </div>
 </div>
 
-<!-- MASTER FREQ -->
+<!-- ── FRÉQUENCE MAÎTRE ───────────────────────────────────── -->
 <div id="freq-display">
   <div id="freq-val">432 Hz</div>
   <div id="freq-label">Fréquence Maître · clic = cycle</div>
 </div>
 
-<!-- FLUX -->
+<!-- ── FLUX ──────────────────────────────────────────────── -->
 <button id="btn-flux" class="flux-off">▶ FLUX ON</button>
 
-<!-- +/- -->
+<!-- ── +/- ───────────────────────────────────────────────── -->
 <button id="btn-minus">−</button>
 <button id="btn-plus">+</button>
 
-<!-- LEFT PANEL OPEN -->
+<!-- ── BOUTONS PANNEAUX ───────────────────────────────────── -->
 <button id="btn-left">⬡</button>
-
-<!-- MENU -->
 <button id="btn-menu">☰</button>
 
-<!-- BINAURAL BUBBLE -->
+<!-- ── BULLE BINAURAL ────────────────────────────────────── -->
 <div id="bin-bubble">
   <span id="bin-bubble-top">∿</span>
   <span id="bin-bubble-sub">binn.</span>
 </div>
 
-<!-- LEFT PANEL -->
+<!-- ── PANNEAU GAUCHE ────────────────────────────────────── -->
 <div id="pan-left">
   <div class="pan-hd">
     <span class="pan-title">Binaural · FX</span>
@@ -271,12 +350,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     <div id="freq-right-list"></div>
   </div>
   <div class="psec">
-    <div id="bin-active-display" style="font-size:.52rem;color:#666;min-height:36px;line-height:1.6;"></div>
+    <div id="bin-active-display" style="font-size:.50rem;color:rgba(220,180,80,.65);min-height:36px;line-height:1.6;"></div>
     <button class="bin-btn" id="bin-play-btn" onclick="toggleBinaural()">▶ Activer Binaural</button>
   </div>
 </div>
 
-<!-- RIGHT PANEL -->
+<!-- ── PANNEAU DROIT ──────────────────────────────────────── -->
 <div id="pan-right">
   <div class="pan-hd">
     <span class="pan-title">Modules</span>
@@ -316,7 +395,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   </div>
 </div>
 
-<!-- IFRAME -->
+<!-- ── IFRAME ──────────────────────────────────────────────── -->
 <div id="iframe-overlay">
   <div id="iframe-bar">
     <button id="iframe-back" onclick="closeIframe()">← Retour</button>
@@ -325,10 +404,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <iframe id="iframe-frame" sandbox="allow-scripts allow-same-origin allow-forms" allow="autoplay"></iframe>
 </div>
 
-<!-- FLASH -->
+<!-- ── FLASH / INFO ───────────────────────────────────────── -->
 <div id="flash"></div>
-
-<!-- INFO BAR -->
 <div id="info-bar">
   <span>Omcha 396 · UT432</span>
   <span id="ib-ut">—</span>
@@ -342,12 +419,102 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════
+//  SPHÈRE SOLAIRE — génération SVG (d'après SphereSolaire Omcha 4K)
+// ═══════════════════════════════════════════════════
+(function buildSphere(){
+  const NS='http://www.w3.org/2000/svg';
+  const C=500, sp=document.getElementById('sphere-3d');
+
+  function layer(cls){
+    const wrap=document.createElement('div');wrap.className='sph-c sph-'+cls;
+    const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 1000 1000');
+    wrap.appendChild(s);sp.appendChild(wrap);return s;
+  }
+  function el(p,tag,a){
+    const e=document.createElementNS(NS,tag);
+    for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e;
+  }
+  function defs(s){
+    const d=document.createElementNS(NS,'defs');
+    d.innerHTML=`
+      <radialGradient id="gOr" cx="40%" cy="35%" r="75%">
+        <stop offset="0%"   stop-color="#FFFDF4"/>
+        <stop offset="22%"  stop-color="#FFE9A8"/>
+        <stop offset="55%"  stop-color="#F6B73C"/>
+        <stop offset="82%"  stop-color="#C8791A"/>
+        <stop offset="100%" stop-color="#9A4E0E"/>
+      </radialGradient>
+      <radialGradient id="gNoyau" cx="45%" cy="40%" r="70%">
+        <stop offset="0%"   stop-color="#FFFFFF"/>
+        <stop offset="35%"  stop-color="#FFF2C0"/>
+        <stop offset="100%" stop-color="#F6A92C"/>
+      </radialGradient>
+      <linearGradient id="gRayon" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#F6B73C" stop-opacity="0"/>
+        <stop offset="55%"  stop-color="#F6B73C" stop-opacity=".9"/>
+        <stop offset="100%" stop-color="#FFE9A8"/>
+      </linearGradient>`;
+    s.appendChild(d);
+  }
+
+  // Rayons solaires (48 rayons alternés)
+  const sR=layer('rayons');defs(sR);
+  for(let i=0;i<48;i++){
+    const a=(360/48)*i;
+    const long=i%2?470:430,larg=i%2?5:9;
+    el(sR,'rect',{x:C-larg/2,y:C-long,width:larg,height:long-150,
+      fill:'url(#gRayon)',rx:larg/2,transform:`rotate(${a} ${C} ${C})`,opacity:.92});
+  }
+
+  // Anneau dentelé avec perles
+  function buildAnneau(s,r,n,t){
+    defs(s);
+    el(s,'circle',{cx:C,cy:C,r,fill:'none',stroke:'url(#gOr)','stroke-width':10});
+    el(s,'circle',{cx:C,cy:C,r:r-3,fill:'none',stroke:'#9A4E0E','stroke-width':1,opacity:.4});
+    for(let i=0;i<n;i++){
+      const a=(360/n)*i*Math.PI/180;
+      const x=C+Math.cos(a)*r,y=C+Math.sin(a)*r;
+      el(s,'circle',{cx:x,cy:y,r:t,fill:'url(#gOr)',stroke:'#9A4E0E','stroke-width':1});
+      el(s,'circle',{cx:x-t*.3,cy:y-t*.3,r:t*.32,fill:'#FFFDF4',opacity:.8});
+    }
+  }
+  buildAnneau(layer('anext'),360,40,14);
+  buildAnneau(layer('amed'),265,30,11);
+
+  // Couronne de pétales (18 gouttes)
+  const sP=layer('petales');defs(sP);
+  for(let i=0;i<18;i++){
+    const a=(360/18)*i;
+    el(sP,'path',{
+      d:`M${C} ${C-150}C${C+34} ${C-120},${C+30} ${C-60},${C} ${C-40}C${C-30} ${C-60},${C-34} ${C-120},${C} ${C-150}Z`,
+      fill:'url(#gOr)',stroke:'#9A4E0E','stroke-width':1.4,transform:`rotate(${a} ${C} ${C})`});
+    el(sP,'ellipse',{cx:C,cy:C-118,rx:7,ry:18,fill:'#FFFDF4',opacity:.55,
+      transform:`rotate(${a} ${C} ${C})`});
+  }
+
+  // Cœur fleur (24 pétales intérieures)
+  const sC=layer('coeur');defs(sC);
+  for(let i=0;i<24;i++){
+    const a=(360/24)*i;
+    el(sC,'path',{
+      d:`M${C} ${C-95}Q${C+18} ${C-55},${C} ${C-25}Q${C-18} ${C-55},${C} ${C-95}Z`,
+      fill:'url(#gNoyau)',stroke:'#C8791A','stroke-width':1,transform:`rotate(${a} ${C} ${C})`});
+  }
+
+  // Noyau lumineux
+  const sN=layer('noyau');defs(sN);
+  el(sN,'circle',{cx:C,cy:C,r:48,fill:'url(#gNoyau)'});
+  el(sN,'circle',{cx:C,cy:C,r:20,fill:'#FFFFFF'});
+  el(sN,'circle',{cx:C,cy:C,r:48,fill:'none',stroke:'#C8791A','stroke-width':2,opacity:.6});
+})();
+
+// ═══════════════════════════════════════════════════
 //  CONSTANTES
 // ═══════════════════════════════════════════════════
 const TAU=Math.PI*2;
-const LON_D=2.35, LAT_R=48.85*Math.PI/180;
+const LON_D=2.35;
 
-// 9 seuils UT432 — nommés par leur valeur numérique
+// 9 seuils UT432 — valeurs numériques uniquement
 const SEUILS=[
   {v:0,  h:280,s:'0'},   {v:54, h:250,s:'54'},
   {v:108,h:200,s:'108'}, {v:162,h:155,s:'162'},
@@ -356,7 +523,7 @@ const SEUILS=[
   {v:432,h:295,s:'432'},
 ];
 
-// 7 paires binaurales — ratios 10:11:12 — libellés neutres
+// 7 paires binaurales — ratios 10:11:12
 const RATIOS=[
   {name:'Δ1 · 10:11',    rL:1,      rR:11/10,  color:'#ff6060'},
   {name:'Δ2 · 10:11',    rL:10/11,  rR:1,      color:'#ff9050'},
@@ -372,20 +539,10 @@ const FREQ_PRESETS=[108,216,288,360,396,432,528,639,741,852,963];
 // ═══════════════════════════════════════════════════
 //  ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════
-let masterFreq=432;
-let masterVol=0.75;
-let reverbAmt=0.28;
-let binDepth=1.0;
-let flowing=false;
-let binauralActive=false;
-let activePairIdx=0;
-let _autoTimer=null;
-let _autoIntervalMin=0;
-let _freqPresetIdx=5; // 432
-
-let sphOmegaX=0.10, sphOmegaY=0.17;
-let sphAngleX=0, sphAngleY=0;
-let sphDir=1;
+let masterFreq=432,masterVol=0.75,reverbAmt=0.28,binDepth=1.0;
+let flowing=false,binauralActive=false,activePairIdx=0;
+let _autoTimer=null,_autoIntervalMin=0,_freqPresetIdx=5;
+let sphOmegaX=0.10,sphOmegaY=0.17,sphAngleX=0,sphAngleY=0,sphDir=1;
 let _lastHue=48;
 
 // ═══════════════════════════════════════════════════
@@ -393,27 +550,20 @@ let _lastHue=48;
 // ═══════════════════════════════════════════════════
 function lastSunOf(y,m){
   let d=new Date(Date.UTC(y,m+1,0));
-  while(d.getUTCDay()!==0)d.setUTCDate(d.getUTCDate()-1);
-  return d;
+  while(d.getUTCDay()!==0)d.setUTCDate(d.getUTCDate()-1);return d;
 }
 function frOff(n){
-  const y=n.getUTCFullYear();
-  const s=lastSunOf(y,2),e=lastSunOf(y,9);
-  s.setUTCHours(1,0,0,0);e.setUTCHours(1,0,0,0);
-  return(n>=s&&n<e)?2:1;
+  const y=n.getUTCFullYear(),s=lastSunOf(y,2),e=lastSunOf(y,9);
+  s.setUTCHours(1,0,0,0);e.setUTCHours(1,0,0,0);return(n>=s&&n<e)?2:1;
 }
-function frNow(){
-  const n=new Date(),o=frOff(n);
-  return{date:new Date(n.getTime()+o*3600000),off:o};
-}
+function frNow(){const n=new Date(),o=frOff(n);return{date:new Date(n.getTime()+o*3600000),off:o};}
 function eqT(fd){
   const doy=Math.floor((fd-new Date(fd.getFullYear(),0,0))/86400000);
   const B=(360/365*(doy-81))*Math.PI/180;
   return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);
 }
 function calcUT432(){
-  const{date:fd,off}=frNow();
-  const eot=eqT(fd);
+  const{date:fd,off}=frNow();const eot=eqT(fd);
   const m=(fd.getUTCHours()-off)*60+fd.getUTCMinutes()+fd.getUTCSeconds()/60;
   return((m+LON_D/15*60+eot)/1440*432+432)%432;
 }
@@ -421,68 +571,44 @@ function getHue(ut){
   for(let i=0;i<SEUILS.length-1;i++){
     const a=SEUILS[i],b=SEUILS[i+1];
     if(ut>=a.v&&ut<b.v){
-      const t=(ut-a.v)/(b.v-a.v);
-      let dh=b.h-a.h;
-      if(dh>180)dh-=360;if(dh<-180)dh+=360;
-      return(a.h+dh*t+360)%360;
+      const t=(ut-a.v)/(b.v-a.v);let dh=b.h-a.h;
+      if(dh>180)dh-=360;if(dh<-180)dh+=360;return(a.h+dh*t+360)%360;
     }
   }
   return SEUILS[SEUILS.length-1].h;
 }
-function getCurSeuil(ut){
-  let c=SEUILS[0];
-  for(const s of SEUILS)if(ut>=s.v)c=s;
-  return c;
-}
+function getCurSeuil(ut){let c=SEUILS[0];for(const s of SEUILS)if(ut>=s.v)c=s;return c;}
 
 // ═══════════════════════════════════════════════════
 //  AUDIO ENGINE — ANTI-CRACK OBLIGATOIRE
 // ═══════════════════════════════════════════════════
-let _actx=null,_limiter=null,_masterGain=null;
-let _dryGain=null,_wetGain=null;
+let _actx=null,_limiter=null,_masterGain=null,_dryGain=null,_wetGain=null;
 let _binL=null,_binR=null,_binGL=null,_binGR=null,_merger=null;
 let _audioReady=false;
 
 function _initAudio(){
   if(_audioReady)return;
   _actx=new(window.AudioContext||window.webkitAudioContext)();
-
   // LIMITEUR OBLIGATOIRE — plafond −3.6 dB — NE JAMAIS RETIRER
   _limiter=_actx.createDynamicsCompressor();
-  _limiter.threshold.value=-3.6;
-  _limiter.knee.value=0;
-  _limiter.ratio.value=20;
-  _limiter.attack.value=0.001;
-  _limiter.release.value=0.05;
+  _limiter.threshold.value=-3.6;_limiter.knee.value=0;
+  _limiter.ratio.value=20;_limiter.attack.value=0.001;_limiter.release.value=0.05;
   _limiter.connect(_actx.destination);
-
-  _masterGain=_actx.createGain();
-  _masterGain.gain.value=masterVol;
-
+  _masterGain=_actx.createGain();_masterGain.gain.value=masterVol;
   _dryGain=_actx.createGain();_dryGain.gain.value=1-reverbAmt;
   _wetGain=_actx.createGain();_wetGain.gain.value=reverbAmt;
-
   const _delay=_actx.createDelay(2.0);_delay.delayTime.value=0.12;
   const _fb=_actx.createGain();_fb.gain.value=0.38;
-  const _lpf=_actx.createBiquadFilter();
-  _lpf.type='lowpass';_lpf.frequency.value=1800;_lpf.Q.value=0.5;
-
-  _masterGain.connect(_dryGain);
-  _masterGain.connect(_lpf);
-  _lpf.connect(_delay);
-  _delay.connect(_fb);
-  _fb.connect(_delay);
-  _delay.connect(_wetGain);
-  _dryGain.connect(_limiter);
-  _wetGain.connect(_limiter);
-
+  const _lpf=_actx.createBiquadFilter();_lpf.type='lowpass';_lpf.frequency.value=1800;_lpf.Q.value=0.5;
+  _masterGain.connect(_dryGain);_masterGain.connect(_lpf);
+  _lpf.connect(_delay);_delay.connect(_fb);_fb.connect(_delay);_delay.connect(_wetGain);
+  _dryGain.connect(_limiter);_wetGain.connect(_limiter);
   _audioReady=true;
 }
 
 // Rampe douce — jamais d'affectation .value brutale en cours de jeu
 function _ramp(param,val,tau){
-  if(!_actx)return;
-  param.setTargetAtTime(Math.max(0,val),_actx.currentTime,tau||0.06);
+  if(!_actx)return;param.setTargetAtTime(Math.max(0,val),_actx.currentTime,tau||0.06);
 }
 
 function _startBinaural(idx){
@@ -491,46 +617,30 @@ function _startBinaural(idx){
   const pair=RATIOS[idx];
   const safeL=Math.max(36,Math.min(864,masterFreq*pair.rL));
   const safeR=Math.max(36,Math.min(864,masterFreq*pair.rR));
-
-  _merger=_actx.createChannelMerger(2);
-  _merger.connect(_masterGain);
+  _merger=_actx.createChannelMerger(2);_merger.connect(_masterGain);
   _binGL=_actx.createGain();_binGL.gain.value=0;
   _binGR=_actx.createGain();_binGR.gain.value=0;
-  _binGL.connect(_merger,0,0);
-  _binGR.connect(_merger,0,1);
-
-  _binL=_actx.createOscillator();
-  _binL.type='sine';_binL.frequency.value=safeL;
+  _binGL.connect(_merger,0,0);_binGR.connect(_merger,0,1);
+  _binL=_actx.createOscillator();_binL.type='sine';_binL.frequency.value=safeL;
   _binL.connect(_binGL);_binL.start();
-
-  _binR=_actx.createOscillator();
-  _binR.type='sine';_binR.frequency.value=safeR;
+  _binR=_actx.createOscillator();_binR.type='sine';_binR.frequency.value=safeR;
   _binR.connect(_binGR);_binR.start();
-
-  // Gain ∝ 1/√(voices actives) — anti-crack
-  const tgt=0.36*binDepth/Math.sqrt(2);
-  const now=_actx.currentTime;
-  _binGL.gain.setTargetAtTime(tgt,now,0.10);
-  _binGR.gain.setTargetAtTime(tgt,now,0.10);
+  const tgt=0.36*binDepth/Math.sqrt(2);const now=_actx.currentTime;
+  _binGL.gain.setTargetAtTime(tgt,now,0.10);_binGR.gain.setTargetAtTime(tgt,now,0.10);
 }
 
 function _stopBinaural(immediate){
   if(!_actx)return;
-  const tau=immediate?0.02:0.08;
-  const now=_actx.currentTime;
+  const tau=immediate?0.02:0.08;const now=_actx.currentTime;
   if(_binGL)_binGL.gain.setTargetAtTime(0,now,tau);
   if(_binGR)_binGR.gain.setTargetAtTime(0,now,tau);
-  const capGL=_binGL,capGR=_binGR,capL=_binL,capR=_binR,capM=_merger;
-  const delay=(tau*8+0.1)*1000;
+  const cGL=_binGL,cGR=_binGR,cL=_binL,cR=_binR,cM=_merger;
   setTimeout(()=>{
-    try{capL&&capL.stop();}catch(e){}
-    try{capL&&capL.disconnect();}catch(e){}
-    try{capR&&capR.stop();}catch(e){}
-    try{capR&&capR.disconnect();}catch(e){}
-    try{capGL&&capGL.disconnect();}catch(e){}
-    try{capGR&&capGR.disconnect();}catch(e){}
-    try{capM&&capM.disconnect();}catch(e){}
-  },delay);
+    try{cL&&cL.stop();}catch(e){}try{cL&&cL.disconnect();}catch(e){}
+    try{cR&&cR.stop();}catch(e){}try{cR&&cR.disconnect();}catch(e){}
+    try{cGL&&cGL.disconnect();}catch(e){}try{cGR&&cGR.disconnect();}catch(e){}
+    try{cM&&cM.disconnect();}catch(e){}
+  },(tau*8+0.1)*1000);
   _binL=_binR=_binGL=_binGR=_merger=null;
 }
 
@@ -550,27 +660,19 @@ function _updateBinauralFreqs(idx){
 function setMasterVol(v){
   masterVol=Math.max(0,Math.min(1,v));
   if(_masterGain&&_audioReady)_ramp(_masterGain.gain,masterVol,0.06);
-  const el=document.getElementById('sv-vol');
-  if(el)el.textContent=Math.round(masterVol*100)+'%';
+  const el=document.getElementById('sv-vol');if(el)el.textContent=Math.round(masterVol*100)+'%';
 }
 function setReverb(v){
   reverbAmt=Math.max(0,Math.min(1,v));
-  if(_dryGain&&_audioReady){
-    _ramp(_dryGain.gain,1-reverbAmt,0.06);
-    _ramp(_wetGain.gain,reverbAmt,0.06);
-  }
-  const el=document.getElementById('sv-rev');
-  if(el)el.textContent=Math.round(reverbAmt*100)+'%';
+  if(_dryGain&&_audioReady){_ramp(_dryGain.gain,1-reverbAmt,0.06);_ramp(_wetGain.gain,reverbAmt,0.06);}
+  const el=document.getElementById('sv-rev');if(el)el.textContent=Math.round(reverbAmt*100)+'%';
 }
 function setBinDepth(v){
   binDepth=Math.max(0.1,Math.min(1,v));
   if(binauralActive&&_binGL&&_binGR&&_actx){
-    const tgt=0.36*binDepth/Math.sqrt(2);
-    _ramp(_binGL.gain,tgt,0.06);
-    _ramp(_binGR.gain,tgt,0.06);
+    const tgt=0.36*binDepth/Math.sqrt(2);_ramp(_binGL.gain,tgt,0.06);_ramp(_binGR.gain,tgt,0.06);
   }
-  const el=document.getElementById('sv-dep');
-  if(el)el.textContent=Math.round(binDepth*100)+'%';
+  const el=document.getElementById('sv-dep');if(el)el.textContent=Math.round(binDepth*100)+'%';
 }
 function setMasterFreq(f){
   masterFreq=Math.max(36,Math.min(864,Math.round(f)));
@@ -580,8 +682,7 @@ function setMasterFreq(f){
   updateFreqLists();
 }
 function toggleBinaural(){
-  _initAudio();
-  if(_actx.state==='suspended')_actx.resume();
+  _initAudio();if(_actx.state==='suspended')_actx.resume();
   binauralActive=!binauralActive;
   if(binauralActive){
     _startBinaural(activePairIdx);
@@ -596,16 +697,12 @@ function toggleBinaural(){
   if(btn){btn.textContent=binauralActive?'■ Couper Binaural':'▶ Activer Binaural';btn.classList.toggle('on',binauralActive);}
 }
 function toggleFlux(){
-  _initAudio();
-  if(_actx.state==='suspended')_actx.resume();
+  _initAudio();if(_actx.state==='suspended')_actx.resume();
   flowing=!flowing;
   const btn=document.getElementById('btn-flux');
-  if(flowing){
-    btn.textContent='■ FLUX OFF';btn.classList.remove('flux-off');
+  if(flowing){btn.textContent='■ FLUX OFF';btn.classList.remove('flux-off');
     if(binauralActive){_stopBinaural(false);setTimeout(()=>_startBinaural(activePairIdx),200);}
-  }else{
-    btn.textContent='▶ FLUX ON';btn.classList.add('flux-off');
-  }
+  }else{btn.textContent='▶ FLUX ON';btn.classList.add('flux-off');}
 }
 
 let _prevSeuilIdx=-1;
@@ -627,8 +724,7 @@ function doFullRandom(){
   sphOmegaX=(Math.random()*0.22+0.08)*sphDir;
   sphOmegaY=(Math.random()*0.38+0.14)*sphDir;
   const fl=document.getElementById('flash');
-  fl.classList.add('show');
-  setTimeout(()=>fl.classList.remove('show'),1100);
+  fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),1100);
   updateFreqLists();
 }
 
@@ -638,11 +734,7 @@ function setAutoRandom(val){
   const el=document.getElementById('sv-auto');
   if(el)el.textContent=_autoIntervalMin?_autoIntervalMin+'min':'off';
   if(_autoTimer){clearInterval(_autoTimer);_autoTimer=null;}
-  if(_autoIntervalMin>0){
-    _autoTimer=setInterval(()=>{
-      if(flowing||binauralActive)doFullRandom();
-    },_autoIntervalMin*60000);
-  }
+  if(_autoIntervalMin>0)_autoTimer=setInterval(()=>{if(flowing||binauralActive)doFullRandom();},_autoIntervalMin*60000);
 }
 
 // ═══════════════════════════════════════════════════
@@ -650,23 +742,19 @@ function setAutoRandom(val){
 // ═══════════════════════════════════════════════════
 let _leftOpen=false,_rightOpen=false;
 function toggleLeft(){
-  _leftOpen=!_leftOpen;
-  document.getElementById('pan-left').classList.toggle('open',_leftOpen);
+  _leftOpen=!_leftOpen;document.getElementById('pan-left').classList.toggle('open',_leftOpen);
   if(_leftOpen&&_rightOpen){_rightOpen=false;document.getElementById('pan-right').classList.remove('open');}
 }
 function closePanLeft(){_leftOpen=false;document.getElementById('pan-left').classList.remove('open');}
 function toggleMenu(){
-  _rightOpen=!_rightOpen;
-  document.getElementById('pan-right').classList.toggle('open',_rightOpen);
+  _rightOpen=!_rightOpen;document.getElementById('pan-right').classList.toggle('open',_rightOpen);
   if(_rightOpen&&_leftOpen){_leftOpen=false;document.getElementById('pan-left').classList.remove('open');}
 }
 function closePanRight(){_rightOpen=false;document.getElementById('pan-right').classList.remove('open');}
-
 function openIframe(title,src){
   document.getElementById('iframe-title').textContent=title;
   document.getElementById('iframe-frame').src=src;
-  document.getElementById('iframe-overlay').classList.add('open');
-  closePanRight();
+  document.getElementById('iframe-overlay').classList.add('open');closePanRight();
 }
 function closeIframe(){
   document.getElementById('iframe-overlay').classList.remove('open');
@@ -680,57 +768,44 @@ function updateFreqLists(){
   const lEl=document.getElementById('freq-left-list');
   const rEl=document.getElementById('freq-right-list');
   const adEl=document.getElementById('bin-active-display');
-  if(!lEl||!rEl)return;
-  lEl.innerHTML='';rEl.innerHTML='';
-
+  if(!lEl||!rEl)return;lEl.innerHTML='';rEl.innerHTML='';
   RATIOS.forEach((r,i)=>{
-    const fL=(masterFreq*r.rL).toFixed(1);
-    const fR=(masterFreq*r.rR).toFixed(1);
+    const fL=(masterFreq*r.rL).toFixed(1),fR=(masterFreq*r.rR).toFixed(1);
     const active=i===activePairIdx;
-
     const mkRow=(hz,col)=>{
-      const d=document.createElement('div');
-      d.className='freq-row'+(active?' is-active':'');
+      const d=document.createElement('div');d.className='freq-row'+(active?' is-active':'');
       d.innerHTML=`<span class="freq-dot" style="background:${col}"></span>`+
         `<span class="freq-name">${r.name}</span>`+
         `<span class="freq-hz" style="color:${col}">${hz} Hz</span>`;
       d.style.cursor='pointer';
-      d.addEventListener('click',()=>{
-        activePairIdx=i;
-        if(binauralActive&&_audioReady)_startBinaural(i);
-        updateFreqLists();
-      });
+      d.addEventListener('click',()=>{activePairIdx=i;if(binauralActive&&_audioReady)_startBinaural(i);updateFreqLists();});
       return d;
     };
-    lEl.appendChild(mkRow(fL,r.color));
-    rEl.appendChild(mkRow(fR,r.color));
-
+    lEl.appendChild(mkRow(fL,r.color));rEl.appendChild(mkRow(fR,r.color));
     if(active&&adEl){
       const bt=Math.abs(masterFreq*r.rR-masterFreq*r.rL).toFixed(2);
-      adEl.innerHTML=`<span style="color:${r.color}">${r.name}</span><br>`+
-        `L: <b>${fL} Hz</b> · R: <b>${fR} Hz</b><br>`+
-        `<span style="color:#666">Battement: ${bt} Hz</span>`;
+      adEl.innerHTML=`<span style="color:${r.color}">${r.name}</span><br>L: <b>${fL} Hz</b> · R: <b>${fR} Hz</b><br>`+
+        `<span style="color:rgba(220,180,80,.65)">Battement: ${bt} Hz</span>`;
       document.getElementById('info-beat').textContent=bt+' Hz';
     }
   });
 }
 
 // ═══════════════════════════════════════════════════
-//  SPHERE ROTATION
+//  SPHERE ROTATION (JS off-axis tilt)
 // ═══════════════════════════════════════════════════
 function updateSphereRot(dt){
-  sphAngleX+=sphOmegaX*dt;
-  sphAngleY+=sphOmegaY*dt;
+  sphAngleX+=sphOmegaX*dt;sphAngleY+=sphOmegaY*dt;
   sphOmegaX+=(0.08*sphDir-sphOmegaX)*0.0008;
   sphOmegaY+=(0.14*sphDir-sphOmegaY)*0.0008;
   const wrap=document.getElementById('sphere-wrap');
-  const degX=(Math.sin(sphAngleX)*8).toFixed(1);
-  const degY=(Math.sin(sphAngleY)*12).toFixed(1);
-  wrap.style.transform=`translate(-50%,-56%) perspective(600px) rotateX(${degX}deg) rotateY(${degY}deg)`;
+  const degX=(Math.sin(sphAngleX)*6).toFixed(2);
+  const degY=(Math.sin(sphAngleY)*10).toFixed(2);
+  wrap.style.transform=`translate(-50%,-50%) rotateX(${degX}deg) rotateY(${degY}deg)`;
 }
 
 // ═══════════════════════════════════════════════════
-//  DISPLAY UPDATE
+//  DISPLAY UPDATE (UT432)
 // ═══════════════════════════════════════════════════
 function updateDisplay(ut432){
   const seuil=getCurSeuil(ut432);
@@ -740,10 +815,9 @@ function updateDisplay(ut432){
   document.getElementById('sphere-time').textContent=ut432.toFixed(1);
   document.getElementById('sphere-seuil').textContent=seuil.s;
 
-  // Sphère : bordure + lueur colorée selon UT432
-  const sp=document.getElementById('sphere');
-  sp.style.borderColor=`hsla(${_lastHue},70%,50%,.45)`;
-  sp.style.boxShadow=`0 0 18px hsla(${_lastHue},80%,55%,.22)`;
+  // Teinte de la lueur de la sphère suit UT432
+  const sc=document.getElementById('sphere-scene');
+  sc.style.filter=`drop-shadow(0 0 38px hsla(${_lastHue},85%,55%,.55))`;
 
   const{date:fd}=frNow();
   const hh=String(fd.getUTCHours()).padStart(2,'0');
@@ -759,14 +833,9 @@ function updateDisplay(ut432){
 let _prevT=performance.now();
 function loop(){
   const now=performance.now();
-  const dt=(now-_prevT)/1000;
-  _prevT=now;
-
+  const dt=(now-_prevT)/1000;_prevT=now;
   const ut432=calcUT432();
-  updateDisplay(ut432);
-  updateSphereRot(dt);
-  _applyUT432Binaural(ut432);
-
+  updateDisplay(ut432);updateSphereRot(dt);_applyUT432Binaural(ut432);
   requestAnimationFrame(loop);
 }
 
@@ -780,11 +849,10 @@ document.getElementById('bin-bubble').addEventListener('click',toggleBinaural);
 document.getElementById('btn-minus').addEventListener('click',()=>setMasterFreq(masterFreq-9));
 document.getElementById('btn-plus').addEventListener('click',()=>setMasterFreq(masterFreq+9));
 
-document.getElementById('sphere').addEventListener('click',e=>{
-  e.stopPropagation();
-  _initAudio();
-  if(_actx.state==='suspended')_actx.resume();
-  doFullRandom();
+// Tap sphère = full random (masterFreq inchangé)
+document.getElementById('sphere-wrap').addEventListener('click',e=>{
+  e.stopPropagation();_initAudio();
+  if(_actx.state==='suspended')_actx.resume();doFullRandom();
 });
 
 document.getElementById('freq-display').addEventListener('click',()=>{
@@ -793,8 +861,7 @@ document.getElementById('freq-display').addEventListener('click',()=>{
 });
 
 document.addEventListener('click',e=>{
-  const pl=document.getElementById('pan-left');
-  const pr=document.getElementById('pan-right');
+  const pl=document.getElementById('pan-left'),pr=document.getElementById('pan-right');
   if(_leftOpen&&!pl.contains(e.target)&&e.target.id!=='btn-left')closePanLeft();
   if(_rightOpen&&!pr.contains(e.target)&&e.target.id!=='btn-menu')closePanRight();
 });
