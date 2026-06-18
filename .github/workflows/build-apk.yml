@@ -70,7 +70,7 @@ jobs:
 
       - name: Sync web assets to Android project
         working-directory: apk
-        run: npx cap sync android --no-deps
+        run: npx cap sync android
 
       - name: Make Gradle wrapper executable
         working-directory: apk/android
