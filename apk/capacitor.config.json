@@ -1,0 +1,22 @@
+{
+  "appId": "com.fbf.omcha432",
+  "appName": "OmCha 432",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#1c0640",
+    "minWebViewVersion": 60
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#1c0640",
+      "showSpinner": false
+    }
+  }
+}

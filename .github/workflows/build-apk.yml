@@ -1,0 +1,109 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type (debug or release)'
+        required: false
+        default: 'debug'
+        type: choice
+        options: [debug, release]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apk/package.json
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Capacitor dependencies
+        working-directory: apk
+        run: npm install
+
+      - name: Prepare web assets (copy HTML files into www/)
+        working-directory: apk
+        run: |
+          mkdir -p www
+          # Main entry point
+          cp ../0mcha396_v2.html www/index.html
+          # Companion files
+          for f in ../ut36_theory.html ../utc432project.html ../omcv477.html \
+                   ../omcha432flux.html ../cycle432.html ../sphere432max.html \
+                   ../theme432.html ../omcv450.html; do
+            [ -f "$f" ] && cp "$f" www/
+          done
+          echo "www/ contents:"
+          ls -lh www/
+
+      - name: Patch Google Fonts for offline fallback
+        working-directory: apk/www
+        run: |
+          # Replace Google Fonts link with system-font fallback so the APK
+          # works fully offline; Cinzel Decorative is replaced by a serif stack
+          sed -i '/<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">/d' index.html
+          sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">|<style>@font-face{font-family:"Cinzel Decorative";src:local("Georgia"),local("serif");}</style>|g' index.html
+
+      - name: Add Android platform
+        working-directory: apk
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        run: npx cap add android
+
+      - name: Sync web assets to Android project
+        working-directory: apk
+        run: npx cap sync android --no-deps
+
+      - name: Make Gradle wrapper executable
+        working-directory: apk/android
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        working-directory: apk/android
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK with version info
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M)
+          mkdir -p dist
+          cp apk/android/app/build/outputs/apk/debug/app-debug.apk \
+             dist/OmCha432-${TIMESTAMP}-debug.apk
+          echo "APK_NAME=OmCha432-${TIMESTAMP}-debug" >> $GITHUB_ENV
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: dist/*.apk
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## APK Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App:** OmCha 432 – Cosmic Sound" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** com.fbf.omcha432" >> $GITHUB_STEP_SUMMARY
+          echo "**Build:** Debug (installable with Unknown Sources enabled)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download the APK from the **Artifacts** section above." >> $GITHUB_STEP_SUMMARY
+          ls -lh dist/*.apk >> $GITHUB_STEP_SUMMARY
