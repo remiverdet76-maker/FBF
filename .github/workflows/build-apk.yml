@@ -1,0 +1,85 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required Android SDK components
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - name: Install Capacitor dependencies
+        working-directory: apk
+        run: npm install
+
+      - name: Prepare web assets
+        working-directory: apk
+        run: |
+          mkdir -p www
+          cp ../0mcha396_v2.html www/index.html
+          for f in ../ut36_theory.html ../utc432project.html ../omcv477.html \
+                   ../omcha432flux.html ../cycle432.html ../sphere432max.html \
+                   ../theme432.html ../omcv450.html; do
+            [ -f "$f" ] && cp "$f" www/
+          done
+          echo "www/ contents:"; ls -lh www/
+
+      - name: Remove Google Fonts (offline fallback)
+        working-directory: apk/www
+        run: |
+          sed -i '/<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">/d' index.html
+          sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">||g' index.html
+
+      - name: Add Android platform
+        working-directory: apk
+        run: npx cap add android
+
+      - name: Sync web assets to Android
+        working-directory: apk
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: apk/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --warning-mode=all
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmCha432-debug
+          path: apk/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          APK=apk/android/app/build/outputs/apk/debug/app-debug.apk
+          echo "## APK Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "**App:** OmCha 432 | **Package:** com.fbf.omcha432" >> $GITHUB_STEP_SUMMARY
+          echo "**Size:** $(du -sh $APK | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "Télécharger dans l'onglet **Artifacts** ci-dessus." >> $GITHUB_STEP_SUMMARY
