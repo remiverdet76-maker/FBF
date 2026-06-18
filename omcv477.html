@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OmCv · 477 · 13 Géométries Vivantes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;700&family=Share+Tech+Mono&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#02010D;font-family:'Share Tech Mono',monospace;color:rgba(200,180,255,.7);}
+#cvBg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#cvFg{position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+/* Heure centrale */
+#heure{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity .5s;}
+#h-num{font-family:'Cinzel',serif;font-size:clamp(2.8rem,7vw,5.5rem);font-weight:300;letter-spacing:.05em;line-height:1;transition:color .8s,text-shadow .8s;}
+#h-geo{font-family:'Cinzel',serif;font-size:.42em;letter-spacing:.38em;text-transform:uppercase;opacity:.42;margin-top:.3em;transition:color .8s;display:block;}
+#h-seuil{font-family:'Cinzel',serif;font-size:.35em;letter-spacing:.38em;text-transform:uppercase;opacity:.35;margin-top:.2em;transition:color .8s;display:block;}
+/* Jauges */
+#gauges{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);display:flex;gap:20px;align-items:flex-end;}
+.gauge{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.g-bar{width:3px;border-radius:3px;background:rgba(255,255,255,.07);position:relative;}
+.g-fill{position:absolute;bottom:0;left:0;right:0;border-radius:3px;transition:height .32s,background .8s;}
+.g-lbl{font-size:.40rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(200,180,255,.26);}
+.g-val{font-size:.56rem;letter-spacing:.10em;transition:color .8s;}
+/* Infos */
+#h-civil{position:absolute;bottom:26px;right:26px;font-size:.60rem;letter-spacing:.18em;color:rgba(200,180,255,.22);transition:color .8s;}
+#h-astres{position:absolute;top:20px;left:50%;transform:translateX(-50%);display:flex;gap:22px;font-size:.58rem;letter-spacing:.16em;color:rgba(200,180,255,.32);}
+.astr{display:flex;align-items:center;gap:5px;}
+#title{position:absolute;top:20px;left:26px;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.42em;text-transform:uppercase;color:rgba(200,180,255,.18);}
+/* Sélecteur géométrie — carousel discret en bas à gauche */
+#geo-sel{position:absolute;bottom:26px;left:26px;display:flex;flex-direction:column;gap:4px;pointer-events:all;}
+#geo-sel-title{font-size:.42rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(200,180,255,.22);margin-bottom:3px;}
+#geo-btns{display:flex;flex-wrap:wrap;gap:3px;max-width:200px;}
+.gbtn{font-family:'Cinzel',serif;font-size:.44rem;letter-spacing:.12em;padding:4px 7px;border-radius:5px;border:1px solid rgba(200,180,255,.10);background:rgba(200,180,255,.03);color:rgba(200,180,255,.35);cursor:pointer;transition:all .20s;text-transform:uppercase;white-space:nowrap;}
+.gbtn:hover{background:rgba(200,180,255,.09);color:rgba(200,180,255,.70);}
+.gbtn.on{background:rgba(255,200,80,.10);border-color:rgba(255,200,80,.38);color:rgba(255,200,80,.82);}
+/* Menu btn */
+#menu-btn{position:fixed;top:14px;right:18px;z-index:400;width:32px;height:32px;border-radius:8px;background:rgba(100,60,200,.10);border:1px solid rgba(160,120,255,.12);color:rgba(200,180,255,.38);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .20s;pointer-events:all;}
+#menu-btn:hover{background:rgba(160,120,255,.18);color:rgba(200,180,255,.85);}
+/* Panel */
+#panel{position:fixed;top:0;right:0;bottom:0;width:280px;background:linear-gradient(170deg,rgba(8,4,28,.97),rgba(3,2,14,.99));border-left:1px solid rgba(160,120,255,.08);backdrop-filter:blur(40px);transform:translateX(280px);transition:transform .34s cubic-bezier(.4,0,.2,1);z-index:500;display:flex;flex-direction:column;pointer-events:all;}
+#panel.open{transform:translateX(0);}
+#phd{padding:16px 15px 11px;border-bottom:1px solid rgba(255,255,255,.05);}
+#phd-t{font-family:'Cinzel',serif;font-size:.70rem;letter-spacing:.36em;text-transform:uppercase;color:rgba(200,180,255,.52);}
+#phd-s{font-size:.50rem;letter-spacing:.16em;color:rgba(200,180,255,.16);margin-top:3px;}
+#close-btn{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(200,180,255,.26);font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;}
+#close-btn:hover{color:rgba(200,180,255,.78);}
+#pc{flex:1;overflow-y:auto;padding:14px 13px;}
+#pc::-webkit-scrollbar{width:1px;}
+#pc::-webkit-scrollbar-thumb{background:rgba(200,180,255,.14);}
+.ps{margin-bottom:16px;}
+.ps-h{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(255,200,80,.34);margin-bottom:7px;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,.05);}
+.ps-r{display:flex;justify-content:space-between;align-items:center;padding:5px 3px;font-size:.68rem;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(200,180,255,.50);}
+.ps-r:last-child{border:none;}
+.sl-row{display:flex;flex-direction:column;gap:4px;padding:6px 3px;}
+.sl-row label{font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,180,255,.26);display:flex;justify-content:space-between;}
+.sl-row label span{color:rgba(255,200,80,.60);}
+input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:rgba(255,255,255,.09);border-radius:3px;cursor:pointer;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:rgba(255,200,80,.78);cursor:pointer;}
+.sw{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);cursor:pointer;transition:all .18s;-webkit-appearance:none;appearance:none;position:relative;flex-shrink:0;}
+.sw:checked{background:rgba(255,200,80,.28);border-color:rgba(255,200,80,.38);}
+.sw::after{content:'';width:10px;height:10px;background:rgba(200,180,255,.72);border-radius:50%;position:absolute;top:2px;left:2px;transition:left .18s;}
+.sw:checked::after{left:16px;}
+.act{padding:5px 10px;border-radius:6px;font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.16em;text-transform:uppercase;border:1px solid rgba(200,180,255,.12);background:rgba(200,180,255,.03);color:rgba(200,180,255,.45);cursor:pointer;transition:all .18s;margin:2px 2px 0 0;}
+.act:hover{background:rgba(200,180,255,.09);color:rgba(200,180,255,.85);}
+</style>
+</head>
+<body>
+<canvas id="cvBg"></canvas>
+<canvas id="cvFg"></canvas>
+<div id="ui">
+  <div id="title">⬡ OmCv · 477 · Géométrie Vivante</div>
+  <div id="heure">
+    <div id="h-num">216.0</div>
+    <span id="h-geo">Métatron</span>
+    <span id="h-seuil">Tiphereth</span>
+  </div>
+  <div id="gauges">
+    <div class="gauge"><div class="g-val" id="gv-freq">1.0</div><div class="g-bar" style="height:68px"><div class="g-fill" id="gf-freq"></div></div><div class="g-lbl">Fréq</div></div>
+    <div class="gauge"><div class="g-val" id="gv-dens">1.0</div><div class="g-bar" style="height:68px"><div class="g-fill" id="gf-dens"></div></div><div class="g-lbl">Densité</div></div>
+    <div class="gauge"><div class="g-val" id="gv-tors">0°</div><div class="g-bar" style="height:68px"><div class="g-fill" id="gf-tors"></div></div><div class="g-lbl">Torsion</div></div>
+    <div class="gauge"><div class="g-val" id="gv-axe">0</div><div class="g-bar" style="height:68px"><div class="g-fill" id="gf-axe"></div></div><div class="g-lbl">Axiale</div></div>
+    <div class="gauge"><div class="g-val" id="gv-tore">0</div><div class="g-bar" style="height:68px"><div class="g-fill" id="gf-tore"></div></div><div class="g-lbl">Tore</div></div>
+  </div>
+  <div id="h-astres">
+    <div class="astr"><span>☀</span><span id="sun-t">--:-- — --:--</span></div>
+    <div class="astr"><span id="moon-ico">🌙</span><span id="moon-t">--</span></div>
+  </div>
+  <div id="h-civil">--:--:--</div>
+  <!-- Sélecteur géométrie -->
+  <div id="geo-sel">
+    <div id="geo-sel-title">⬡ Géométrie</div>
+    <div id="geo-btns"></div>
+  </div>
+</div>
+<button id="menu-btn" onclick="togglePanel()">≡</button>
+<div id="panel">
+  <div id="phd"><div id="phd-t">OmCv · 477</div><div id="phd-s">13 Géométries · Tore Vivant · UT432</div></div>
+  <button id="close-btn" onclick="togglePanel()">✕</button>
+  <div id="pc">
+    <div class="ps"><div class="ps-h">Pilotage UT432</div>
+      <div class="ps-r"><span>Auto UT432</span><input type="checkbox" class="sw" id="o-auto" checked onchange="CFG.auto=this.checked"></div>
+      <div class="sl-row"><label>Densité <span id="sv-dens">1.00</span></label><input type="range" id="sl-dens" min="0" max="200" value="100" oninput="CFG.density=this.value/100;document.getElementById('sv-dens').textContent=CFG.density.toFixed(2)"></div>
+      <div class="sl-row"><label>Torsion <span id="sv-tors">0°</span></label><input type="range" id="sl-tors" min="0" max="100" value="0" oninput="CFG.torsion=this.value/100;document.getElementById('sv-tors').textContent=Math.round(CFG.torsion*360)+'°'"></div>
+      <div class="sl-row"><label>Fréquence <span id="sv-freq">1.00</span></label><input type="range" id="sl-freq" min="10" max="350" value="100" oninput="CFG.freq=this.value/100;document.getElementById('sv-freq').textContent=CFG.freq.toFixed(2)"></div>
+      <div class="sl-row"><label>Axiale <span id="sv-axe">0.00</span></label><input type="range" id="sl-axe" min="0" max="100" value="0" oninput="CFG.axial=this.value/100;document.getElementById('sv-axe').textContent=CFG.axial.toFixed(2)"></div>
+      <div class="sl-row"><label>Tore vivant <span id="sv-tore">0.00</span></label><input type="range" id="sl-tore" min="0" max="100" value="0" oninput="CFG.tore=this.value/100;document.getElementById('sv-tore').textContent=CFG.tore.toFixed(2)"></div>
+    </div>
+    <div class="ps"><div class="ps-h">Rendu</div>
+      <div class="ps-r"><span>Cercle UT432</span><input type="checkbox" class="sw" id="o-ring" checked onchange="CFG.ring=this.checked"></div>
+      <div class="ps-r"><span>Arêtes</span><input type="checkbox" class="sw" id="o-edges" checked onchange="CFG.edges=this.checked"></div>
+      <div class="ps-r"><span>Cercles</span><input type="checkbox" class="sw" id="o-circles" checked onchange="CFG.circles=this.checked"></div>
+      <div class="ps-r"><span>Sphères nœuds</span><input type="checkbox" class="sw" id="o-spheres" checked onchange="CFG.spheres=this.checked"></div>
+      <div class="ps-r"><span>Particules</span><input type="checkbox" class="sw" id="o-parts" checked onchange="CFG.parts=this.checked"></div>
+      <div class="ps-r"><span>Aura</span><input type="checkbox" class="sw" id="o-aura" checked onchange="CFG.aura=this.checked"></div>
+      <div class="ps-r"><span>Chiffre UT432</span><input type="checkbox" class="sw" id="o-num" onchange="document.getElementById('heure').style.opacity=this.checked?'1':'0'"></div>
+      <div class="sl-row"><label>Vitesse <span id="sv-spd">1.0x</span></label><input type="range" id="sl-spd" min="0" max="300" value="100" oninput="V.spd=this.value/100;document.getElementById('sv-spd').textContent=V.spd.toFixed(1)+'x'"></div>
+      <div class="sl-row"><label>Glow <span id="sv-glow">60%</span></label><input type="range" id="sl-glow" min="0" max="100" value="60" oninput="V.glow=this.value/100;document.getElementById('sv-glow').textContent=this.value+'%'"></div>
+    </div>
+    <div class="ps"><div class="ps-h">Actions</div>
+      <button class="act" onclick="togglePause()">Pause [P]</button>
+      <button class="act" onclick="toggleFS()">Plein ecran [F]</button>
+      <button class="act" onclick="doExport()">PNG</button>
+    </div>
+    <div class="ps"><div class="ps-h">J0 · UT432</div>
+      <div class="ps-r"><div style="opacity:.38">Jo</div><div>20 mars 2026 · Equinoxe</div></div>
+      <div class="ps-r"><div style="opacity:.38">0</div><div>Minuit solaire Paris</div></div>
+      <div class="ps-r"><div style="opacity:.38">216</div><div>Midi solaire · 6 cube</div></div>
+      <div class="ps-r"><div style="opacity:.38">Live</div><div id="jo-live">-</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ZONE:DATA ───────────────────────────────────────────
+const TAU=Math.PI*2;
+
+const SEUILS=[
+  {v:0,  h:280,s:'Kether'},  {v:54, h:250,s:'Chokhmah'},{v:108,h:200,s:'Binah'},
+  {v:162,h:155,s:'Chesed'},  {v:216,h:48, s:'Tiphereth'},{v:270,h:88, s:'Netzach'},
+  {v:324,h:32, s:'Hod'},     {v:378,h:5,  s:'Yesod'},    {v:432,h:295,s:'Malkuth'},
+];
+function getHue(ut){
+  for(let i=0;i<SEUILS.length-1;i++){
+    const a=SEUILS[i],b=SEUILS[i+1];
+    if(ut>=a.v&&ut<b.v){
+      const t=(ut-a.v)/(b.v-a.v);
+      let dh=b.h-a.h;
+      if(dh>180)dh-=360;if(dh<-180)dh+=360;
+      return(a.h+dh*t+360)%360;
+    }
+  }
+  return SEUILS[SEUILS.length-1].h;
+}
+function getCurSeuil(ut){let c=SEUILS[0];for(const s of SEUILS){if(ut>=s.v)c=s;}return c;}
+
+// 13 géométries
+const GEOS=[
+  {id:'metatron', name:'Métatron'},
+  {id:'fleur',    name:'Fleur de Vie'},
+  {id:'graine',   name:'Graine de Vie'},
+  {id:'fruit',    name:'Fruit de Vie'},
+  {id:'tore',     name:'Tore'},
+  {id:'merkaba',  name:'Merkaba'},
+  {id:'david',    name:'Étoile David'},
+  {id:'sriyantra',name:'Sri Yantra'},
+  {id:'vesica',   name:'Vesica Piscis'},
+  {id:'arbre',    name:'Arbre de Vie'},
+  {id:'icosa',    name:'Icosaèdre'},
+  {id:'infini',   name:'Nœud Infini'},
+  {id:'etoile8',  name:'Étoile 8'},
+];
+let currentGeo='metatron';
+// Transition entre géométries — lissage du morph
+let _geoMorph={from:'metatron',to:'metatron',t:1.0};
+
+// UT432 → paramètres physiques (même logique qu'OmCv-468)
+function ut2params(ut){
+  const f=ut/432;
+  const dens=0.25+1.5*Math.pow(Math.sin(f*Math.PI),1.4);
+  const tors=f;
+  let freq=0.5;
+  for(const s of SEUILS){const d=Math.abs(ut-s.v);freq+=1.2*Math.max(0,1-d/18);}
+  const axial=Math.max(0,Math.sin(f*TAU*2))*.8;
+  // Tore vivant : actif dans les phases d'expansion (0→216)
+  const tore=Math.max(0,Math.sin(f*Math.PI))*.9;
+  return{dens,tors,freq:Math.min(4,freq),axial,tore};
+}
+
+const CFG={
+  auto:true,density:1,torsion:0,freq:1,axial:0,tore:0,
+  _td:1,_tt:0,_tf:1,_ta:0,_tr:0,
+  ring:true,edges:true,circles:true,spheres:true,parts:true,aura:true,
+};
+const V={t:0,spd:1,rx:.28,ry:0,trx:.28,try_:0,zoom:1,tzoom:1,glow:.6,drag:false,lmx:0,lmy:0,autoRot:true};
+const _ls={d:1,t:0,f:1,a:0,r:0}; // valeurs lissées
+
+// ZONE:CANVAS ─────────────────────────────────────────
+const BG=document.getElementById('cvBg'),FG=document.getElementById('cvFg');
+const B=BG.getContext('2d'),X=FG.getContext('2d');
+let W,H,cx,cy,MS;
+function resize(){
+  W=window.innerWidth;H=window.innerHeight;
+  BG.width=FG.width=W;BG.height=FG.height=H;
+  cx=W/2;cy=H/2;MS=Math.min(W,H)*.36;
+}
+window.addEventListener('resize',resize);
+
+// ZONE:TIME ───────────────────────────────────────────
+function lastSun(y,m){let d=new Date(Date.UTC(y,m+1,0));while(d.getUTCDay()!==0)d.setUTCDate(d.getUTCDate()-1);return d;}
+function frOff(n){const y=n.getUTCFullYear(),s=lastSun(y,2),e=lastSun(y,9);s.setUTCHours(1,0,0,0);e.setUTCHours(1,0,0,0);return(n>=s&&n<e)?2:1;}
+function frNow(){const n=new Date(),o=frOff(n);return{date:new Date(n.getTime()+o*3600000),off:o};}
+let _eot={v:0,min:-1};
+function eqT(d){
+  const m=d.getUTCHours()*60+d.getUTCMinutes();
+  if(m===_eot.min)return _eot.v;
+  const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+  const B2=(360/365*(doy-81))*Math.PI/180;
+  const v=9.87*Math.sin(2*B2)-7.53*Math.cos(B2)-1.5*Math.sin(B2);
+  _eot={v,min:m};return v;
+}
+function calcUT(fd,off){const m=(fd.getUTCHours()-off)*60+fd.getUTCMinutes()+fd.getUTCSeconds()/60;return((m+2.35/15*60+eqT(fd))/1440*432+432)%432;}
+const LAT_R=48.85*Math.PI/180,LON_D=2.35;
+function sunTimes(fd){
+  const doy=Math.floor((fd-new Date(Date.UTC(fd.getFullYear(),0,1)))/86400000)+1;
+  const B2=(360/365*(doy-81))*Math.PI/180;
+  const eot=9.87*Math.sin(2*B2)-7.53*Math.cos(B2)-1.5*Math.sin(B2);
+  const decl=Math.asin(Math.sin(23.45*Math.PI/180)*Math.sin(B2));
+  const cosHA=(Math.sin(-.833*Math.PI/180)-Math.sin(LAT_R)*Math.sin(decl))/(Math.cos(LAT_R)*Math.cos(decl));
+  if(Math.abs(cosHA)>1)return null;
+  const HA=Math.acos(cosHA)*180/Math.PI;
+  const noon=720-eot-LON_D*4;
+  return{rise:(noon-HA*4)/60,set:(noon+HA*4)/60};
+}
+function moonPhase(fd){
+  const d=(fd-new Date('2000-01-01T12:00:00Z'))/86400000;
+  const phase=((d%29.53)/29.53+1)%1;
+  return{phase,icon:['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][Math.floor(phase*8)]};
+}
+
+// ZONE:PROJ ───────────────────────────────────────────
+function proj(x,y,z){
+  const cY=Math.cos(V.ry),sY=Math.sin(V.ry);
+  let x1=x*cY+z*sY,z1=-x*sY+z*cY;
+  const cX=Math.cos(V.rx),sX=Math.sin(V.rx);
+  let y1=y*cX-z1*sX,z2=y*sX+z1*cX;
+  const fov=3.2/(3.2+z2);
+  const sc=MS*V.zoom*fov;
+  return{sx:cx+x1*sc,sy:cy+y1*sc,fov:Math.max(0,fov),z:z2};
+}
+
+// ZONE:GEO — 13 générateurs de noeuds ─────────────────
+// Chaque géométrie retourne {nodes:[[x,y,z],...], edges:[[i,j],...]}
+// axial = expansion Z, torsion = twist, tore = enroulement torique
+
+function geoMetatron(sc,ax,to,tr){
+  const nodes=[[0,0,0]];
+  for(let i=0;i<6;i++){const a=i*Math.PI/3+tr*TAU;nodes.push([Math.cos(a)*sc,Math.sin(a)*sc,0]);}
+  for(let i=0;i<6;i++){
+    const a=i*Math.PI/3+Math.PI/6+tr*TAU*.5;
+    const zO=ax*sc*.55*Math.sin(i/6*TAU);
+    // Tore vivant : les nœuds ext s'enroulent sur le tore
+    const TR=sc*1.732,tube=sc*.55*to;
+    const xB=Math.cos(a)*TR,yB=Math.sin(a)*TR;
+    const toA=a+to*TAU*2; // angle de tube
+    const tx=xB+tube*Math.cos(toA)*Math.cos(a),ty=yB+tube*Math.cos(toA)*Math.sin(a),tz=tube*Math.sin(toA)+zO;
+    nodes.push([tx,ty,tz]);
+  }
+  const edges=[];
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)edges.push([i,j]);
+  const circles=nodes.map((_,i)=>({ci:i,r:sc}));
+  return{nodes,edges,circles};
+}
+
+function geoFleur(sc,ax,to,tr){
+  // 19 cercles (Fleur de Vie complète)
+  const nodes=[];
+  // Couche 0 : centre
+  nodes.push([0,0,0]);
+  // Couche 1 : 6 cercles
+  for(let i=0;i<6;i++){const a=i*Math.PI/3+tr*TAU;nodes.push([Math.cos(a)*sc,Math.sin(a)*sc,ax*sc*.2*Math.sin(i/6*TAU)]);}
+  // Couche 2 : 12 cercles
+  for(let i=0;i<6;i++){
+    const a=i*Math.PI/3+tr*TAU;
+    nodes.push([Math.cos(a)*sc*2,Math.sin(a)*sc*2,ax*sc*.45*Math.sin(i/6*TAU+to*TAU)]);
+    const a2=i*Math.PI/3+Math.PI/6+tr*TAU;
+    nodes.push([Math.cos(a2)*sc*1.732,Math.sin(a2)*sc*1.732,ax*sc*.3*Math.cos(i/6*TAU+to*TAU)]);
+  }
+  const edges=[];
+  for(let i=0;i<7;i++)for(let j=i+1;j<7;j++)edges.push([i,j]);
+  const circles=nodes.map((_,i)=>({ci:i,r:sc}));
+  return{nodes,edges,circles};
+}
+
+function geoGraine(sc,ax,to,tr){
+  const nodes=[[0,0,0]];
+  for(let i=0;i<6;i++){const a=i*Math.PI/3+tr*TAU;nodes.push([Math.cos(a)*sc,Math.sin(a)*sc,ax*sc*.4*Math.sin(i/6*TAU+to*TAU)]);}
+  const edges=[];
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)edges.push([i,j]);
+  const circles=nodes.map((_,i)=>({ci:i,r:sc}));
+  return{nodes,edges,circles};
+}
+
+function geoFruit(sc,ax,to,tr){
+  const nodes=[[0,0,0]];
+  for(let i=0;i<6;i++){const a=i*Math.PI/3+tr*TAU;nodes.push([Math.cos(a)*sc*2,Math.sin(a)*sc*2,ax*sc*.35*Math.sin(i/6*TAU)]);}
+  for(let i=0;i<6;i++){const a=i*Math.PI/3+Math.PI/6+tr*TAU*.5;nodes.push([Math.cos(a)*sc*1.15,Math.sin(a)*sc*1.15,ax*sc*.25*Math.cos(i/6*TAU+to*TAU)]);}
+  const edges=[];
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const d=Math.hypot(nodes[i][0]-nodes[j][0],nodes[i][1]-nodes[j][1]);
+    if(d<sc*2.5)edges.push([i,j]);
+  }
+  const circles=nodes.map((_,i)=>({ci:i,r:sc*.9}));
+  return{nodes,edges,circles};
+}
+
+function geoTore(sc,ax,to,tr){
+  // Tore paramétrique pur — nœuds sur la surface
+  const nU=18,nV=12;
+  const TR=sc*1.1,tube=sc*.42*(0.5+ax*.8);
+  const nodes=[];
+  for(let iu=0;iu<nU;iu++)for(let iv=0;iv<nV;iv++){
+    const u=iu/nU*TAU+tr*TAU,v=iv/nV*TAU+to*TAU;
+    const x=(TR+tube*Math.cos(v))*Math.cos(u);
+    const y=(TR+tube*Math.cos(v))*Math.sin(u);
+    const z=tube*Math.sin(v)*(0.5+ax*.8);
+    nodes.push([x,y,z]);
+  }
+  const edges=[];
+  for(let iu=0;iu<nU;iu++)for(let iv=0;iv<nV;iv++){
+    const cur=iu*nV+iv;
+    edges.push([cur,((iu+1)%nU)*nV+iv]);
+    edges.push([cur,iu*nV+((iv+1)%nV)]);
+  }
+  return{nodes,edges,circles:[]};
+}
+
+function geoMerkaba(sc,ax,to,tr){
+  // 2 tétraèdres — nœuds en 3D
+  const s2=sc*1.2;
+  const nodes=[
+    [0,s2*(1+ax*.4),to*sc*.3],
+    [s2*.866,-s2*.5*(1+ax*.2),to*sc*.15],
+    [-s2*.866,-s2*.5*(1+ax*.2),-to*sc*.15],
+    [0,-s2*(1+ax*.4)*(to*.5+.5),-to*sc*.3],
+    [s2*.866,s2*.5*(1+ax*.2),to*sc*.15],
+    [-s2*.866,s2*.5*(1+ax*.2),-to*sc*.15],
+  ];
+  // Rotation torsion
+  nodes.forEach((n,i)=>{const a=tr*TAU*(i<3?1:-1);const nx=n[0]*Math.cos(a)-n[1]*Math.sin(a),ny=n[0]*Math.sin(a)+n[1]*Math.cos(a);n[0]=nx;n[1]=ny;});
+  const edges=[[0,1],[0,2],[1,2],[3,4],[3,5],[4,5],[0,3],[1,4],[2,5],[0,4],[1,5],[2,3]];
+  return{nodes,edges,circles:[]};
+}
+
+function geoDavid(sc,ax,to,tr){
+  const nodes=[];
+  for(let tri=0;tri<2;tri++){
+    for(let v=0;v<3;v++){
+      const a=v/3*TAU+tri*Math.PI/3+Math.PI/6+tr*TAU;
+      const r=sc*(1+ax*.35*(tri?1:-1));
+      const z=ax*sc*.4*(tri?1:-1)*Math.sin(v/3*TAU+to*TAU);
+      nodes.push([Math.cos(a)*r,Math.sin(a)*r,z]);
+    }
+  }
+  nodes.push([0,0,0]); // centre
+  const edges=[[0,1],[1,2],[2,0],[3,4],[4,5],[5,3],[0,3],[1,4],[2,5],[0,4],[1,5],[2,3]];
+  for(let i=0;i<6;i++)edges.push([i,6]);
+  return{nodes,edges,circles:[]};
+}
+
+function geoSriYantra(sc,ax,to,tr){
+  // Triangles concentriques (approximation Sri Yantra)
+  const nodes=[];
+  const layers=5;
+  for(let l=0;l<layers;l++){
+    const r=sc*(1-l*.14);
+    for(let tri=0;tri<2;tri++){
+      for(let v=0;v<3;v++){
+        const a=v/3*TAU+tri*Math.PI/3+tr*TAU*(l+1)*.2;
+        const z=ax*sc*.3*(l%2?1:-1)+to*sc*.2*Math.sin(v/3*TAU+l);
+        nodes.push([Math.cos(a)*r,Math.sin(a)*r,z]);
+      }
+    }
+  }
+  nodes.push([0,0,to*sc*.25]); // bindu
+  const edges=[];
+  // Triangles
+  for(let l=0;l<layers;l++){
+    for(let tri=0;tri<2;tri++){
+      const base=l*6+tri*3;
+      edges.push([base,base+1],[base+1,base+2],[base+2,base]);
+    }
+  }
+  return{nodes,edges,circles:[]};
+}
+
+function geoVesica(sc,ax,to,tr){
+  const r=sc*.85;
+  const d=sc*.45;
+  const nodes=[];
+  const NP=24;
+  for(let c=0;c<2;c++){
+    const ox2=c===0?-d:d;
+    for(let i=0;i<NP;i++){
+      const a=i/NP*TAU+tr*TAU;
+      const z=ax*sc*.35*Math.sin(a+to*TAU)*(c===0?1:-1);
+      nodes.push([ox2+Math.cos(a)*r,Math.sin(a)*r,z]);
+    }
+  }
+  const edges=[];
+  for(let c=0;c<2;c++){
+    const base=c*NP;
+    for(let i=0;i<NP;i++)edges.push([base+i,base+(i+1)%NP]);
+  }
+  // Quelques arêtes croisant la vesica
+  for(let i=0;i<NP;i+=4)edges.push([i,NP+i]);
+  return{nodes,edges,circles:[]};
+}
+
+function geoArbre(sc,ax,to,tr){
+  // 10 sephiroth + 22 chemins
+  const scA=sc*.7;
+  const sp=[
+    [0,-1.80],[.72,-1.22],[-.72,-1.22],[.72,-.45],[-.72,-.45],
+    [0,0],[.72,.55],[-.72,.55],[0,1.10],[0,1.72]
+  ];
+  const nodes=sp.map(([x,y],i)=>{
+    const tA=tr*TAU+i/10*to*TAU;
+    const xr=x*Math.cos(tA)-y*.1*Math.sin(tA);
+    return[xr*scA,y*scA*.75,ax*scA*.3*Math.sin(i/10*TAU+to*TAU)];
+  });
+  const edges=[[0,1],[0,2],[0,5],[1,2],[1,3],[1,5],[2,4],[2,5],[3,4],[3,5],[3,6],[4,5],[4,7],[5,6],[5,7],[5,8],[6,7],[6,8],[6,9],[7,8],[7,9],[8,9]];
+  return{nodes,edges,circles:[]};
+}
+
+function geoIcosa(sc,ax,to,tr){
+  const phi=(1+Math.sqrt(5))/2;
+  const verts=[
+    [0,1,phi],[0,-1,phi],[0,1,-phi],[0,-1,-phi],
+    [1,phi,0],[-1,phi,0],[1,-phi,0],[-1,-phi,0],
+    [phi,0,1],[phi,0,-1],[-phi,0,1],[-phi,0,-1],
+  ].map(v=>{
+    const l=Math.sqrt(v[0]**2+v[1]**2+v[2]**2);
+    const nx=v[0]/l*sc,ny=v[1]/l*sc,nz=v[2]/l*sc;
+    // Torsion + axiale
+    const a=tr*TAU;
+    const xr=nx*Math.cos(a)-ny*Math.sin(a);
+    const yr=nx*Math.sin(a)+ny*Math.cos(a);
+    return[xr,yr*(1+ax*.4),nz*(1+ax*.6)+to*sc*.2*Math.sin(xr/sc*Math.PI)];
+  });
+  const edges=[[0,1],[0,4],[0,5],[0,8],[0,10],[1,6],[1,7],[1,8],[1,10],
+    [2,3],[2,4],[2,5],[2,9],[2,11],[3,6],[3,7],[3,9],[3,11],
+    [4,5],[4,8],[4,9],[5,10],[5,11],[6,7],[6,8],[6,9],[7,10],[7,11],[8,9],[10,11]];
+  return{nodes:verts,edges,circles:[]};
+}
+
+function geoInfini(sc,ax,to,tr){
+  // Grille de losanges (Nœud Infini / Endless Knot)
+  const nodes=[];
+  const gr=sc*.42;
+  for(let row=-2;row<=2;row++)for(let col=-2;col<=2;col++){
+    if(Math.abs(row)+Math.abs(col)>3)continue;
+    const z=ax*gr*.6*Math.sin((row+col)/4*TAU+to*TAU)+to*gr*.3*Math.cos(row*col*.5+tr*TAU);
+    nodes.push([col*gr*1.72+to*gr*.2*Math.sin(row+tr*TAU),row*gr*1.72+to*gr*.2*Math.cos(col+tr*TAU),z]);
+  }
+  const edges=[];
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const d=Math.hypot(nodes[i][0]-nodes[j][0],nodes[i][1]-nodes[j][1]);
+    if(d<gr*2)edges.push([i,j]);
+  }
+  return{nodes,edges,circles:[]};
+}
+
+function geoEtoile8(sc,ax,to,tr){
+  const n=8;
+  const nodes=[];
+  // 2 carrés décalés de 45° — étoile à 8 pointes
+  for(let sq=0;sq<2;sq++){
+    for(let v=0;v<4;v++){
+      const a=v/4*TAU+sq*Math.PI/4+tr*TAU;
+      const r=sc*(1+ax*.35*(sq?1:-1));
+      const z=ax*sc*.4*(sq?1:-1)*Math.sin(v/4*TAU+to*TAU);
+      nodes.push([Math.cos(a)*r,Math.sin(a)*r,z]);
+    }
+  }
+  nodes.push([0,0,to*sc*.3]); // centre
+  const edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4]];
+  for(let i=0;i<8;i++)edges.push([i,8]);
+  for(let i=0;i<4;i++){edges.push([i,i+4]);edges.push([i,(i+1)%4+4]);}
+  return{nodes,edges,circles:[]};
+}
+
+// Dispatcher
+function buildGeo(id,sc,ax,to,tr){
+  switch(id){
+    case'metatron': return geoMetatron(sc,ax,to,tr);
+    case'fleur':    return geoFleur(sc,ax,to,tr);
+    case'graine':   return geoGraine(sc,ax,to,tr);
+    case'fruit':    return geoFruit(sc,ax,to,tr);
+    case'tore':     return geoTore(sc,ax,to,tr);
+    case'merkaba':  return geoMerkaba(sc,ax,to,tr);
+    case'david':    return geoDavid(sc,ax,to,tr);
+    case'sriyantra':return geoSriYantra(sc,ax,to,tr);
+    case'vesica':   return geoVesica(sc,ax,to,tr);
+    case'arbre':    return geoArbre(sc,ax,to,tr);
+    case'icosa':    return geoIcosa(sc,ax,to,tr);
+    case'infini':   return geoInfini(sc,ax,to,tr);
+    case'etoile8':  return geoEtoile8(sc,ax,to,tr);
+    default:        return geoMetatron(sc,ax,to,tr);
+  }
+}
+
+// ZONE:RENDER — Rendu d'une géométrie ─────────────────
+function renderGeo(geo,hue,density,gAlpha){
+  const{nodes,edges,circles}=geo;
+  const pulse=1+.04*Math.sin(V.t*_ls.f*1.8);
+
+  // Aura depuis le centre
+  if(CFG.aura&&gAlpha>.05){
+    const p0=proj(0,0,0);
+    for(let layer=6;layer>=1;layer--){
+      const gR=Math.max(1,p0.fov*MS*V.zoom*(0.12+layer*.10)*density);
+      const h=(hue+layer*14+V.t*8)%360;
+      const al=(.16-.020*layer)*density*(1+.35*Math.sin(V.t*_ls.f*TAU/6))*gAlpha;
+      const g=X.createRadialGradient(p0.sx,p0.sy,0,p0.sx,p0.sy,gR);
+      g.addColorStop(0,`hsla(${h},95%,72%,${al*1.4})`);
+      g.addColorStop(.4,`hsla(${(h+20)%360},90%,60%,${al*.6})`);
+      g.addColorStop(1,`hsla(${(h+40)%360},85%,50%,0)`);
+      X.beginPath();X.arc(p0.sx,p0.sy,gR,0,TAU);X.fillStyle=g;X.fill();
+    }
+  }
+
+  // Arêtes
+  if(CFG.edges&&gAlpha>.02){
+    edges.forEach(([i,j],ei)=>{
+      const[ax2,ay2,az2]=nodes[i],[bx2,by2,bz2]=nodes[j];
+      const pa=proj(ax2,ay2,az2),pb=proj(bx2,by2,bz2);
+      const avgFov=(pa.fov+pb.fov)*.5;
+      const h=(hue+(i+j)*8)%360;
+      const al=Math.min(.88,density*.75*avgFov*gAlpha);
+      if(al<.01)return;
+      const gb=avgFov>.7&&V.glow>.1?Math.round(V.glow*12):0;
+      if(gb>0){X.shadowColor=`hsla(${h},90%,68%,1)`;X.shadowBlur=gb;}
+      const lg=X.createLinearGradient(pa.sx,pa.sy,pb.sx,pb.sy);
+      lg.addColorStop(0,`hsla(${h},88%,68%,${al})`);
+      lg.addColorStop(1,`hsla(${(h+40)%360},88%,68%,${al})`);
+      X.beginPath();X.moveTo(pa.sx,pa.sy);X.lineTo(pb.sx,pb.sy);
+      X.strokeStyle=lg;X.lineWidth=Math.max(.35,1.1*avgFov*density*V.zoom);X.globalAlpha=1;X.stroke();
+      X.shadowBlur=0;
+    });
+  }
+
+  // Cercles des sphères
+  if(CFG.circles&&circles.length>0&&gAlpha>.02){
+    circles.forEach(({ci,r})=>{
+      const[ox,oy,oz]=nodes[ci];
+      const h=(hue+ci*25)%360;
+      const NP=36;
+      X.beginPath();let first=true;
+      for(let s=0;s<NP+1;s++){
+        const a=s/NP*TAU;
+        const rx=Math.cos(a)*r,ry2=Math.sin(a)*r*Math.cos(_ls.t*TAU*.5);
+        const rz=Math.sin(a)*r*Math.sin(_ls.t*TAU*.5)*(_ls.a*.5);
+        const p=proj(ox+rx,oy+ry2,oz+rz);
+        if(first){X.moveTo(p.sx,p.sy);first=false;}else X.lineTo(p.sx,p.sy);
+      }
+      const pC=proj(ox,oy,oz);
+      const al2=density*.48*Math.max(0,.2+.8*pC.fov)*gAlpha;
+      if(V.glow>.1){X.shadowColor=`hsla(${h},88%,65%,1)`;X.shadowBlur=Math.round(V.glow*7);}
+      X.strokeStyle=`hsla(${h},88%,66%,${al2})`;X.lineWidth=Math.max(.28,.75*density*V.zoom);X.stroke();X.shadowBlur=0;
+    });
+  }
+
+  // Sphères nœuds
+  if(CFG.spheres&&gAlpha>.02){
+    nodes.forEach(([ox,oy,oz],idx)=>{
+      const p=proj(ox,oy,oz);
+      const r=Math.max(1.2,p.fov*MS*V.zoom*.050*density*pulse*gAlpha);
+      const h=(hue+idx*25)%360;
+      const sg=X.createRadialGradient(p.sx-r*.3,p.sy-r*.3,r*.04,p.sx,p.sy,r);
+      sg.addColorStop(0,`hsla(${h},22%,97%,${density*.88*gAlpha})`);
+      sg.addColorStop(.22,`hsla(${h},82%,76%,${density*.85*gAlpha})`);
+      sg.addColorStop(.58,`hsla(${h},92%,50%,${density*.80*gAlpha})`);
+      sg.addColorStop(1,`hsla(${(h+25)%360},88%,16%,${density*.62*gAlpha})`);
+      X.beginPath();X.arc(p.sx,p.sy,r,0,TAU);X.fillStyle=sg;X.fill();
+      if(V.glow>.05){X.shadowColor=`hsla(${h},90%,72%,1)`;X.shadowBlur=Math.round(V.glow*9)*density;}
+      X.beginPath();X.arc(p.sx,p.sy,r,0,TAU);X.strokeStyle=`hsla(${h},92%,80%,${density*.62*gAlpha})`;X.lineWidth=.5*density;X.stroke();X.shadowBlur=0;
+    });
+  }
+}
+
+// ZONE:PARTICLES ──────────────────────────────────────
+const NPART=180;
+const parts=[];
+const _baseNodes=geoMetatron(1,0,0,0).nodes;
+for(let i=0;i<NPART;i++){parts.push({ai:Math.floor(Math.random()*_baseNodes.length),bi:Math.floor(Math.random()*_baseNodes.length),t:Math.random(),spd:.003+Math.random()*.006,ph:Math.random()*TAU});}
+
+function drawParticles(hue,density,nodes){
+  if(!CFG.parts||nodes.length<2)return;
+  const nN=nodes.length;
+  parts.forEach((p,i)=>{
+    const ai=p.ai%nN,bi=p.bi%nN;
+    p.t=(p.t+p.spd*_ls.f)%1;
+    const[ax2,ay2,az2]=nodes[ai],[bx2,by2,bz2]=nodes[bi];
+    const px2=ax2+(bx2-ax2)*p.t,py2=ay2+(by2-ay2)*p.t,pz2=az2+(bz2-az2)*p.t;
+    const pp=proj(px2,py2,pz2);
+    const h=(hue+i/NPART*360+V.t*12)%360;
+    const alpha=density*Math.max(.05,pp.fov*.65)*(.5+.5*Math.sin(V.t*_ls.f*2+p.ph));
+    const sz=Math.max(.7,pp.fov*MS*V.zoom*.025*density);
+    if(V.glow>.05){X.shadowColor=`hsla(${h},92%,72%,1)`;X.shadowBlur=sz*3.5*V.glow;}
+    X.fillStyle=`hsla(${h},92%,72%,${alpha})`;X.beginPath();X.arc(pp.sx,pp.sy,sz,0,TAU);X.fill();
+  });
+  X.shadowBlur=0;
+}
+
+// ZONE:RING — Cercle UT432 ────────────────────────────
+function drawUT432Ring(ut432,hue){
+  if(!CFG.ring)return;
+  const RR=MS*1.05;
+  for(let i=0;i<360;i++){
+    const a0=i/360*TAU-Math.PI/2,a1=(i+1)/360*TAU-Math.PI/2+.010;
+    X.beginPath();X.arc(cx,cy,RR,a0,a1);
+    X.strokeStyle=`hsla(${(hue+i)%360},85%,58%,.13)`;X.lineWidth=RR*.036;X.stroke();
+  }
+  const frac=ut432/432;
+  if(frac>0){
+    for(let i=0;i<=Math.floor(frac*180);i++){
+      const p=i/180;if(p>frac)break;
+      const a0=p*TAU-Math.PI/2,a1=(p+1/180)*TAU-Math.PI/2+.008;
+      const h=(hue+p*360)%360;
+      const prox=Math.max(0,1-(frac-p)*5);
+      X.beginPath();X.arc(cx,cy,RR,a0,a1);
+      X.strokeStyle=`hsla(${h},98%,72%,${.44+.50*prox})`;X.lineWidth=RR*.040;X.stroke();
+      if(prox>.45){X.beginPath();X.arc(cx,cy,RR,a0,a1);X.strokeStyle=`hsla(${h},98%,88%,${prox*.17})`;X.lineWidth=RR*.078;X.stroke();}
+    }
+  }
+  // Tête
+  const ha=frac*TAU-Math.PI/2;
+  const hx=cx+Math.cos(ha)*RR,hy=cy+Math.sin(ha)*RR;
+  const ph=(hue+frac*360)%360;
+  const hp=1+.22*Math.sin(V.t*TAU*_ls.f*.28);
+  const hg=X.createRadialGradient(hx,hy,0,hx,hy,RR*.088*hp);
+  hg.addColorStop(0,`hsla(${ph},100%,88%,.76)`);hg.addColorStop(.4,`hsla(${ph},95%,72%,.30)`);hg.addColorStop(1,`hsla(${ph},90%,60%,0)`);
+  X.beginPath();X.arc(hx,hy,RR*.088*hp,0,TAU);X.fillStyle=hg;X.fill();
+  const cg=X.createRadialGradient(hx-RR*.011,hy-RR*.011,0,hx,hy,RR*.021);
+  cg.addColorStop(0,'rgba(255,255,255,.96)');cg.addColorStop(.4,`hsla(${ph},90%,84%,.86)`);cg.addColorStop(1,`hsla(${ph},90%,62%,.60)`);
+  X.beginPath();X.arc(hx,hy,RR*.021,0,TAU);X.fillStyle=cg;X.fill();
+  for(let s=0;s<18;s++){const ta=ha-Math.PI*.09*(1-s/18);const tx=cx+Math.cos(ta)*RR,ty=cy+Math.sin(ta)*RR;X.beginPath();X.arc(tx,ty,RR*.010*(s/18),0,TAU);X.fillStyle=`hsla(${ph},92%,76%,${(s/18)*.48})`;X.fill();}
+  // Seuils
+  SEUILS.forEach(s=>{
+    const a=s.v/432*TAU-Math.PI/2,near=Math.abs(ut432-s.v)<8;
+    const lx=cx+Math.cos(a)*(RR*1.072),ly=cy+Math.sin(a)*(RR*1.072);
+    X.beginPath();X.moveTo(cx+Math.cos(a)*RR*.977,cy+Math.sin(a)*RR*.977);X.lineTo(cx+Math.cos(a)*RR*.994,cy+Math.sin(a)*RR*.994);
+    X.strokeStyle=`hsla(${s.h},88%,68%,${near?.82:.26})`;X.lineWidth=near?1.8:.6;X.stroke();
+    X.font=`${near?'700':'300'} ${Math.max(8,RR*.022|0)}px 'Cinzel',serif`;
+    X.fillStyle=`hsla(${s.h},90%,${near?85:57}%,${near?.86:.34})`;
+    if(near){X.shadowColor=`hsl(${s.h},90%,68%)`;X.shadowBlur=11;}
+    X.textAlign='center';X.textBaseline='middle';X.fillText(s.v,lx,ly);X.shadowBlur=0;
+  });
+  // Astres
+  const{date:fd2,off:off2}=frNow();
+  const eot2=eqT(fd2);
+  const sun2=sunTimes(fd2);
+  if(sun2){
+    [{h:sun2.rise},{h:sun2.set}].forEach(ev=>{
+      const sm2=ev.h*60+LON_D/15*60+eot2;
+      const utA=((sm2)/1440*432+432)%432;
+      const ang=utA/432*TAU-Math.PI/2;
+      const ex=cx+Math.cos(ang)*RR,ey=cy+Math.sin(ang)*RR;
+      const dr=RR*.017;
+      const sg2=X.createRadialGradient(ex,ey,0,ex,ey,dr*3.5);
+      sg2.addColorStop(0,'hsla(48,100%,72%,.52)');sg2.addColorStop(1,'hsla(40,100%,60%,0)');
+      X.beginPath();X.arc(ex,ey,dr*3.5,0,TAU);X.fillStyle=sg2;X.fill();
+      const sdg=X.createRadialGradient(ex-dr*.3,ey-dr*.3,dr*.04,ex,ey,dr);
+      sdg.addColorStop(0,'hsla(56,100%,92%,1)');sdg.addColorStop(.4,'hsla(48,100%,78%,1)');sdg.addColorStop(1,'hsla(38,100%,58%,.9)');
+      X.beginPath();X.arc(ex,ey,dr,0,TAU);X.fillStyle=sdg;X.fill();
+      for(let i=0;i<8;i++){const a2=i*Math.PI/4+V.t*.7;X.beginPath();X.moveTo(ex+Math.cos(a2)*dr*1.4,ey+Math.sin(a2)*dr*1.4);X.lineTo(ex+Math.cos(a2)*dr*2.1,ey+Math.sin(a2)*dr*2.1);X.strokeStyle='hsla(48,100%,80%,.48)';X.lineWidth=dr*.18;X.stroke();}
+    });
+  }
+}
+
+// ZONE:LOOP ───────────────────────────────────────────
+let _paused=false,_ut432=0;
+
+function loop(){
+  requestAnimationFrame(loop);
+  if(_paused)return;
+  const{date:fd,off}=frNow();
+  const ut432=calcUT(fd,off);_ut432=ut432;
+  const hue=getHue(ut432);
+  const seuil=getCurSeuil(ut432);
+
+  // Lissage rotation
+  V.rx+=(V.trx-V.rx)*.055;V.ry+=(V.try_-V.ry)*.055;V.zoom+=(V.tzoom-V.zoom)*.07;
+  if(V.autoRot)V.try_+=.0018*V.spd;
+
+  // Params auto
+  if(CFG.auto){
+    const p=ut2params(ut432);
+    CFG._td=p.dens;CFG._tt=p.tors;CFG._tf=p.freq;CFG._ta=p.axial;CFG._tr=p.tore;
+    ['dens','tors','freq','axe','tore'].forEach((k,i)=>{
+      const keys=['dens','tors','freq','axe','tore'];
+      const vals=[p.dens*100,p.tors*100,p.freq*100,p.axial*100,p.tore*100];
+      const sl=document.getElementById('sl-'+keys[i]);
+      const sv=document.getElementById('sv-'+keys[i]);
+      if(sl)sl.value=vals[i];
+      if(sv){
+        if(k==='tors')sv.textContent=Math.round(p.tors*360)+'°';
+        else if(k==='freq')sv.textContent=p.freq.toFixed(2);
+        else if(k==='dens')sv.textContent=p.dens.toFixed(2);
+        else sv.textContent=(vals[i]/100).toFixed(2);
+      }
+    });
+  }else{
+    CFG._td=CFG.density;CFG._tt=CFG.torsion;CFG._tf=CFG.freq;CFG._ta=CFG.axial;CFG._tr=CFG.tore;
+  }
+
+  // Lissage paramètres
+  _ls.d+=( CFG._td-_ls.d)*.032;_ls.t+=( CFG._tt-_ls.t)*.026;
+  _ls.f+=( CFG._tf-_ls.f)*.038;_ls.a+=( CFG._ta-_ls.a)*.030;
+  _ls.r+=( CFG._tr-_ls.r)*.028;
+
+  // Transition morphing entre géométries
+  if(_geoMorph.to!==_geoMorph.from){
+    _geoMorph.t=Math.min(1,_geoMorph.t+.025);
+    if(_geoMorph.t>=1){_geoMorph.from=_geoMorph.to;}
+  }
+
+  // Fond
+  B.fillStyle=`hsla(${hue},35%,4%,1)`;B.fillRect(0,0,W,H);
+  X.fillStyle=`hsla(${hue},30%,3%,.18)`;X.fillRect(0,0,W,H);
+  X.globalAlpha=1;
+
+  // Construire géométrie(s)
+  const geoA=buildGeo(_geoMorph.from,1,_ls.a,_ls.r,_ls.t);
+  const morphT=_geoMorph.t;
+  if(morphT<1&&_geoMorph.from!==_geoMorph.to){
+    // Afficher les deux avec alpha croisé
+    const geoB=buildGeo(_geoMorph.to,1,_ls.a,_ls.r,_ls.t);
+    renderGeo(geoA,hue,_ls.d,1-morphT);
+    renderGeo(geoB,hue,_ls.d,morphT);
+    drawParticles(hue,_ls.d,morphT>.5?geoB.nodes:geoA.nodes);
+  }else{
+    renderGeo(geoA,hue,_ls.d,1);
+    drawParticles(hue,_ls.d,geoA.nodes);
+  }
+
+  drawUT432Ring(ut432,hue);
+  V.t+=.016*V.spd;
+  updateHUD(ut432,hue,seuil,fd,off);
+}
+
+// ZONE:HUD ────────────────────────────────────────────
+function updateHUD(ut432,hue,seuil,fd,off){
+  const col=`hsl(${hue},90%,72%)`;
+  const dn=document.getElementById('h-num');
+  dn.textContent=ut432.toFixed(1);dn.style.color=col;dn.style.textShadow=`0 0 50px ${col},0 0 100px ${col}`;
+  document.getElementById('h-geo').textContent=GEOS.find(g=>g.id===currentGeo)?.name||'';
+  document.getElementById('h-geo').style.color=`hsl(${hue},75%,55%)`;
+  document.getElementById('h-seuil').textContent=seuil.s;
+  document.getElementById('h-seuil').style.color=`hsl(${hue},70%,50%)`;
+
+  const fills={dens:[_ls.d/2*100,hue],tors:[_ls.t*100,(hue+60)%360],freq:[_ls.f/4*100,(hue+120)%360],axe:[_ls.a*100,(hue+200)%360],tore:[_ls.r*100,(hue+280)%360]};
+  Object.entries(fills).forEach(([k,[pct,h]])=>{
+    const gf=document.getElementById('gf-'+k),gv=document.getElementById('gv-'+k);
+    if(gf){gf.style.height=Math.min(100,pct)+'%';gf.style.background=`hsl(${h},85%,62%)`;}
+    if(gv){
+      gv.style.color=`hsl(${h},85%,65%)`;
+      if(k==='tors')gv.textContent=Math.round(_ls.t*360)+'°';
+      else if(k==='freq')gv.textContent=_ls.f.toFixed(2);
+      else if(k==='dens')gv.textContent=_ls.d.toFixed(2);
+      else gv.textContent=(_ls[k[0]==='a'?'a':'r']).toFixed(2);
+    }
+  });
+
+  const hh=String(fd.getUTCHours()).padStart(2,'0'),mm=String(fd.getUTCMinutes()).padStart(2,'0'),ss=String(fd.getUTCSeconds()).padStart(2,'0');
+  document.getElementById('h-civil').textContent=`${hh}:${mm}:${ss}`;
+  document.getElementById('h-civil').style.color=`hsl(${hue},40%,50%)`;
+  const sun=sunTimes(fd);
+  if(sun){
+    const rh=Math.floor(sun.rise+off)%24,rm=Math.floor((sun.rise+off)%1*60);
+    const sh=Math.floor(sun.set+off)%24,sm2=Math.floor((sun.set+off)%1*60);
+    document.getElementById('sun-t').textContent=`${String(rh).padStart(2,'0')}:${String(rm).padStart(2,'0')} — ${String(sh).padStart(2,'0')}:${String(sm2).padStart(2,'0')}`;
+  }
+  const moon=moonPhase(fd);
+  document.getElementById('moon-ico').textContent=moon.icon;document.getElementById('moon-t').textContent=Math.round(moon.phase*100)+'%';
+  document.getElementById('jo-live').textContent=`${ut432.toFixed(1)} | ${seuil.s} | UTC+${off}`;
+}
+
+// ZONE:GEO-SEL — Boutons géométries ───────────────────
+function buildGeoButtons(){
+  const wrap=document.getElementById('geo-btns');
+  GEOS.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.className='gbtn'+(g.id===currentGeo?' on':'');
+    btn.textContent=g.name;
+    btn.onclick=()=>setGeo(g.id);
+    wrap.appendChild(btn);
+  });
+}
+function setGeo(id){
+  if(id===currentGeo)return;
+  _geoMorph={from:currentGeo,to:id,t:0};
+  currentGeo=id;
+  document.querySelectorAll('.gbtn').forEach(b=>b.classList.toggle('on',b.textContent===GEOS.find(g=>g.id===id)?.name));
+}
+
+// ZONE:UI ─────────────────────────────────────────────
+let isPanelOpen=false;
+function togglePanel(){isPanelOpen=!isPanelOpen;document.getElementById('panel').classList.toggle('open',isPanelOpen);}
+function togglePause(){_paused=!_paused;}
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen().catch(()=>{});}
+document.addEventListener('fullscreenchange',()=>resize());
+function doExport(){const oc=document.createElement('canvas');oc.width=W;oc.height=H;const ox=oc.getContext('2d');ox.drawImage(BG,0,0);ox.drawImage(FG,0,0);const a=document.createElement('a');a.href=oc.toDataURL('image/png');a.download=`OmCv_${currentGeo}_${Math.round(_ut432)}_${new Date().toISOString().slice(0,10)}.png`;a.click();}
+
+FG.addEventListener('mousedown',e=>{V.drag=true;V.lmx=e.clientX;V.lmy=e.clientY;V.autoRot=false;});
+window.addEventListener('mouseup',()=>{V.drag=false;});
+window.addEventListener('mousemove',e=>{if(!V.drag)return;V.try_+=(e.clientX-V.lmx)*.007;V.trx=Math.max(-1.4,Math.min(1.4,V.trx+(e.clientY-V.lmy)*.007));V.lmx=e.clientX;V.lmy=e.clientY;});
+FG.addEventListener('wheel',e=>{e.preventDefault();V.tzoom=Math.max(.3,Math.min(3.5,V.tzoom*(e.deltaY>0?.93:1.08)));},{passive:false});
+let _ptd=0;
+FG.addEventListener('touchstart',e=>{if(e.touches.length===1){V.drag=true;V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;V.autoRot=false;}else if(e.touches.length===2){_ptd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}},{passive:true});
+FG.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches.length===1&&V.drag){V.try_+=(e.touches[0].clientX-V.lmx)*.007;V.trx+=(e.touches[0].clientY-V.lmy)*.007;V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;}else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);V.tzoom=Math.max(.3,Math.min(3.5,V.tzoom*d/_ptd));_ptd=d;}},{passive:false});
+FG.addEventListener('touchend',()=>{V.drag=false;});
+window.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.key.toLowerCase()==='p')togglePause();
+  if(e.key.toLowerCase()==='f')toggleFS();
+  // Touches 1-9 pour changer de géométrie
+  const idx=parseInt(e.key)-1;
+  if(idx>=0&&idx<GEOS.length)setGeo(GEOS[idx].id);
+  if(e.key==='Escape'){V.trx=.28;V.try_=0;V.tzoom=1;if(isPanelOpen)togglePanel();}
+});
+
+// Init
+resize();
+buildGeoButtons();
+loop();
+</script>
+</body>
+</html>
