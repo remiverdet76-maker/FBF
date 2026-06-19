@@ -204,6 +204,11 @@ input[type=color]{
 }
 @keyframes ripple{0%{width:0;height:0;opacity:.55;margin:0}100%{width:140px;height:140px;opacity:0;margin:-70px}}
 </style>
+<link rel="stylesheet" href="bg-rotator.css">
+<style id="cosmic-bg-override">
+  html,body{background:transparent !important;}
+  #c{mix-blend-mode:screen;}
+</style>
 </head>
 <body>
 <div id="title">UTC432 · PROJECT · PARIS · 396</div>
@@ -798,5 +803,6 @@ function loop(){
 
 resize(); loop();
 </script>
+<script src="bg-rotator.js"></script>
 </body>
 </html>

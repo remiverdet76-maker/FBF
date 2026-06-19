@@ -1284,6 +1284,12 @@ input.param-input{
 
 
 </style>
+<link rel="stylesheet" href="bg-rotator.css">
+<style id="cosmic-bg-override">
+  html,body{background:transparent !important;}
+  #cosmic-bg{display:none!important;}
+  #meta-canvas{filter:contrast(1.16) saturate(1.18);}
+</style>
 </head>
 <body>
 
@@ -1983,12 +1989,12 @@ function ui(state, text) {
 // 9 géométries sacrées 3D
 const GEO_NAMES=['Dodécaèdre','Icosaèdre','Double Pyramide','Merkaba','Graine de Vie','Fleur de Vie','Arbre de Vie','Sphère Organique'];
 const GEO_IDS  =['dodeca','icosa','bipyramid','merkaba','graine','fleur','arbre','sphere'];
-let activeGeometry=0;
+let activeGeometry=7; // Sphère Organique par défaut — structure 3D autonome & organique
 
 const V={rx:.28,ry:0,trx:.28,try_:0,zoom:2.5,tzoom:2.5,drag:false,lmx:0,lmy:0,t:0,spd:1,autoRot:true};
 
 // HP: wi=vitesse flux · ex=échelle géo · f=couplage fréquence audio
-const HP={wi:6.0,ex:.18,tM:7,ns:200,br:true,pa:true,ma:true,la:true,gl:.65,f:1,breathe:1};
+const HP={wi:6.5,ex:.26,tM:10,ns:280,br:true,pa:true,ma:true,la:true,gl:.80,f:1,breathe:1};
 const TF={val:0,target:0};
 const AE={on:false,spd:.3,phase:0,counter:0,baseWi:6.0,baseEx:.18,baseTM:7};
 
@@ -2000,7 +2006,7 @@ const GEO_PRESETS={
   graine:   {wi:6.0, ex:.12,tM:5, ns:120,tf:0.0 },
   fleur:    {wi:6.0, ex:.16,tM:7, ns:170,tf:0.05},
   arbre:    {wi:5.5, ex:.17,tM:8, ns:155,tf:0.12},
-  sphere:   {wi:6.0, ex:.28,tM:10,ns:200,tf:0.5 },
+  sphere:   {wi:6.5, ex:.30,tM:10,ns:280,tf:0.55},
 };
 
 let _hpTarget=null;
@@ -4840,5 +4846,6 @@ function cycleFluxMode() {
 }
 
 </script>
+<script src="bg-rotator.js"></script>
 </body>
 </html>

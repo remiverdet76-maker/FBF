@@ -359,7 +359,12 @@ input[type=range].rm::-webkit-slider-thumb{background:var(--cgold);box-shadow:0 
 }
 @keyframes fhint{0%{opacity:.2;}75%{opacity:.2;}100%{opacity:0;pointer-events:none;}}
 </style>
-<script src="/_sdk/resizing_sdk.js"></script></head>
+<script src="/_sdk/resizing_sdk.js"></script><link rel="stylesheet" href="bg-rotator.css">
+<style id="cosmic-bg-override">
+  html,body{background:transparent !important;}
+  #cvUniverse,#cvSphere{mix-blend-mode:screen;}
+</style>
+</head>
 <body data-html-import-id="html-import-0" data-template-id="__page-root" style="background: rgb(1, 3, 6);">
 <canvas id="cvUniverse" width="1280" height="1024" data-html-import-id="html-import-1"></canvas>
 <canvas id="cvSphere" width="1280" height="1024" data-html-import-id="html-import-2"></canvas>
@@ -1937,4 +1942,5 @@ setTimeout(function(){
 </script>
 
 
-<script src="/_sdk/editing_sdk.js"></script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0e369efa616da11',t:'MTc4MTg4MTMzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body></html>
+<script src="/_sdk/editing_sdk.js"></script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0e369efa616da11',t:'MTc4MTg4MTMzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script src="bg-rotator.js"></script>
+</body></html>

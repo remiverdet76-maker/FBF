@@ -48,7 +48,11 @@ jobs:
                    ../copilot432.html ../sphere3d432.html; do
             [ -f "$f" ] && cp "$f" www/
           done
-          echo "www/ contents:"; ls -lh www/
+          # Fond cosmique rotatif partagé + 9 images recalibrées 9:16
+          cp ../bg-rotator.css ../bg-rotator.js www/
+          mkdir -p www/img
+          cp ../img/*.jpg www/img/
+          echo "www/ contents:"; ls -lh www/; echo "www/img:"; ls -lh www/img/
 
       - name: Remove Google Fonts (offline fallback)
         working-directory: apk/www

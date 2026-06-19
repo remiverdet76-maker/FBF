@@ -1,0 +1,33 @@
+/* ════════════════════════════════════════════════════════════════
+   bg-rotator.css — Fond cosmique rotatif (9 images 9:16) partagé
+   par tous les écrans à fond noir. Reste derrière tout le contenu.
+   ════════════════════════════════════════════════════════════════ */
+#bg-rotator{
+  position:fixed; inset:0; z-index:-10;
+  overflow:hidden; pointer-events:none;
+  background:#02010d;
+}
+#bg-rotator .bg-layer{
+  position:absolute; inset:0;
+  background-size:cover; background-position:center center;
+  background-repeat:no-repeat;
+  opacity:0; transition:opacity 2.6s ease-in-out;
+  /* léger contraste/saturation + assombrissement pour la lisibilité */
+  filter:contrast(1.10) saturate(1.10) brightness(.80);
+  transform:scale(1.06);
+  will-change:opacity;
+}
+#bg-rotator .bg-layer.on{ opacity:1; }
+/* voile dégradé : centre plus clair, bords assombris → contenu lisible */
+#bg-rotator .bg-veil{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 42%,
+              rgba(2,1,13,.18) 0%,
+              rgba(2,1,13,.50) 58%,
+              rgba(2,1,13,.78) 100%);
+}
+
+/* Canvas "néon sur noir" : le noir devient transparent (laisse voir le
+   fond cosmique) et seules les lignes lumineuses ressortent → contraste
+   accru des animations 3D. */
+.fx-screen{ mix-blend-mode:screen; }
