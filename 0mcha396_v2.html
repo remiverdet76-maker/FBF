@@ -306,15 +306,6 @@ body{
   text-transform: uppercase;
 }
 
-.sph-ut {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(.55rem, 2vmin, .8rem);
-  font-weight: 400;
-  color: rgba(200,180,255,.55);
-  letter-spacing: .14em;
-  transition: color .8s;
-}
-
 #flux-mode-btn {
   position: fixed;
   bottom: 24px;
@@ -1676,7 +1667,7 @@ function lfoToggle(on) {
   LFO_STATE.on = on;
   if (!_lfoNode || !_lfoDepthGain || !_lfoGain) return;
   if (on) {
-    _lfoDepthGain.gain.value = LFO_STATE.depth;
+    _lfoDepthGain.gain.setTargetAtTime(LFO_STATE.depth, aNow(), 0.08);
   } else {
     _lfoDepthGain.gain.setTargetAtTime(0, aNow(), 0.1);
   }
@@ -1694,7 +1685,7 @@ function breathToggle(on) {
   BREATH_STATE.on = on;
   if (!_breathLFO || !_breathDepthGain || !_breathGain) return;
   if (on) {
-    _breathDepthGain.gain.value = BREATH_STATE.depth;
+    _breathDepthGain.gain.setTargetAtTime(BREATH_STATE.depth, aNow(), 0.2);
   } else {
     _breathDepthGain.gain.setTargetAtTime(0, aNow(), 0.5);
   }
@@ -1724,8 +1715,8 @@ function _startBTKeepalive() {
   } catch(e) {}
 }
 
-function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
-function setCompRatio(v)   { if (compressor) try { compressor.ratio.value = parseFloat(v); } catch(e) {} }
+function setCompThresh(v)  { if (compressor) try { compressor.threshold.setTargetAtTime(parseFloat(v), aNow(), 0.05); } catch(e) {} }
+function setCompRatio(v)   { if (compressor) try { compressor.ratio.setTargetAtTime(parseFloat(v), aNow(), 0.05); } catch(e) {} }
 
 /* ---------- 2.6b · CONTRÔLES RACK MASTER (style DB4) ---------- */
 // Trim d'entrée du bus (gain avant master). 0..1.5, défaut 1.
