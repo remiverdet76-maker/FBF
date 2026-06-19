@@ -1,6 +1,28 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+<!doctype html>
+<html lang="fr"><head>
+<script>
+/* OmCha396 — audio centralise : ce module reste muet quand il est embarque
+   (le binaural d'Omcha396 est la seule source). En page autonome : inchange. */
+(function(){
+  if (window.self === window.top) return;
+  try {
+    var P = window.AudioNode && AudioNode.prototype;
+    if (P && P.connect) {
+      var _c = P.connect;
+      P.connect = function(dest){
+        try {
+          if (dest && ((window.AudioDestinationNode && dest instanceof window.AudioDestinationNode) ||
+              (dest.constructor && dest.constructor.name === "AudioDestinationNode"))) {
+            return dest;
+          }
+        } catch(e){}
+        return _c.apply(this, arguments);
+      };
+    }
+  } catch(e){}
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SPHÈRE 432</title>
@@ -337,252 +359,252 @@ input[type=range].rm::-webkit-slider-thumb{background:var(--cgold);box-shadow:0 
 }
 @keyframes fhint{0%{opacity:.2;}75%{opacity:.2;}100%{opacity:0;pointer-events:none;}}
 </style>
-</head>
-<body>
-<canvas id="cvUniverse"></canvas>
-<canvas id="cvSphere"></canvas>
-<div id="ui">
+<script src="/_sdk/resizing_sdk.js"></script></head>
+<body data-html-import-id="html-import-0" data-template-id="__page-root" style="background: rgb(1, 3, 6);">
+<canvas id="cvUniverse" width="1280" height="1024" data-html-import-id="html-import-1"></canvas>
+<canvas id="cvSphere" width="1280" height="1024" data-html-import-id="html-import-2"></canvas>
+<div id="ui" data-html-import-id="html-import-3">
 
 <!-- HEADER -->
-<div id="hdr">
-  <div id="hdr-title">SPHÈRE 432</div>
-  <div id="hdr-sub">Expansion Fractale · Centre 432</div>
-  <div id="hdr-ratio">432 / 360 = 6/5 → n+1/n</div>
+<div id="hdr" data-html-import-id="html-import-4">
+  <div id="hdr-title" data-html-import-id="html-import-5" data-template-id="div-0" class="canva-container" style="font-family: Orbitron; font-weight: 700; font-size: 28px;">SPHÈRE 432</div>
+  <div id="hdr-sub" data-html-import-id="html-import-6" data-template-id="div-1" class="canva-container" style="color: rgb(122, 154, 176); font-size: 9px;">Expansion Fractale · Centre 432</div>
+  <div id="hdr-ratio" data-html-import-id="html-import-7" data-template-id="div-2" class="canva-container" style="color: rgb(0, 204, 255); font-size: 11px;">432 / 360 = 6/5 → n+1/n</div>
 </div>
 
 <!-- TOOLBAR -->
-<div id="toolbar">
-  <button class="tbtn" id="tModes">⊞ Modes</button>
-  <button class="tbtn maxexp-c" id="tMaxExp" onclick="toggleMaxExp()">✦ 360×432^(432×432)</button>
-  <button class="tbtn" id="tBin">⬡ Binaural</button>
-  <button class="tbtn bpm-c" id="tBpm">◉ BPM</button>
-  <button class="tbtn pp-c" id="tPP">⇄ Ping-Pong</button>
-  <button class="tbtn" id="tMaster">◈ Master</button>
-  <button class="tbtn" id="tParams">≡ Params</button>
-  <button class="tbtn" id="tFS">⤢ Plein écran</button>
+<div id="toolbar" data-html-import-id="html-import-8">
+  <button class="tbtn canva-button" id="tModes" data-html-import-id="html-import-9" data-template-id="button-3" style="background: rgba(1, 3, 6, 0.9); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">⊞ MODES</button>
+  <button class="tbtn maxexp-c canva-button" id="tMaxExp" onclick="toggleMaxExp()" data-html-import-id="html-import-10" data-template-id="button-4" style="background: rgba(1, 3, 6, 0.9); color: rgb(255, 215, 0); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">✦ 360×432^(432×432)</button>
+  <button class="tbtn canva-button" id="tBin" data-html-import-id="html-import-11" data-template-id="button-5" style="background: rgba(1, 3, 6, 0.9); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">⬡ BINAURAL</button>
+  <button class="tbtn bpm-c canva-button" id="tBpm" data-html-import-id="html-import-12" data-template-id="button-6" style="background: rgba(1, 3, 6, 0.9); color: rgb(255, 204, 0); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">◉ BPM</button>
+  <button class="tbtn pp-c canva-button" id="tPP" data-html-import-id="html-import-13" data-template-id="button-7" style="background: rgba(1, 3, 6, 0.9); color: rgb(136, 85, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">⇄ PING-PONG</button>
+  <button class="tbtn canva-button" id="tMaster" data-html-import-id="html-import-14" data-template-id="button-8" style="background: rgba(1, 3, 6, 0.9); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">◈ MASTER</button>
+  <button class="tbtn canva-button" id="tParams" data-html-import-id="html-import-15" data-template-id="button-9" style="background: rgba(1, 3, 6, 0.9); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">≡ PARAMS</button>
+  <button class="tbtn canva-button" id="tFS" data-html-import-id="html-import-16" data-template-id="button-10" style="background: rgba(1, 3, 6, 0.9); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">⤢ PLEIN ÉCRAN</button>
 </div>
 
 <!-- MODES PANEL -->
-<div id="panModes">
-  <div class="psec-title exp">Expansion</div>
-  <div class="mrow exp" data-mode="exp1">432 / 360 <span class="mrow-ratio">×1.200</span></div>
-  <div class="mrow exp" data-mode="exp2">864 / 360 <span class="mrow-ratio">×2.400</span></div>
-  <div class="mrow exp" data-mode="exp3">1296 / 360 <span class="mrow-ratio">×3.600</span></div>
-  <div class="psec-gap"></div>
-  <div class="psec-title cont">Contraction</div>
-  <div class="mrow cont" data-mode="cnt1">360 / 432 <span class="mrow-ratio">×0.833</span></div>
-  <div class="mrow cont" data-mode="cnt2">360 / 864 <span class="mrow-ratio">×0.417</span></div>
-  <div class="mrow cont" data-mode="cnt3">360 / 1296 <span class="mrow-ratio">×0.278</span></div>
-  <div class="psec-gap"></div>
-  <div class="psec-title spec">Spéciaux</div>
-  <div class="mrow flux" data-mode="flux">Flux énergétique</div>
-  <div class="mrow pp" data-mode="pp">Ping-Pong</div>
-  <div class="mrow" data-mode="bpm">BPM Pulsation</div>
-  <div class="psec-gap"></div>
-  <div class="psec-title" style="color:#ffd700;">Expansion Maximale</div>
-  <div class="mrow maxexp" data-mode="maxexp" onclick="setMode('maxexp')" style="flex-direction:column;align-items:flex-start;gap:3px;">
-    <div style="display:flex;justify-content:space-between;width:100%;">
-      <span>360 × 432^(432×432)</span>
-      <span class="mrow-ratio">∞</span>
+<div id="panModes" data-html-import-id="html-import-17" data-template-id="div-11" class="canva-container" style="background: rgba(1, 3, 6, 0.93);">
+  <div class="psec-title exp canva-container" data-html-import-id="html-import-18" data-template-id="div-12" style="color: rgb(0, 255, 136); font-size: 8px;">Expansion</div>
+  <div class="mrow exp canva-container" data-mode="exp1" data-html-import-id="html-import-19" data-template-id="div-13" style="color: rgb(0, 255, 136); font-size: 9px;"><canva-inline-text data-template-id="canva-inline-text-14" class="canva-text" style="color: rgb(0, 255, 136); font-size: 9px;">432 / 360 </canva-inline-text><span class="mrow-ratio canva-text" data-html-import-id="html-import-20" data-template-id="span-15" style="color: rgb(0, 255, 136); font-size: 8px;">×1.200</span></div>
+  <div class="mrow exp canva-container" data-mode="exp2" data-html-import-id="html-import-21" data-template-id="div-16" style="color: rgb(0, 255, 136); font-size: 9px;"><canva-inline-text data-template-id="canva-inline-text-17" class="canva-text" style="color: rgb(0, 255, 136); font-size: 9px;">864 / 360 </canva-inline-text><span class="mrow-ratio canva-text" data-html-import-id="html-import-22" data-template-id="span-18" style="color: rgb(0, 255, 136); font-size: 8px;">×2.400</span></div>
+  <div class="mrow exp canva-container" data-mode="exp3" data-html-import-id="html-import-23" data-template-id="div-19" style="color: rgb(0, 255, 136); font-size: 9px;"><canva-inline-text data-template-id="canva-inline-text-20" class="canva-text" style="color: rgb(0, 255, 136); font-size: 9px;">1296 / 360 </canva-inline-text><span class="mrow-ratio canva-text" data-html-import-id="html-import-24" data-template-id="span-21" style="color: rgb(0, 255, 136); font-size: 8px;">×3.600</span></div>
+  <div class="psec-gap" data-html-import-id="html-import-25"></div>
+  <div class="psec-title cont canva-container" data-html-import-id="html-import-26" data-template-id="div-22" style="color: rgb(255, 102, 0); font-size: 8px;">Contraction</div>
+  <div class="mrow cont canva-container" data-mode="cnt1" data-html-import-id="html-import-27" data-template-id="div-23" style="color: rgb(255, 102, 0); font-size: 9px;"><canva-inline-text data-template-id="canva-inline-text-24" class="canva-text" style="color: rgb(255, 102, 0); font-size: 9px;">360 / 432 </canva-inline-text><span class="mrow-ratio canva-text" data-html-import-id="html-import-28" data-template-id="span-25" style="color: rgb(255, 102, 0); font-size: 8px;">×0.833</span></div>
+  <div class="mrow cont canva-container" data-mode="cnt2" data-html-import-id="html-import-29" data-template-id="div-26" style="color: rgb(255, 102, 0); font-size: 9px;"><canva-inline-text data-template-id="canva-inline-text-27" class="canva-text" style="color: rgb(255, 102, 0); font-size: 9px;">360 / 864 </canva-inline-text><span class="mrow-ratio canva-text" data-html-import-id="html-import-30" data-template-id="span-28" style="color: rgb(255, 102, 0); font-size: 8px;">×0.417</span></div>
+  <div class="mrow cont canva-container" data-mode="cnt3" data-html-import-id="html-import-31" data-template-id="div-29" style="color: rgb(255, 102, 0); font-size: 9px;"><canva-inline-text data-template-id="canva-inline-text-30" class="canva-text" style="color: rgb(255, 102, 0); font-size: 9px;">360 / 1296 </canva-inline-text><span class="mrow-ratio canva-text" data-html-import-id="html-import-32" data-template-id="span-31" style="color: rgb(255, 102, 0); font-size: 8px;">×0.278</span></div>
+  <div class="psec-gap" data-html-import-id="html-import-33"></div>
+  <div class="psec-title spec canva-container" data-html-import-id="html-import-34" data-template-id="div-32" style="color: rgb(0, 204, 255); font-size: 8px;">Spéciaux</div>
+  <div class="mrow flux canva-container" data-mode="flux" data-html-import-id="html-import-35" data-template-id="div-33" style="color: rgb(255, 0, 102); font-size: 9px;">Flux énergétique</div>
+  <div class="mrow pp canva-container" data-mode="pp" data-html-import-id="html-import-36" data-template-id="div-34" style="color: rgb(136, 85, 255); font-size: 9px;">Ping-Pong</div>
+  <div class="mrow canva-container" data-mode="bpm" data-html-import-id="html-import-37" data-template-id="div-35" style="color: rgb(122, 154, 176); font-size: 9px;">BPM Pulsation</div>
+  <div class="psec-gap" data-html-import-id="html-import-38"></div>
+  <div class="psec-title canva-container" style="color: rgb(255, 215, 0); font-size: 8px;" data-html-import-id="html-import-39" data-template-id="div-36">Expansion Maximale</div>
+  <div class="mrow maxexp canva-container" data-mode="maxexp" onclick="setMode('maxexp')" style="flex-direction: column; align-items: flex-start; gap: 3px; background: rgba(255, 215, 0, 0.02); color: rgb(255, 215, 0); font-size: 9px;" data-html-import-id="html-import-40" data-template-id="div-37">
+    <div style="display:flex;justify-content:space-between;width:100%;" data-html-import-id="html-import-41">
+      <span data-html-import-id="html-import-42" data-template-id="span-38" class="canva-text" style="color: rgb(255, 215, 0);">360 × 432^(432×432)</span>
+      <span class="mrow-ratio canva-text" data-html-import-id="html-import-43" data-template-id="span-39" style="color: rgb(255, 215, 0); font-size: 8px;">∞</span>
     </div>
-    <div style="font-size:7px;opacity:.4;letter-spacing:.1em;">champ total · centres partout</div>
+    <div style="font-size: 7px; opacity: 0.4; letter-spacing: 0.1em; color: rgb(255, 215, 0);" data-html-import-id="html-import-44" data-template-id="div-40" class="canva-container">champ total · centres partout</div>
   </div>
 </div>
 
 <!-- PARAMS PANEL -->
-<div id="panParams">
-  <div class="pcard">
-    <div class="pcard-title">Sphère — Visuel</div>
-    <div class="pr"><div class="pl">Sphères actives</div><div class="pv" id="pvSph">6</div></div>
-    <input type="range" id="rSph" min="2" max="9" value="6">
-    <div style="height:8px"></div>
-    <div class="pr"><div class="pl">Base Ω</div><div class="pv" id="pvBase">360</div></div>
-    <input type="range" id="rBase" min="180" max="1296" value="360">
-    <div style="height:8px"></div>
-    <div class="pr"><div class="pl">Vitesse</div><div class="pv" id="pvSpd">1.0×</div></div>
-    <input type="range" id="rSpd" min="0" max="30" value="10">
-    <div style="height:8px"></div>
-    <div class="pr"><div class="pl">Rotation auto</div><input type="checkbox" id="ckRot" checked></div>
-    <div class="pr"><div class="pl">Lignes harm.</div><input type="checkbox" id="ckLines" checked></div>
-    <div class="pr"><div class="pl">Anneaux 72Ω</div><input type="checkbox" id="ckBeat" checked></div>
-    <div class="pr"><div class="pl">Particules</div><input type="checkbox" id="ckParts" checked></div>
-    <div class="pr"><div class="pl">Univers fond</div><input type="checkbox" id="ckUniv" checked></div>
-    <button class="btn" id="btnReset">↺ Réinitialiser vue</button>
+<div id="panParams" data-html-import-id="html-import-45">
+  <div class="pcard canva-container" data-html-import-id="html-import-46" data-template-id="div-41" style="background: rgba(1, 3, 6, 0.92);">
+    <div class="pcard-title canva-container" data-html-import-id="html-import-47" data-template-id="div-42" style="color: rgb(0, 204, 255); font-size: 8px;">Sphère — Visuel</div>
+    <div class="pr" data-html-import-id="html-import-48"><div class="pl canva-container" data-html-import-id="html-import-49" data-template-id="div-43" style="color: rgb(122, 154, 176); font-size: 9px;">Sphères actives</div><div class="pv canva-container" id="pvSph" data-html-import-id="html-import-50" data-template-id="div-44" style="color: rgb(221, 238, 255); font-size: 10px;">6</div></div>
+    <input type="range" id="rSph" min="2" max="9" value="6" data-html-import-id="html-import-51" data-template-id="input-45" class="canva-input" style="background: rgba(0, 204, 255, 0.12);">
+    <div style="height:8px" data-html-import-id="html-import-52"></div>
+    <div class="pr" data-html-import-id="html-import-53"><div class="pl canva-container" data-html-import-id="html-import-54" data-template-id="div-46" style="color: rgb(122, 154, 176); font-size: 9px;">Base Ω</div><div class="pv canva-container" id="pvBase" data-html-import-id="html-import-55" data-template-id="div-47" style="color: rgb(221, 238, 255); font-size: 10px;">360</div></div>
+    <input type="range" id="rBase" min="180" max="1296" value="360" data-html-import-id="html-import-56" data-template-id="input-48" class="canva-input" style="background: rgba(0, 204, 255, 0.12);">
+    <div style="height:8px" data-html-import-id="html-import-57"></div>
+    <div class="pr" data-html-import-id="html-import-58"><div class="pl canva-container" data-html-import-id="html-import-59" data-template-id="div-49" style="color: rgb(122, 154, 176); font-size: 9px;">Vitesse</div><div class="pv canva-container" id="pvSpd" data-html-import-id="html-import-60" data-template-id="div-50" style="color: rgb(221, 238, 255); font-size: 10px;">1.0×</div></div>
+    <input type="range" id="rSpd" min="0" max="30" value="10" data-html-import-id="html-import-61" data-template-id="input-51" class="canva-input" style="background: rgba(0, 204, 255, 0.12);">
+    <div style="height:8px" data-html-import-id="html-import-62"></div>
+    <div class="pr" data-html-import-id="html-import-63"><div class="pl canva-container" data-html-import-id="html-import-64" data-template-id="div-52" style="color: rgb(122, 154, 176); font-size: 9px;">Rotation auto</div><input type="checkbox" id="ckRot" checked="" data-html-import-id="html-import-65"></div>
+    <div class="pr" data-html-import-id="html-import-66"><div class="pl canva-container" data-html-import-id="html-import-67" data-template-id="div-53" style="color: rgb(122, 154, 176); font-size: 9px;">Lignes harm.</div><input type="checkbox" id="ckLines" checked="" data-html-import-id="html-import-68"></div>
+    <div class="pr" data-html-import-id="html-import-69"><div class="pl canva-container" data-html-import-id="html-import-70" data-template-id="div-54" style="color: rgb(122, 154, 176); font-size: 9px;">Anneaux 72Ω</div><input type="checkbox" id="ckBeat" checked="" data-html-import-id="html-import-71"></div>
+    <div class="pr" data-html-import-id="html-import-72"><div class="pl canva-container" data-html-import-id="html-import-73" data-template-id="div-55" style="color: rgb(122, 154, 176); font-size: 9px;">Particules</div><input type="checkbox" id="ckParts" checked="" data-html-import-id="html-import-74"></div>
+    <div class="pr" data-html-import-id="html-import-75"><div class="pl canva-container" data-html-import-id="html-import-76" data-template-id="div-56" style="color: rgb(122, 154, 176); font-size: 9px;">Univers fond</div><input type="checkbox" id="ckUniv" checked="" data-html-import-id="html-import-77"></div>
+    <button class="btn canva-button" id="btnReset" data-html-import-id="html-import-78" data-template-id="button-57" style="background: rgba(0, 204, 255, 0.07); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">↺ RÉINITIALISER VUE</button>
   </div>
-  <div class="pcard">
-    <div class="pcard-title">Hiérarchie sphères</div>
-    <div class="sphere-list" id="sphereList"></div>
+  <div class="pcard canva-container" data-html-import-id="html-import-79" data-template-id="div-58" style="background: rgba(1, 3, 6, 0.92);">
+    <div class="pcard-title canva-container" data-html-import-id="html-import-80" data-template-id="div-59" style="color: rgb(0, 204, 255); font-size: 8px;">Hiérarchie sphères</div>
+    <div class="sphere-list" id="sphereList" data-html-import-id="html-import-81"><div class="si" data-html-import-id="html-import-82" style="opacity: 1;"><div class="si-dot canva-container" data-html-import-id="html-import-83" data-template-id="div-60" style="background: rgb(26, 110, 170); box-shadow: rgba(26, 110, 170, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-84" data-template-id="div-61" style="color: rgb(122, 154, 176); font-size: 9px;">S₀ (base)</div><div class="si-freq canva-container" data-html-import-id="html-import-85" data-template-id="div-62" style="color: rgb(221, 238, 255); font-size: 9px;">360 Ω</div></div><div class="si" data-html-import-id="html-import-86" style="opacity: 1;"><div class="si-dot canva-container" data-html-import-id="html-import-87" data-template-id="div-63" style="background: rgb(0, 204, 255); box-shadow: rgba(0, 204, 255, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-88" data-template-id="div-64" style="color: rgb(122, 154, 176); font-size: 9px;">S₁ 6/5</div><div class="si-freq canva-container" data-html-import-id="html-import-89" data-template-id="div-65" style="color: rgb(221, 238, 255); font-size: 9px;">432 Ω</div></div><div class="si" data-html-import-id="html-import-90" style="opacity: 1;"><div class="si-dot canva-container" data-html-import-id="html-import-91" data-template-id="div-66" style="background: rgb(0, 255, 170); box-shadow: rgba(0, 255, 170, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-92" data-template-id="div-67" style="color: rgb(122, 154, 176); font-size: 9px;">S₂ 7/6</div><div class="si-freq canva-container" data-html-import-id="html-import-93" data-template-id="div-68" style="color: rgb(221, 238, 255); font-size: 9px;">504 Ω</div></div><div class="si" data-html-import-id="html-import-94" style="opacity: 1;"><div class="si-dot canva-container" data-html-import-id="html-import-95" data-template-id="div-69" style="background: rgb(170, 255, 0); box-shadow: rgba(170, 255, 0, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-96" data-template-id="div-70" style="color: rgb(122, 154, 176); font-size: 9px;">S₃ 8/7</div><div class="si-freq canva-container" data-html-import-id="html-import-97" data-template-id="div-71" style="color: rgb(221, 238, 255); font-size: 9px;">576 Ω</div></div><div class="si" data-html-import-id="html-import-98" style="opacity: 1;"><div class="si-dot canva-container" data-html-import-id="html-import-99" data-template-id="div-72" style="background: rgb(255, 221, 0); box-shadow: rgba(255, 221, 0, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-100" data-template-id="div-73" style="color: rgb(122, 154, 176); font-size: 9px;">S₄ 9/8</div><div class="si-freq canva-container" data-html-import-id="html-import-101" data-template-id="div-74" style="color: rgb(221, 238, 255); font-size: 9px;">648 Ω</div></div><div class="si" data-html-import-id="html-import-102" style="opacity: 1;"><div class="si-dot canva-container" data-html-import-id="html-import-103" data-template-id="div-75" style="background: rgb(255, 136, 0); box-shadow: rgba(255, 136, 0, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-104" data-template-id="div-76" style="color: rgb(122, 154, 176); font-size: 9px;">S₅ 10/9</div><div class="si-freq canva-container" data-html-import-id="html-import-105" data-template-id="div-77" style="color: rgb(221, 238, 255); font-size: 9px;">720 Ω</div></div><div class="si" data-html-import-id="html-import-106" style="opacity: 0.3;"><div class="si-dot canva-container" data-html-import-id="html-import-107" data-template-id="div-78" style="background: rgb(255, 68, 0); box-shadow: rgba(255, 68, 0, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-108" data-template-id="div-79" style="color: rgb(122, 154, 176); font-size: 9px;">S₆ 11/10</div><div class="si-freq canva-container" data-html-import-id="html-import-109" data-template-id="div-80" style="color: rgb(221, 238, 255); font-size: 9px;">792 Ω</div></div><div class="si" data-html-import-id="html-import-110" style="opacity: 0.3;"><div class="si-dot canva-container" data-html-import-id="html-import-111" data-template-id="div-81" style="background: rgb(255, 0, 102); box-shadow: rgba(255, 0, 102, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-112" data-template-id="div-82" style="color: rgb(122, 154, 176); font-size: 9px;">S₇ 12/11</div><div class="si-freq canva-container" data-html-import-id="html-import-113" data-template-id="div-83" style="color: rgb(221, 238, 255); font-size: 9px;">864 Ω</div></div><div class="si" data-html-import-id="html-import-114" style="opacity: 0.3;"><div class="si-dot canva-container" data-html-import-id="html-import-115" data-template-id="div-84" style="background: rgb(204, 0, 255); box-shadow: rgba(204, 0, 255, 0.4) 0px 0px 5px;"></div><div class="si-name canva-container" data-html-import-id="html-import-116" data-template-id="div-85" style="color: rgb(122, 154, 176); font-size: 9px;">S₈ 13/12</div><div class="si-freq canva-container" data-html-import-id="html-import-117" data-template-id="div-86" style="color: rgb(221, 238, 255); font-size: 9px;">936 Ω</div></div></div>
   </div>
-  <div class="pcard">
-    <div class="pcard-title">OSC A — Harmonique</div>
-    <div class="osc-card">
-      <div class="osc-head">
-        <div class="osc-label" style="color:#8855ff">OSC A</div>
-        <div class="osc-dot" id="dotA" title="Activer"></div>
+  <div class="pcard canva-container" data-html-import-id="html-import-118" data-template-id="div-87" style="background: rgba(1, 3, 6, 0.92);">
+    <div class="pcard-title canva-container" data-html-import-id="html-import-119" data-template-id="div-88" style="color: rgb(0, 204, 255); font-size: 8px;">OSC A — Harmonique</div>
+    <div class="osc-card canva-container" data-html-import-id="html-import-120" data-template-id="div-89" style="background: rgba(1, 3, 6, 0.6);">
+      <div class="osc-head" data-html-import-id="html-import-121">
+        <div class="osc-label canva-container" style="color: rgb(136, 85, 255); font-size: 8px;" data-html-import-id="html-import-122" data-template-id="div-90">OSC A</div>
+        <div class="osc-dot" id="dotA" title="Activer" data-html-import-id="html-import-123"></div>
       </div>
-      <div class="pr"><div class="pl">Fréquence Ω</div><div class="pv" id="pvAFreq">864</div></div>
-      <input type="range" class="rviolet" id="rAFreq" min="1" max="144000" value="864">
-      <div class="pr" style="margin-top:7px"><div class="pl">Type</div>
-        <select id="selAType"><option value="sine">Sinus</option><option value="triangle">Triangle</option><option value="sawtooth">Dent de scie</option><option value="square">Carré</option></select>
+      <div class="pr" data-html-import-id="html-import-124"><div class="pl canva-container" data-html-import-id="html-import-125" data-template-id="div-91" style="color: rgb(122, 154, 176); font-size: 9px;">Fréquence Ω</div><div class="pv canva-container" id="pvAFreq" data-html-import-id="html-import-126" data-template-id="div-92" style="color: rgb(221, 238, 255); font-size: 10px;">864</div></div>
+      <input type="range" class="rviolet canva-input" id="rAFreq" min="1" max="144000" value="864" data-html-import-id="html-import-127" data-template-id="input-93" style="background: rgba(0, 204, 255, 0.12);">
+      <div class="pr" style="margin-top:7px" data-html-import-id="html-import-128"><div class="pl canva-container" data-html-import-id="html-import-129" data-template-id="div-94" style="color: rgb(122, 154, 176); font-size: 9px;">Type</div>
+        <select id="selAType" data-html-import-id="html-import-130" data-template-id="select-95" class="canva-input" style="background: rgba(0, 204, 255, 0.07); color: rgb(221, 238, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;"><option value="sine" data-html-import-id="html-import-131" data-template-id="option-96" style="color: rgb(221, 238, 255);">Sinus</option><option value="triangle" data-html-import-id="html-import-132" data-template-id="option-97" style="color: rgb(221, 238, 255);">Triangle</option><option value="sawtooth" data-html-import-id="html-import-133" data-template-id="option-98" style="color: rgb(221, 238, 255);">Dent de scie</option><option value="square" data-html-import-id="html-import-134" data-template-id="option-99" style="color: rgb(221, 238, 255);">Carré</option></select>
       </div>
-      <div class="pr"><div class="pl">Volume</div><div class="pv" id="pvAVol">60%</div></div>
-      <input type="range" class="rviolet" id="rAVol" min="0" max="100" value="60">
-      <div class="pr"><div class="pl">Pan L↔R</div><div class="pv" id="pvAPan">0</div></div>
-      <input type="range" class="rviolet" id="rAPan" min="-100" max="100" value="0">
+      <div class="pr" data-html-import-id="html-import-135"><div class="pl canva-container" data-html-import-id="html-import-136" data-template-id="div-100" style="color: rgb(122, 154, 176); font-size: 9px;">Volume</div><div class="pv canva-container" id="pvAVol" data-html-import-id="html-import-137" data-template-id="div-101" style="color: rgb(221, 238, 255); font-size: 10px;">60%</div></div>
+      <input type="range" class="rviolet canva-input" id="rAVol" min="0" max="100" value="60" data-html-import-id="html-import-138" data-template-id="input-102" style="background: rgba(0, 204, 255, 0.12);">
+      <div class="pr" data-html-import-id="html-import-139"><div class="pl canva-container" data-html-import-id="html-import-140" data-template-id="div-103" style="color: rgb(122, 154, 176); font-size: 9px;">Pan L↔R</div><div class="pv canva-container" id="pvAPan" data-html-import-id="html-import-141" data-template-id="div-104" style="color: rgb(221, 238, 255); font-size: 10px;">0</div></div>
+      <input type="range" class="rviolet canva-input" id="rAPan" min="-100" max="100" value="0" data-html-import-id="html-import-142" data-template-id="input-105" style="background: rgba(0, 204, 255, 0.12);">
     </div>
-    <div class="pcard-title" style="margin-top:10px">OSC B — Sub-fractal</div>
-    <div class="osc-card">
-      <div class="osc-head">
-        <div class="osc-label" style="color:#e8a020">OSC B</div>
-        <div class="osc-dot" id="dotB" title="Activer"></div>
+    <div class="pcard-title canva-container" style="margin-top: 10px; color: rgb(0, 204, 255); font-size: 8px;" data-html-import-id="html-import-143" data-template-id="div-106">OSC B — Sub-fractal</div>
+    <div class="osc-card canva-container" data-html-import-id="html-import-144" data-template-id="div-107" style="background: rgba(1, 3, 6, 0.6);">
+      <div class="osc-head" data-html-import-id="html-import-145">
+        <div class="osc-label canva-container" style="color: rgb(232, 160, 32); font-size: 8px;" data-html-import-id="html-import-146" data-template-id="div-108">OSC B</div>
+        <div class="osc-dot" id="dotB" title="Activer" data-html-import-id="html-import-147"></div>
       </div>
-      <div class="pr"><div class="pl">Fréquence Ω</div><div class="pv" id="pvBFreq">216</div></div>
-      <input type="range" class="rgold" id="rBFreq" min="1" max="144000" value="216">
-      <div class="pr" style="margin-top:7px"><div class="pl">Type</div>
-        <select id="selBType"><option value="sine">Sinus</option><option value="triangle">Triangle</option><option value="sawtooth">Dent de scie</option><option value="square">Carré</option></select>
+      <div class="pr" data-html-import-id="html-import-148"><div class="pl canva-container" data-html-import-id="html-import-149" data-template-id="div-109" style="color: rgb(122, 154, 176); font-size: 9px;">Fréquence Ω</div><div class="pv canva-container" id="pvBFreq" data-html-import-id="html-import-150" data-template-id="div-110" style="color: rgb(221, 238, 255); font-size: 10px;">216</div></div>
+      <input type="range" class="rgold canva-input" id="rBFreq" min="1" max="144000" value="216" data-html-import-id="html-import-151" data-template-id="input-111" style="background: rgba(0, 204, 255, 0.12);">
+      <div class="pr" style="margin-top:7px" data-html-import-id="html-import-152"><div class="pl canva-container" data-html-import-id="html-import-153" data-template-id="div-112" style="color: rgb(122, 154, 176); font-size: 9px;">Type</div>
+        <select id="selBType" data-html-import-id="html-import-154" data-template-id="select-113" class="canva-input" style="background: rgba(0, 204, 255, 0.07); color: rgb(221, 238, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;"><option value="sine" data-html-import-id="html-import-155" data-template-id="option-114" style="color: rgb(221, 238, 255);">Sinus</option><option value="triangle" data-html-import-id="html-import-156" data-template-id="option-115" style="color: rgb(221, 238, 255);">Triangle</option><option value="sawtooth" data-html-import-id="html-import-157" data-template-id="option-116" style="color: rgb(221, 238, 255);">Dent de scie</option><option value="square" data-html-import-id="html-import-158" data-template-id="option-117" style="color: rgb(221, 238, 255);">Carré</option></select>
       </div>
-      <div class="pr"><div class="pl">Volume</div><div class="pv" id="pvBVol">60%</div></div>
-      <input type="range" class="rgold" id="rBVol" min="0" max="100" value="60">
-      <div class="pr"><div class="pl">Pan L↔R</div><div class="pv" id="pvBPan">0</div></div>
-      <input type="range" class="rgold" id="rBPan" min="-100" max="100" value="0">
+      <div class="pr" data-html-import-id="html-import-159"><div class="pl canva-container" data-html-import-id="html-import-160" data-template-id="div-118" style="color: rgb(122, 154, 176); font-size: 9px;">Volume</div><div class="pv canva-container" id="pvBVol" data-html-import-id="html-import-161" data-template-id="div-119" style="color: rgb(221, 238, 255); font-size: 10px;">60%</div></div>
+      <input type="range" class="rgold canva-input" id="rBVol" min="0" max="100" value="60" data-html-import-id="html-import-162" data-template-id="input-120" style="background: rgba(0, 204, 255, 0.12);">
+      <div class="pr" data-html-import-id="html-import-163"><div class="pl canva-container" data-html-import-id="html-import-164" data-template-id="div-121" style="color: rgb(122, 154, 176); font-size: 9px;">Pan L↔R</div><div class="pv canva-container" id="pvBPan" data-html-import-id="html-import-165" data-template-id="div-122" style="color: rgb(221, 238, 255); font-size: 10px;">0</div></div>
+      <input type="range" class="rgold canva-input" id="rBPan" min="-100" max="100" value="0" data-html-import-id="html-import-166" data-template-id="input-123" style="background: rgba(0, 204, 255, 0.12);">
     </div>
   </div>
 </div>
 
 <!-- BPM PANEL -->
-<div id="panBpm">
-  <div id="bpmVal">60</div>
-  <div id="bpmLabel">BPM — Pulsation fractale</div>
-  <div id="bpmDot"></div>
-  <div class="bpm-ctrl">
-    <button class="bpmB" id="bpmDec">−</button>
-    <input type="range" class="rbpm" id="rBpm" min="1" max="180" value="60">
-    <button class="bpmB" id="bpmInc">+</button>
+<div id="panBpm" data-html-import-id="html-import-167" data-template-id="div-124" class="canva-container" style="background: rgba(1, 3, 6, 0.95);">
+  <div id="bpmVal" data-html-import-id="html-import-168" data-template-id="div-125" class="canva-container" style="font-family: Orbitron; font-weight: 300; font-size: 48px;">60</div>
+  <div id="bpmLabel" data-html-import-id="html-import-169" data-template-id="div-126" class="canva-container" style="color: rgb(122, 154, 176); font-size: 8px;">BPM — Pulsation fractale</div>
+  <div id="bpmDot" data-html-import-id="html-import-170" data-template-id="div-127" class="canva-container" style="background: rgb(255, 204, 0);"></div>
+  <div class="bpm-ctrl" data-html-import-id="html-import-171">
+    <button class="bpmB canva-button" id="bpmDec" data-html-import-id="html-import-172" data-template-id="button-128" style="background: rgba(255, 204, 0, 0.1); color: rgb(255, 204, 0); font-family: &quot;Share Tech Mono&quot;; font-size: 16px;">−</button>
+    <input type="range" class="rbpm canva-input" id="rBpm" min="1" max="180" value="60" data-html-import-id="html-import-173" data-template-id="input-129" style="background: rgba(0, 204, 255, 0.12);">
+    <button class="bpmB canva-button" id="bpmInc" data-html-import-id="html-import-174" data-template-id="button-130" style="background: rgba(255, 204, 0, 0.1); color: rgb(255, 204, 0); font-family: &quot;Share Tech Mono&quot;; font-size: 16px;">+</button>
   </div>
-  <div style="font-size:8px;opacity:.35;margin-top:6px;letter-spacing:.15em;">↑↓ clavier · clic pour activer</div>
-  <div class="pr" style="margin-top:9px;justify-content:center;gap:10px;">
-    <div style="font-size:9px;">Actif</div>
-    <input type="checkbox" id="ckBpmActive">
+  <div style="font-size: 8px; opacity: 0.35; margin-top: 6px; letter-spacing: 0.15em; color: rgb(122, 154, 176);" data-html-import-id="html-import-175" data-template-id="div-131" class="canva-container">↑↓ clavier · clic pour activer</div>
+  <div class="pr" style="margin-top:9px;justify-content:center;gap:10px;" data-html-import-id="html-import-176">
+    <div style="font-size: 9px; color: rgb(122, 154, 176);" data-html-import-id="html-import-177" data-template-id="div-132" class="canva-container">Actif</div>
+    <input type="checkbox" id="ckBpmActive" data-html-import-id="html-import-178">
   </div>
 </div>
 
 <!-- BINAURAL PANEL -->
-<div id="panBin">
-  <div class="bin-hdr">
-    <div class="bin-title">⬡ Binaural — 1 à 144 000 Ω</div>
-    <button class="bin-x" id="binClose">✕</button>
+<div id="panBin" data-html-import-id="html-import-179" data-template-id="div-133" class="canva-container" style="background: rgba(1, 3, 6, 0.97);">
+  <div class="bin-hdr" data-html-import-id="html-import-180">
+    <div class="bin-title canva-container" data-html-import-id="html-import-181" data-template-id="div-134" style="color: rgb(0, 204, 255); font-size: 9px;">⬡ Binaural — 1 à 144 000 Ω</div>
+    <button class="bin-x canva-button" id="binClose" data-html-import-id="html-import-182" data-template-id="button-135" style="color: rgb(122, 154, 176); font-size: 15px;">✕</button>
   </div>
-  <div class="bin-freqs">
-    <div><div class="bfl L">Oreille gauche</div><div class="bfv" id="bfvL">432 Ω</div></div>
-    <div><div class="bfl R">Oreille droite</div><div class="bfv" id="bfvR">440 Ω</div></div>
+  <div class="bin-freqs" data-html-import-id="html-import-183">
+    <div data-html-import-id="html-import-184"><div class="bfl L canva-container" data-html-import-id="html-import-185" data-template-id="div-136" style="color: rgb(0, 153, 255); font-size: 8px;">Oreille gauche</div><div class="bfv canva-container" id="bfvL" data-html-import-id="html-import-186" data-template-id="div-137" style="color: rgb(221, 238, 255); font-family: Orbitron; font-size: 20px;">432 Ω</div></div>
+    <div data-html-import-id="html-import-187"><div class="bfl R canva-container" data-html-import-id="html-import-188" data-template-id="div-138" style="color: rgb(255, 102, 0); font-size: 8px;">Oreille droite</div><div class="bfv canva-container" id="bfvR" data-html-import-id="html-import-189" data-template-id="div-139" style="color: rgb(221, 238, 255); font-family: Orbitron; font-size: 20px;">440 Ω</div></div>
   </div>
-  <div class="bin-beat-lbl" id="beatLbl">▷ Battement : 8 Ω — Alpha</div>
-  <canvas id="cvWave" height="36"></canvas>
-  <div class="bin-row">
-    <div class="bin-rl"><span>Fréq. gauche Ω</span><span class="bin-rv" id="blL">432</span></div>
-    <div class="bin-finput">
-      <input type="number" id="numL" min="1" max="144000" value="432">
-      <input type="range" class="rL" id="slL" min="1" max="144000" value="432" style="flex:1">
+  <div class="bin-beat-lbl canva-container" id="beatLbl" data-html-import-id="html-import-190" data-template-id="div-140" style="font-size: 10px;">▷ Battement : 8.000 Ω — Alpha</div>
+  <canvas id="cvWave" height="36" width="520" data-html-import-id="html-import-191"></canvas>
+  <div class="bin-row" data-html-import-id="html-import-192">
+    <div class="bin-rl" data-html-import-id="html-import-193"><span data-html-import-id="html-import-194" data-template-id="span-141" class="canva-text" style="color: rgb(122, 154, 176);">Fréq. gauche Ω</span><span class="bin-rv canva-text" id="blL" data-html-import-id="html-import-195" data-template-id="span-142" style="color: rgb(221, 238, 255);">432 Ω</span></div>
+    <div class="bin-finput" data-html-import-id="html-import-196">
+      <input type="number" id="numL" min="1" max="144000" value="432" data-html-import-id="html-import-197" data-template-id="input-143" class="canva-input" style="background: rgba(0, 204, 255, 0.07); color: rgb(221, 238, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 10px;">
+      <input type="range" class="rL canva-input" id="slL" min="1" max="144000" value="432" style="flex: 1 1 0%; background: rgba(0, 204, 255, 0.12);" data-html-import-id="html-import-198" data-template-id="input-144">
     </div>
   </div>
-  <div class="bin-row">
-    <div class="bin-rl"><span>Fréq. droite Ω</span><span class="bin-rv" id="blR">440</span></div>
-    <div class="bin-finput">
-      <input type="number" id="numR" min="1" max="144000" value="440">
-      <input type="range" class="rR" id="slR" min="1" max="144000" value="440" style="flex:1">
+  <div class="bin-row" data-html-import-id="html-import-199">
+    <div class="bin-rl" data-html-import-id="html-import-200"><span data-html-import-id="html-import-201" data-template-id="span-145" class="canva-text" style="color: rgb(122, 154, 176);">Fréq. droite Ω</span><span class="bin-rv canva-text" id="blR" data-html-import-id="html-import-202" data-template-id="span-146" style="color: rgb(221, 238, 255);">440 Ω</span></div>
+    <div class="bin-finput" data-html-import-id="html-import-203">
+      <input type="number" id="numR" min="1" max="144000" value="440" data-html-import-id="html-import-204" data-template-id="input-147" class="canva-input" style="background: rgba(0, 204, 255, 0.07); color: rgb(221, 238, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 10px;">
+      <input type="range" class="rR canva-input" id="slR" min="1" max="144000" value="440" style="flex: 1 1 0%; background: rgba(0, 204, 255, 0.12);" data-html-import-id="html-import-205" data-template-id="input-148">
     </div>
   </div>
-  <div class="bin-row">
-    <div class="bin-rl"><span>Battement</span><span class="bin-rv" id="blBeat">8</span></div>
-    <input type="range" class="rBeat" id="slBeat" min="0.01" max="1000" value="8" step="0.01">
+  <div class="bin-row" data-html-import-id="html-import-206">
+    <div class="bin-rl" data-html-import-id="html-import-207"><span data-html-import-id="html-import-208" data-template-id="span-149" class="canva-text" style="color: rgb(122, 154, 176);">Battement</span><span class="bin-rv canva-text" id="blBeat" data-html-import-id="html-import-209" data-template-id="span-150" style="color: rgb(221, 238, 255);">8.000</span></div>
+    <input type="range" class="rBeat canva-input" id="slBeat" min="0.01" max="1000" value="8" step="0.01" data-html-import-id="html-import-210" data-template-id="input-151" style="background: rgba(0, 204, 255, 0.12);">
   </div>
-  <div class="bin-row">
-    <div class="bin-rl"><span>Volume</span><span class="bin-rv" id="blVol">60%</span></div>
-    <input type="range" id="slVol" min="0" max="100" value="60">
+  <div class="bin-row" data-html-import-id="html-import-211">
+    <div class="bin-rl" data-html-import-id="html-import-212"><span data-html-import-id="html-import-213" data-template-id="span-152" class="canva-text" style="color: rgb(122, 154, 176);">Volume</span><span class="bin-rv canva-text" id="blVol" data-html-import-id="html-import-214" data-template-id="span-153" style="color: rgb(221, 238, 255);">60%</span></div>
+    <input type="range" id="slVol" min="0" max="100" value="60" data-html-import-id="html-import-215" data-template-id="input-154" class="canva-input" style="background: rgba(0, 204, 255, 0.12);">
   </div>
-  <div class="bin-presets">
-    <div class="pre" data-l="432" data-r="440">432/440</div>
-    <div class="pre" data-l="360" data-r="432">360/432</div>
-    <div class="pre" data-l="432" data-r="504">S1→S2</div>
-    <div class="pre" data-l="864" data-r="432">864/432</div>
-    <div class="pre" data-l="1296" data-r="432">1296/432</div>
-    <div class="pre" data-l="40" data-r="47.3">Gamma</div>
-    <div class="pre" data-l="200" data-r="210">Alpha</div>
-    <div class="pre" data-l="200" data-r="204">Theta</div>
-    <div class="pre" data-l="200" data-r="201.5">Delta</div>
-    <div class="pre" data-l="7.83" data-r="15.66">Schumann</div>
-    <div class="pre" data-l="432" data-r="504">+72Ω</div>
-    <div class="pre" data-l="144000" data-r="143568">144kΩ</div>
+  <div class="bin-presets" data-html-import-id="html-import-216">
+    <div class="pre canva-container" data-l="432" data-r="440" data-html-import-id="html-import-217" data-template-id="div-155" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">432/440</div>
+    <div class="pre canva-container" data-l="360" data-r="432" data-html-import-id="html-import-218" data-template-id="div-156" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">360/432</div>
+    <div class="pre canva-container" data-l="432" data-r="504" data-html-import-id="html-import-219" data-template-id="div-157" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">S1→S2</div>
+    <div class="pre canva-container" data-l="864" data-r="432" data-html-import-id="html-import-220" data-template-id="div-158" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">864/432</div>
+    <div class="pre canva-container" data-l="1296" data-r="432" data-html-import-id="html-import-221" data-template-id="div-159" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">1296/432</div>
+    <div class="pre canva-container" data-l="40" data-r="47.3" data-html-import-id="html-import-222" data-template-id="div-160" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">Gamma</div>
+    <div class="pre canva-container" data-l="200" data-r="210" data-html-import-id="html-import-223" data-template-id="div-161" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">Alpha</div>
+    <div class="pre canva-container" data-l="200" data-r="204" data-html-import-id="html-import-224" data-template-id="div-162" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">Theta</div>
+    <div class="pre canva-container" data-l="200" data-r="201.5" data-html-import-id="html-import-225" data-template-id="div-163" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">Delta</div>
+    <div class="pre canva-container" data-l="7.83" data-r="15.66" data-html-import-id="html-import-226" data-template-id="div-164" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">Schumann</div>
+    <div class="pre canva-container" data-l="432" data-r="504" data-html-import-id="html-import-227" data-template-id="div-165" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">+72Ω</div>
+    <div class="pre canva-container" data-l="144000" data-r="143568" data-html-import-id="html-import-228" data-template-id="div-166" style="background: rgba(0, 204, 255, 0.03); color: rgb(122, 154, 176); font-size: 7px;">144kΩ</div>
   </div>
-  <div class="bin-foot">
-    <button class="binPlay" id="binPlay">▶ Activer</button>
-    <div class="bin-pp-row">PP<input type="checkbox" id="ckBinPP"></div>
+  <div class="bin-foot" data-html-import-id="html-import-229">
+    <button class="binPlay canva-button" id="binPlay" data-html-import-id="html-import-230" data-template-id="button-167" style="background: rgba(0, 204, 255, 0.08); color: rgb(0, 204, 255); font-family: &quot;Share Tech Mono&quot;; font-size: 9px;">▶ Activer</button>
+    <div class="bin-pp-row" data-html-import-id="html-import-231"><canva-inline-text data-template-id="canva-inline-text-168" class="canva-text" style="color: rgb(122, 154, 176); font-size: 9px;">PP</canva-inline-text><input type="checkbox" id="ckBinPP" data-html-import-id="html-import-232"></div>
   </div>
-  <div class="vubar" id="vubar"></div>
+  <div class="vubar" id="vubar" data-html-import-id="html-import-233"></div>
 </div>
 
 <!-- PING-PONG PANEL -->
-<div id="panPP">
-  <div class="pp-title">⇄ Ping-Pong</div>
-  <div class="pr"><div class="pl">Actif</div><input type="checkbox" id="ckPP"></div>
-  <div class="pr" style="margin-top:8px"><div class="pl">Vitesse Hz</div><div class="pv" id="pvPPSpd">1.0</div></div>
-  <input type="range" class="rviolet" id="rPPSpd" min="1" max="200" value="10">
-  <div class="pr"><div class="pl">Intensité</div><div class="pv" id="pvPPInt">50%</div></div>
-  <input type="range" class="rviolet" id="rPPInt" min="0" max="100" value="50">
+<div id="panPP" data-html-import-id="html-import-234" data-template-id="div-169" class="canva-container" style="background: rgba(1, 3, 6, 0.95);">
+  <div class="pp-title canva-container" data-html-import-id="html-import-235" data-template-id="div-170" style="color: rgb(136, 85, 255); font-size: 8px;">⇄ Ping-Pong</div>
+  <div class="pr" data-html-import-id="html-import-236"><div class="pl canva-container" data-html-import-id="html-import-237" data-template-id="div-171" style="color: rgb(122, 154, 176); font-size: 9px;">Actif</div><input type="checkbox" id="ckPP" data-html-import-id="html-import-238"></div>
+  <div class="pr" style="margin-top:8px" data-html-import-id="html-import-239"><div class="pl canva-container" data-html-import-id="html-import-240" data-template-id="div-172" style="color: rgb(122, 154, 176); font-size: 9px;">Vitesse Hz</div><div class="pv canva-container" id="pvPPSpd" data-html-import-id="html-import-241" data-template-id="div-173" style="color: rgb(221, 238, 255); font-size: 10px;">1.0</div></div>
+  <input type="range" class="rviolet canva-input" id="rPPSpd" min="1" max="200" value="10" data-html-import-id="html-import-242" data-template-id="input-174" style="background: rgba(0, 204, 255, 0.12);">
+  <div class="pr" data-html-import-id="html-import-243"><div class="pl canva-container" data-html-import-id="html-import-244" data-template-id="div-175" style="color: rgb(122, 154, 176); font-size: 9px;">Intensité</div><div class="pv canva-container" id="pvPPInt" data-html-import-id="html-import-245" data-template-id="div-176" style="color: rgb(221, 238, 255); font-size: 10px;">50%</div></div>
+  <input type="range" class="rviolet canva-input" id="rPPInt" min="0" max="100" value="50" data-html-import-id="html-import-246" data-template-id="input-177" style="background: rgba(0, 204, 255, 0.12);">
 </div>
 
 <!-- MASTER PANEL -->
-<div id="panMaster">
-  <div class="mast-title">◈ Mastering Global</div>
-  <div class="mast-row">
-    <div class="mast-lbl"><span>Volume maître</span><span class="mast-v" id="mvVol">80%</span></div>
-    <input type="range" class="rm" id="mVol" min="0" max="100" value="80">
+<div id="panMaster" data-html-import-id="html-import-247" data-template-id="div-178" class="canva-container" style="background: rgba(1, 3, 6, 0.97);">
+  <div class="mast-title canva-container" data-html-import-id="html-import-248" data-template-id="div-179" style="color: rgb(232, 160, 32); font-size: 8px;">◈ Mastering Global</div>
+  <div class="mast-row" data-html-import-id="html-import-249">
+    <div class="mast-lbl" data-html-import-id="html-import-250"><span data-html-import-id="html-import-251" data-template-id="span-180" class="canva-text" style="color: rgb(122, 154, 176);">Volume maître</span><span class="mast-v canva-text" id="mvVol" data-html-import-id="html-import-252" data-template-id="span-181" style="color: rgb(221, 238, 255);">80%</span></div>
+    <input type="range" class="rm canva-input" id="mVol" min="0" max="100" value="80" data-html-import-id="html-import-253" data-template-id="input-182" style="background: rgba(232, 160, 32, 0.1);">
   </div>
-  <div class="mast-row">
-    <div class="mast-lbl"><span>Bass</span><span class="mast-v" id="mvBass">0 dB</span></div>
-    <input type="range" class="rm" id="mBass" min="-12" max="12" value="0" step=".5">
+  <div class="mast-row" data-html-import-id="html-import-254">
+    <div class="mast-lbl" data-html-import-id="html-import-255"><span data-html-import-id="html-import-256" data-template-id="span-183" class="canva-text" style="color: rgb(122, 154, 176);">Bass</span><span class="mast-v canva-text" id="mvBass" data-html-import-id="html-import-257" data-template-id="span-184" style="color: rgb(221, 238, 255);">0 dB</span></div>
+    <input type="range" class="rm canva-input" id="mBass" min="-12" max="12" value="0" step=".5" data-html-import-id="html-import-258" data-template-id="input-185" style="background: rgba(232, 160, 32, 0.1);">
   </div>
-  <div class="mast-row">
-    <div class="mast-lbl"><span>Mid</span><span class="mast-v" id="mvMid">0 dB</span></div>
-    <input type="range" class="rm" id="mMid" min="-12" max="12" value="0" step=".5">
+  <div class="mast-row" data-html-import-id="html-import-259">
+    <div class="mast-lbl" data-html-import-id="html-import-260"><span data-html-import-id="html-import-261" data-template-id="span-186" class="canva-text" style="color: rgb(122, 154, 176);">Mid</span><span class="mast-v canva-text" id="mvMid" data-html-import-id="html-import-262" data-template-id="span-187" style="color: rgb(221, 238, 255);">0 dB</span></div>
+    <input type="range" class="rm canva-input" id="mMid" min="-12" max="12" value="0" step=".5" data-html-import-id="html-import-263" data-template-id="input-188" style="background: rgba(232, 160, 32, 0.1);">
   </div>
-  <div class="mast-row">
-    <div class="mast-lbl"><span>Treble</span><span class="mast-v" id="mvTreble">0 dB</span></div>
-    <input type="range" class="rm" id="mTreble" min="-12" max="12" value="0" step=".5">
+  <div class="mast-row" data-html-import-id="html-import-264">
+    <div class="mast-lbl" data-html-import-id="html-import-265"><span data-html-import-id="html-import-266" data-template-id="span-189" class="canva-text" style="color: rgb(122, 154, 176);">Treble</span><span class="mast-v canva-text" id="mvTreble" data-html-import-id="html-import-267" data-template-id="span-190" style="color: rgb(221, 238, 255);">0 dB</span></div>
+    <input type="range" class="rm canva-input" id="mTreble" min="-12" max="12" value="0" step=".5" data-html-import-id="html-import-268" data-template-id="input-191" style="background: rgba(232, 160, 32, 0.1);">
   </div>
-  <div class="mast-row">
-    <div class="mast-lbl"><span>Reverb</span><span class="mast-v" id="mvRev">20%</span></div>
-    <input type="range" class="rm" id="mRev" min="0" max="100" value="20">
+  <div class="mast-row" data-html-import-id="html-import-269">
+    <div class="mast-lbl" data-html-import-id="html-import-270"><span data-html-import-id="html-import-271" data-template-id="span-192" class="canva-text" style="color: rgb(122, 154, 176);">Reverb</span><span class="mast-v canva-text" id="mvRev" data-html-import-id="html-import-272" data-template-id="span-193" style="color: rgb(221, 238, 255);">20%</span></div>
+    <input type="range" class="rm canva-input" id="mRev" min="0" max="100" value="20" data-html-import-id="html-import-273" data-template-id="input-194" style="background: rgba(232, 160, 32, 0.1);">
   </div>
-  <div class="mast-row">
-    <div class="mast-lbl"><span>Compresseur</span><span class="mast-v" id="mvComp">−24 dB</span></div>
-    <input type="range" class="rm" id="mComp" min="-60" max="0" value="-24">
+  <div class="mast-row" data-html-import-id="html-import-274">
+    <div class="mast-lbl" data-html-import-id="html-import-275"><span data-html-import-id="html-import-276" data-template-id="span-195" class="canva-text" style="color: rgb(122, 154, 176);">Compresseur</span><span class="mast-v canva-text" id="mvComp" data-html-import-id="html-import-277" data-template-id="span-196" style="color: rgb(221, 238, 255);">−24 dB</span></div>
+    <input type="range" class="rm canva-input" id="mComp" min="-60" max="0" value="-24" data-html-import-id="html-import-278" data-template-id="input-197" style="background: rgba(232, 160, 32, 0.1);">
   </div>
-  <div class="mast-lbl" style="margin-top:8px;opacity:.35;font-size:7px;letter-spacing:.2em;text-transform:uppercase;">Niveau sortie</div>
-  <div class="meter-track"><div class="meter-fill" id="mMeter"></div></div>
+  <div class="mast-lbl canva-container" style="margin-top: 8px; opacity: 0.35; font-size: 7px; letter-spacing: 0.2em; text-transform: uppercase; color: rgb(122, 154, 176);" data-html-import-id="html-import-279" data-template-id="div-198">Niveau sortie</div>
+  <div class="meter-track canva-container" data-html-import-id="html-import-280" data-template-id="div-199" style="background: rgba(232, 160, 32, 0.08);"><div class="meter-fill" id="mMeter" data-html-import-id="html-import-281"></div></div>
 </div>
 
 <!-- MODE FLASH -->
-<div id="mflash"></div>
+<div id="mflash" data-html-import-id="html-import-282"></div>
 
 <!-- EXPANSION MAXIMALE OVERLAY -->
-<div id="maxExpOverlay"></div>
-<div id="maxExpLabel">360 × 432^(432×432)<br><span style="font-size:8px;letter-spacing:.5em;opacity:.6;">expansion maximale · centres partout · aucun centre absolu</span></div>
+<div id="maxExpOverlay" data-html-import-id="html-import-283"></div>
+<div id="maxExpLabel" data-html-import-id="html-import-284" data-template-id="div-200" class="canva-container" style="font-family: Orbitron; font-weight: 300; font-size: 11px;"><canva-inline-text data-template-id="canva-inline-text-201" class="canva-text" style="font-family: Orbitron; font-weight: 300; font-size: 11px;">360 × 432^(432×432)</canva-inline-text><br data-html-import-id="html-import-285"><span style="font-size:8px;letter-spacing:.5em;opacity:.6;" data-html-import-id="html-import-286" data-template-id="span-202" class="canva-text">EXPANSION MAXIMALE · CENTRES PARTOUT · AUCUN CENTRE ABSOLU</span></div>
 
 <!-- INFO BAR -->
-<div id="infobar">
-  <div class="ib"><div class="ib-k">Produit</div><div class="ib-v" id="ibProd">—</div></div>
-  <div class="ib"><div class="ib-k">Fréq. finale</div><div class="ib-v" id="ibFreq">—</div></div>
-  <div class="ib"><div class="ib-k">Battement</div><div class="ib-v rose" id="ibBeat">72 Ω</div></div>
-  <div class="ib"><div class="ib-k">Octaves</div><div class="ib-v" id="ibOct">—</div></div>
-  <div class="ib"><div class="ib-k">Mode actif</div><div class="ib-v gold" id="ibMode">Neutre</div></div>
+<div id="infobar" data-html-import-id="html-import-287">
+  <div class="ib canva-container" data-html-import-id="html-import-288" data-template-id="div-203" style="background: rgba(1, 3, 6, 0.82);"><div class="ib-k canva-container" data-html-import-id="html-import-289" data-template-id="div-204" style="color: rgb(122, 154, 176); font-size: 7px;">Produit</div><div class="ib-v canva-container" id="ibProd" data-html-import-id="html-import-290" data-template-id="div-205" style="color: rgb(221, 238, 255); font-size: 12px;">2.0000</div></div>
+  <div class="ib canva-container" data-html-import-id="html-import-291" data-template-id="div-206" style="background: rgba(1, 3, 6, 0.82);"><div class="ib-k canva-container" data-html-import-id="html-import-292" data-template-id="div-207" style="color: rgb(122, 154, 176); font-size: 7px;">Fréq. finale</div><div class="ib-v canva-container" id="ibFreq" data-html-import-id="html-import-293" data-template-id="div-208" style="color: rgb(221, 238, 255); font-size: 12px;">720 Ω</div></div>
+  <div class="ib canva-container" data-html-import-id="html-import-294" data-template-id="div-209" style="background: rgba(1, 3, 6, 0.82);"><div class="ib-k canva-container" data-html-import-id="html-import-295" data-template-id="div-210" style="color: rgb(122, 154, 176); font-size: 7px;">Battement</div><div class="ib-v rose canva-container" id="ibBeat" data-html-import-id="html-import-296" data-template-id="div-211" style="font-size: 12px;">72 Ω</div></div>
+  <div class="ib canva-container" data-html-import-id="html-import-297" data-template-id="div-212" style="background: rgba(1, 3, 6, 0.82);"><div class="ib-k canva-container" data-html-import-id="html-import-298" data-template-id="div-213" style="color: rgb(122, 154, 176); font-size: 7px;">Octaves</div><div class="ib-v canva-container" id="ibOct" data-html-import-id="html-import-299" data-template-id="div-214" style="color: rgb(221, 238, 255); font-size: 12px;">1.000</div></div>
+  <div class="ib canva-container" data-html-import-id="html-import-300" data-template-id="div-215" style="background: rgba(1, 3, 6, 0.82);"><div class="ib-k canva-container" data-html-import-id="html-import-301" data-template-id="div-216" style="color: rgb(122, 154, 176); font-size: 7px;">Mode actif</div><div class="ib-v gold canva-container" id="ibMode" data-html-import-id="html-import-302" data-template-id="div-217" style="color: rgb(232, 160, 32); font-size: 12px;">Neutre</div></div>
 </div>
 
-<div id="kbdhint">Pavé num → fréq binaural · ↑↓ BPM · F plein écran · Shift+1-8 modes</div>
-<div id="draghint">Glisser orbiter · Scroll zoom</div>
+<div id="kbdhint" data-html-import-id="html-import-303" data-template-id="div-218" class="canva-container" style="color: rgb(122, 154, 176); font-size: 8px;">Pavé num → fréq binaural · ↑↓ BPM · F plein écran · Shift+1-8 modes</div>
+<div id="draghint" data-html-import-id="html-import-304" data-template-id="div-219" class="canva-container" style="color: rgb(122, 154, 176); font-size: 8px;">Glisser orbiter · Scroll zoom</div>
 
 </div><!-- /ui -->
-<script>
+<script data-html-import-id="html-import-305">
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════
@@ -1913,5 +1935,6 @@ setTimeout(function(){
   cvW.width=cvW.offsetWidth||520; cvW.height=36;
 },100);
 </script>
-</body>
-</html>
+
+
+<script src="/_sdk/editing_sdk.js"></script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0e369efa616da11',t:'MTc4MTg4MTMzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body></html>

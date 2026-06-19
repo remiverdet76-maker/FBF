@@ -41,10 +41,11 @@ jobs:
         working-directory: apk
         run: |
           mkdir -p www
+          # Page d'accueil = Omcha396 (binaural app-wide)
           cp ../0mcha396_v2.html www/index.html
-          for f in ../ut36_theory.html ../utc432project.html ../omcv477.html \
-                   ../omcha432flux.html ../cycle432.html ../sphere432max.html \
-                   ../theme432.html ../omcv450.html; do
+          # Modules ouverts en surimpression depuis le menu bas
+          for f in ../theme432.html ../utc432project.html ../omcha432flux.html \
+                   ../copilot432.html ../sphere3d432.html; do
             [ -f "$f" ] && cp "$f" www/
           done
           echo "www/ contents:"; ls -lh www/
@@ -52,8 +53,13 @@ jobs:
       - name: Remove Google Fonts (offline fallback)
         working-directory: apk/www
         run: |
-          sed -i '/<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">/d' index.html
-          sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">||g' index.html
+          # Sur tous les HTML : retire preconnect + feuilles de style Google Fonts
+          for f in *.html; do
+            sed -i '/<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">/d' "$f"
+            sed -i '/<link rel="preconnect" href="https:\/\/fonts\.gstatic\.com"/d' "$f"
+            sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">||g' "$f"
+            sed -i "s|@import url('https://fonts\.googleapis\.com[^']*');||g" "$f"
+          done
 
       - name: Add Android platform
         working-directory: apk
