@@ -316,8 +316,8 @@ function buildMC(){
 }
 
 function drawMandala(){
-  if(!HP.ma){mctx.fillStyle='rgba(1,3,6,0.72)';mctx.fillRect(0,0,W,Ht);return;}
-  mctx.fillStyle='rgba(1,3,6,.032)';mctx.fillRect(0,0,W,Ht);
+  if(!HP.ma){mctx.clearRect(0,0,W,Ht);mctx.fillStyle='rgba(1,3,6,0.18)';mctx.fillRect(0,0,W,Ht);return;}
+  mctx.fillStyle='rgba(1,3,6,.018)';mctx.fillRect(0,0,W,Ht);
   if(mandCache){
     mandRot+=.00022;
     mctx.save();mctx.translate(cx,cy);mctx.rotate(mandRot);mctx.translate(-cx,-cy);
@@ -765,34 +765,12 @@ function flash(txt,col){
   setTimeout(function(){el.classList.remove('show');},2100);
 }
 
-// ─── AUDIO ───────────────────────────────────────────────────────
+// ─── AUDIO retiré — audio uniquement dans 0mcha396_v2.html ──────
 var AC=null,mGain=null,oscL=null,oscR=null,bGain=null,bMerge=null,binOn=false;
-
-function ensureAC(){
-  if(AC)return;
-  AC=new(window.AudioContext||window.webkitAudioContext)();
-  mGain=AC.createGain();mGain.gain.value=.65;mGain.connect(AC.destination);
-}
-function resumeAC(){if(AC&&AC.state==='suspended')AC.resume();}
-
-function startBin(){
-  if(binOn)return;ensureAC();resumeAC();
-  bMerge=AC.createChannelMerger(2);bGain=AC.createGain();bGain.gain.value=.24;
-  oscL=AC.createOscillator();oscL.type='sine';oscL.frequency.value=360;
-  oscR=AC.createOscillator();oscR.type='sine';oscR.frequency.value=432;
-  oscL.connect(bMerge,0,0);oscR.connect(bMerge,0,1);
-  bMerge.connect(bGain);bGain.connect(mGain);
-  oscL.start();oscR.start();binOn=true;
-  document.getElementById('binPlay').textContent='◼ Arrêter 360/432';
-  document.getElementById('binPlay').classList.add('on');
-}
-function stopBin(){
-  [oscL,oscR].forEach(function(o){if(o){try{o.stop();}catch(e){}o.disconnect();}});
-  oscL=oscR=null;if(bGain){bGain.disconnect();bGain=null;}if(bMerge){bMerge.disconnect();bMerge=null;}
-  binOn=false;
-  document.getElementById('binPlay').textContent='▶ Activer 360 / 432 Ω';
-  document.getElementById('binPlay').classList.remove('on');
-}
+function ensureAC(){}
+function resumeAC(){}
+function startBin(){}
+function stopBin(){}
 
 // ─── POLARITY GAUGE ──────────────────────────────────────────────
 function updatePol(){
@@ -828,7 +806,7 @@ function draw(){
   requestAnimationFrame(draw);
   drawMandala();
 
-  ctx.fillStyle='rgba(1,3,6,.21)';ctx.fillRect(0,0,W,Ht);
+  ctx.clearRect(0,0,W,Ht);ctx.fillStyle='rgba(1,3,6,.08)';ctx.fillRect(0,0,W,Ht);
 
   V.rx+=(V.trx-V.rx)*.06;V.ry+=(V.try_-V.ry)*.06;V.zoom+=(V.tzoom-V.zoom)*.08;
   if(V.autoRot)V.try_+=.003*V.spd;

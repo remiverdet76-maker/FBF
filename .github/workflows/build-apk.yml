@@ -41,13 +41,14 @@ jobs:
         working-directory: apk
         run: |
           mkdir -p www
-          cp ../0mcha396_v2.html www/index.html
+          cp ../sphere432max.html www/index.html
+          cp ../0mcha396_v2.html www/0mcha396_v2.html
           for img in ../bg_mandala.jpg ../bg_buddha.jpg ../bg_chakra.jpg \
                      ../bg_cosmos.jpg ../bg_flux.jpg ../bg_sphere432.jpg; do
             [ -f "$img" ] && cp "$img" www/
           done
           for f in ../ut36_theory.html ../utc432project.html ../omcv477.html \
-                   ../omcha432flux.html ../sphere432max.html ../theme432.html; do
+                   ../omcha432flux.html ../theme432.html; do
             [ -f "$f" ] && cp "$f" www/
           done
           echo "www/ contents:"; ls -lh www/

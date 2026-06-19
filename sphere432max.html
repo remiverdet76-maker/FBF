@@ -348,13 +348,22 @@ input[type=range].rm::-webkit-slider-thumb{background:var(--cgold);box-shadow:0 
   <div id="hdr-title">SPHÈRE 432</div>
   <div id="hdr-sub">Expansion Fractale · Centre 432</div>
   <div id="hdr-ratio">432 / 360 = 6/5 → n+1/n</div>
+  <!-- Navigation vers les autres pages -->
+  <div id="hdr-nav" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+    <a href="0mcha396_v2.html" style="font-family:monospace;font-size:9px;letter-spacing:.15em;padding:5px 10px;border-radius:2px;background:rgba(134,255,192,.08);border:1px solid rgba(134,255,192,.35);color:#86FFC0;text-decoration:none;text-transform:uppercase;">◉ 0mcha396 Audio</a>
+    <a href="utc432project.html" style="font-family:monospace;font-size:9px;letter-spacing:.15em;padding:5px 10px;border-radius:2px;background:rgba(100,180,255,.06);border:1px solid rgba(100,180,255,.25);color:#60D8FF;text-decoration:none;text-transform:uppercase;">⊙ UT432</a>
+    <a href="ut36_theory.html" style="font-family:monospace;font-size:9px;letter-spacing:.15em;padding:5px 10px;border-radius:2px;background:rgba(255,200,100,.06);border:1px solid rgba(255,200,100,.25);color:#FFD060;text-decoration:none;text-transform:uppercase;">∿ UT36</a>
+    <a href="omcv477.html" style="font-family:monospace;font-size:9px;letter-spacing:.15em;padding:5px 10px;border-radius:2px;background:rgba(180,100,255,.06);border:1px solid rgba(180,100,255,.25);color:#C080FF;text-decoration:none;text-transform:uppercase;">⬡ Géométrie</a>
+    <a href="omcha432flux.html" style="font-family:monospace;font-size:9px;letter-spacing:.15em;padding:5px 10px;border-radius:2px;background:rgba(255,100,100,.06);border:1px solid rgba(255,100,100,.25);color:#FF8E8E;text-decoration:none;text-transform:uppercase;">〜 Flux</a>
+    <a href="theme432.html" style="font-family:monospace;font-size:9px;letter-spacing:.15em;padding:5px 10px;border-radius:2px;background:rgba(255,180,255,.06);border:1px solid rgba(255,180,255,.25);color:#FFB0FF;text-decoration:none;text-transform:uppercase;">☽ Thème</a>
+  </div>
 </div>
 
 <!-- TOOLBAR -->
 <div id="toolbar">
   <button class="tbtn" id="tModes">⊞ Modes</button>
   <button class="tbtn maxexp-c" id="tMaxExp" onclick="toggleMaxExp()">✦ 360×432^(432×432)</button>
-  <button class="tbtn" id="tBin">⬡ Binaural</button>
+  <button class="tbtn" id="tBin" style="opacity:.35;cursor:default;" title="Audio dans 0mcha396">⬡ Audio</button>
   <button class="tbtn bpm-c" id="tBpm">◉ BPM</button>
   <button class="tbtn pp-c" id="tPP">⇄ Ping-Pong</button>
   <button class="tbtn" id="tMaster">◈ Master</button>
@@ -679,11 +688,12 @@ function mkPour(){
 
 function drawUniverse(){
   if(!V.showUniv){
-    uctx.fillStyle='rgba(1,3,6,0.70)';
+    uctx.clearRect(0,0,W,H);
+    uctx.fillStyle='rgba(1,3,6,0.15)';
     uctx.fillRect(0,0,W,H);
     return;
   }
-  uctx.fillStyle='rgba(1,3,6,0.045)';
+  uctx.fillStyle='rgba(1,3,6,0.022)';
   uctx.fillRect(0,0,W,H);
 
   // Nebulae
@@ -1157,46 +1167,8 @@ function drawMaxExp(){
 }
 
 // Son du mode expansion maximale
-function startMaxExpSound(){
-  ensureAC(); resumeAC();
-  stopMaxExpSound();
-
-  ME.oscMaxL = AC.createOscillator();
-  ME.oscMaxR = AC.createOscillator();
-  ME.oscMaxSub = AC.createOscillator();
-  ME.oscMaxGain = AC.createGain();
-
-  var panL=AC.createStereoPanner(); panL.pan.value=-1;
-  var panR=AC.createStereoPanner(); panR.pan.value=1;
-  var gainL=AC.createGain(); gainL.gain.value=0.08;
-  var gainR=AC.createGain(); gainR.gain.value=0.08;
-  var gainSub=AC.createGain(); gainSub.gain.value=0.12;
-
-  // 360 Hz gauche, 432 Hz droite → battement 72 Hz
-  ME.oscMaxL.frequency.value=360;
-  ME.oscMaxR.frequency.value=432;
-  ME.oscMaxSub.frequency.value=54; // sub-basse profonde
-
-  ME.oscMaxL.connect(gainL); gainL.connect(panL); panL.connect(eqIn());
-  ME.oscMaxR.connect(gainR); gainR.connect(panR); panR.connect(eqIn());
-  ME.oscMaxSub.connect(gainSub); gainSub.connect(eqIn());
-
-  ME.oscMaxL.start(); ME.oscMaxR.start(); ME.oscMaxSub.start();
-  ME.oscMaxGain = gainSub;
-
-  // LFO pour faire évoluer les fréquences vers l'infini progressivement
-  var lfo=AC.createOscillator(); lfo.frequency.value=0.04;
-  var lfoG=AC.createGain(); lfoG.gain.value=72;
-  lfo.connect(lfoG); lfoG.connect(ME.oscMaxR.frequency);
-  lfo.start();
-  ME._lfo=lfo; ME._lfoG=lfoG;
-}
-
-function stopMaxExpSound(){
-  ['oscMaxL','oscMaxR','oscMaxSub','_lfo'].forEach(function(k){
-    if(ME[k]){ try{ME[k].stop();}catch(e){} try{ME[k].disconnect();}catch(e){} ME[k]=null; }
-  });
-}
+function startMaxExpSound(){}
+function stopMaxExpSound(){}
 
 function toggleMaxExp(){
   if(ME.on){ stopMaxExp(); } else { startMaxExpFull(); }
@@ -1349,7 +1321,7 @@ function draw(){
   requestAnimationFrame(draw);
   drawUniverse();
 
-  ctx.fillStyle='rgba(1,3,6,0.20)'; ctx.fillRect(0,0,W,H);
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='rgba(1,3,6,0.08)'; ctx.fillRect(0,0,W,H);
   ctx.strokeStyle='rgba(0,204,255,.022)'; ctx.lineWidth=1;
   var st=60;
   for(var x=cx%st;x<W;x+=st){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
@@ -1391,15 +1363,7 @@ function startBpm(){
     var dot=document.getElementById('bpmDot');
     dot.style.opacity='1';
     setTimeout(function(){dot.style.opacity='0';},80);
-    if(AC&&AC.state==='running'){
-      try{
-        var o=AC.createOscillator(), g=AC.createGain();
-        o.frequency.value=900; g.gain.value=.12;
-        o.connect(g); g.connect(masterGain||AC.destination);
-        o.start(); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.04);
-        setTimeout(function(){try{o.stop();o.disconnect();}catch(e){}},80);
-      }catch(e){}
-    }
+    // audio removed
   },ms);
 }
 function stopBpm(){if(bpmTimerId){clearInterval(bpmTimerId);bpmTimerId=null;}}
@@ -1410,9 +1374,7 @@ function setBpm(v){
   if(V.bpmActive) startBpm();
 }
 
-// ═══════════════════════════════════════════════════════════
-// AUDIO ENGINE
-// ═══════════════════════════════════════════════════════════
+// ── Audio removed — audio uniquement dans 0mcha396_v2.html ──
 var AC=null, masterGain=null, compressor=null;
 var bassF=null, midF=null, trebleF=null, reverbN=null, revGain=null, dryGain=null;
 var oscL=null, oscR=null, binGain=null, binMerger=null;
@@ -1421,109 +1383,17 @@ var oscA=null, oscAG=null, oscAP=null;
 var oscB=null, oscBG=null, oscBP=null;
 var binPlaying=false, waveAnim=null;
 var binSt={fL:432,fR:440,vol:.6};
-
-function ensureAC(){
-  if(AC) return;
-  AC=new(window.AudioContext||window.webkitAudioContext)();
-  masterGain=AC.createGain(); masterGain.gain.value=.8;
-  bassF=AC.createBiquadFilter(); bassF.type='lowshelf'; bassF.frequency.value=200;
-  midF=AC.createBiquadFilter(); midF.type='peaking'; midF.frequency.value=1000; midF.Q.value=1;
-  trebleF=AC.createBiquadFilter(); trebleF.type='highshelf'; trebleF.frequency.value=5000;
-  compressor=AC.createDynamicsCompressor();
-  compressor.threshold.value=-24; compressor.knee.value=12; compressor.ratio.value=4;
-  // Reverb
-  reverbN=AC.createConvolver();
-  var rl=AC.sampleRate*1.5;
-  var rb=AC.createBuffer(2,rl,AC.sampleRate);
-  for(var ch=0;ch<2;ch++){var d=rb.getChannelData(ch);for(var i=0;i<rl;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/rl,2);}
-  reverbN.buffer=rb;
-  revGain=AC.createGain(); revGain.gain.value=.18;
-  dryGain=AC.createGain(); dryGain.gain.value=.85;
-  // Chain: bassF→midF→trebleF→compressor→dry+rev→master→dest
-  bassF.connect(midF); midF.connect(trebleF); trebleF.connect(compressor);
-  compressor.connect(dryGain); compressor.connect(reverbN);
-  reverbN.connect(revGain); revGain.connect(masterGain);
-  dryGain.connect(masterGain); masterGain.connect(AC.destination);
-}
-function resumeAC(){ if(AC&&AC.state==='suspended') AC.resume(); }
-function eqIn(){ return bassF; }
-
-// OSC A
+function ensureAC(){}
+function resumeAC(){}
+function eqIn(){ return null; }
 var oscASt={freq:864,type:'sine',vol:.6,pan:0,on:false};
-function startOscA(){
-  if(oscA){stopOscA();}
-  ensureAC(); resumeAC();
-  oscA=AC.createOscillator(); oscA.type=oscASt.type; oscA.frequency.value=oscASt.freq;
-  oscAG=AC.createGain(); oscAG.gain.value=oscASt.vol*.22;
-  oscAP=AC.createStereoPanner(); oscAP.pan.value=oscASt.pan/100;
-  oscA.connect(oscAG); oscAG.connect(oscAP); oscAP.connect(eqIn());
-  oscA.start(); oscASt.on=true;
-  document.getElementById('dotA').classList.add('on');
-}
-function stopOscA(){
-  if(oscA){try{oscA.stop();}catch(e){} oscA.disconnect(); oscA=null;}
-  if(oscAG){oscAG.disconnect();oscAG=null;}
-  if(oscAP){oscAP.disconnect();oscAP=null;}
-  oscASt.on=false; document.getElementById('dotA').classList.remove('on');
-}
-
-// OSC B
+function startOscA(){}
+function stopOscA(){}
 var oscBSt={freq:216,type:'sine',vol:.6,pan:0,on:false};
-function startOscB(){
-  if(oscB){stopOscB();}
-  ensureAC(); resumeAC();
-  oscB=AC.createOscillator(); oscB.type=oscBSt.type; oscB.frequency.value=oscBSt.freq;
-  oscBG=AC.createGain(); oscBG.gain.value=oscBSt.vol*.22;
-  oscBP=AC.createStereoPanner(); oscBP.pan.value=oscBSt.pan/100;
-  oscB.connect(oscBG); oscBG.connect(oscBP); oscBP.connect(eqIn());
-  oscB.start(); oscBSt.on=true;
-  document.getElementById('dotB').classList.add('on');
-}
-function stopOscB(){
-  if(oscB){try{oscB.stop();}catch(e){} oscB.disconnect(); oscB=null;}
-  if(oscBG){oscBG.disconnect();oscBG=null;}
-  if(oscBP){oscBP.disconnect();oscBP=null;}
-  oscBSt.on=false; document.getElementById('dotB').classList.remove('on');
-}
-
-// BINAURAL
-function startBin(){
-  if(binPlaying) return;
-  ensureAC(); resumeAC();
-  binMerger=AC.createChannelMerger(2);
-  binGain=AC.createGain(); binGain.gain.value=binSt.vol*.3;
-  oscL=AC.createOscillator(); oscL.type='sine'; oscL.frequency.value=binSt.fL;
-  oscR=AC.createOscillator(); oscR.type='sine'; oscR.frequency.value=binSt.fR;
-  // Ping-pong on binaural
-  if(document.getElementById('ckBinPP').checked){
-    ppLFO=AC.createOscillator(); ppLFO.frequency.value=V.ppSpd;
-    ppLFOGL=AC.createGain(); ppLFOGL.gain.value=V.ppInt*25;
-    ppLFOGR=AC.createGain(); ppLFOGR.gain.value=-V.ppInt*25;
-    ppLFO.connect(ppLFOGL); ppLFOGL.connect(oscL.frequency);
-    ppLFO.connect(ppLFOGR); ppLFOGR.connect(oscR.frequency);
-    ppLFO.start();
-  }
-  oscL.connect(binMerger,0,0); oscR.connect(binMerger,0,1);
-  binMerger.connect(binGain); binGain.connect(eqIn());
-  oscL.start(); oscR.start();
-  binPlaying=true;
-  document.getElementById('binPlay').textContent='◼ Arrêter';
-  document.getElementById('binPlay').classList.add('on');
-  document.getElementById('vubar').style.transform='scaleX('+binSt.vol+')';
-  startWave();
-}
-function stopBin(){
-  [oscL,oscR].forEach(function(o){if(o){try{o.stop();}catch(e){} o.disconnect();}});
-  oscL=oscR=null;
-  if(ppLFO){try{ppLFO.stop();}catch(e){} ppLFO.disconnect(); ppLFO=null;}
-  if(binGain){binGain.disconnect();binGain=null;}
-  if(binMerger){binMerger.disconnect();binMerger=null;}
-  binPlaying=false;
-  document.getElementById('binPlay').textContent='▶ Activer';
-  document.getElementById('binPlay').classList.remove('on');
-  document.getElementById('vubar').style.transform='scaleX(0)';
-  stopWave();
-}
+function startOscB(){}
+function stopOscB(){}
+function startBin(){}
+function stopBin(){}
 
 function fmtO(v){ if(v>=1000)return(v/1000).toFixed(3)+' kΩ'; if(v<10)return v.toFixed(3)+' Ω'; return Math.round(v)+' Ω'; }
 function bandName(hz){
@@ -1590,11 +1460,7 @@ function stopWave(){ if(waveAnim){cancelAnimationFrame(waveAnim);waveAnim=null;}
 // ═══════════════════════════════════════════════════════════
 // 5. MASTERING
 // ═══════════════════════════════════════════════════════════
-function updateMasterMeter(){
-  if(!masterGain) return;
-  var v=parseFloat(document.getElementById('mVol').value);
-  document.getElementById('mMeter').style.width=v+'%';
-}
+function updateMasterMeter(){}
 
 // ═══════════════════════════════════════════════════════════
 // SPHERE LIST

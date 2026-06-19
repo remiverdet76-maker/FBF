@@ -725,8 +725,8 @@ function loop(){
   }
 
   // Fond semi-transparent (laisse apparaître bg_cosmos.jpg)
-  B.fillStyle=`hsla(${hue},40%,5%,0.60)`;B.fillRect(0,0,W,H);
-  X.fillStyle=`hsla(${hue},30%,3%,.12)`;X.fillRect(0,0,W,H);
+  B.clearRect(0,0,W,H);B.fillStyle=`hsla(${hue},40%,8%,0.30)`;B.fillRect(0,0,W,H);
+  X.fillStyle=`hsla(${hue},30%,3%,.05)`;X.fillRect(0,0,W,H);
   X.globalAlpha=1;
 
   // Construire géométrie(s)

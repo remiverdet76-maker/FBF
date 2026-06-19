@@ -563,9 +563,10 @@ function rgba(hex,a){
 // ─── FOND ────────────────────────────────────────────
 let _stars=null;
 function drawBg(t){
+  X.clearRect(0,0,CW,CH);
   const bg=X.createRadialGradient(cx,cy,0,cx,cy,R*2);
-  bg.addColorStop(0,'rgba(24,12,60,.38)');
-  bg.addColorStop(1,'rgba(4,6,20,.52)');
+  bg.addColorStop(0,'rgba(24,12,60,.22)');
+  bg.addColorStop(1,'rgba(4,6,20,.30)');
   X.fillStyle=bg; X.fillRect(0,0,CW,CH);
   if(OPTS.stars){
     if(!_stars){_stars=[];for(let i=0;i<150;i++)_stars.push([Math.random()*CW,Math.random()*CH,Math.random()*.5+.06,Math.random()*1.1+.2]);}
