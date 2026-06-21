@@ -50,6 +50,8 @@ jobs:
           cp ../bg-rotator.css ../bg-rotator.js ../audio-bus.js www/
           mkdir -p www/img
           cp ../img/*.jpg www/img/
+          # Module multi-fichiers FBF 432 (1ʳᵉ version) : dossier complet
+          [ -d ../fbf432 ] && cp -r ../fbf432 www/fbf432
           echo "www/ contents:"; ls -lh www/; echo "www/img:"; ls -lh www/img/
 
       - name: Remove Google Fonts (offline fallback)
@@ -72,6 +74,11 @@ jobs:
             grep -q 'audio-bus.js' "$f" || \
               sed -i 's#</body>#<script src="audio-bus.js"></script>\n</body>#I' "$f"
           done
+          # Module multi-fichiers fbf432 (sous-dossier) : audio-bus en chemin relatif
+          if [ -f fbf432/index.html ]; then
+            grep -q 'audio-bus.js' fbf432/index.html || \
+              sed -i 's#</body>#<script src="../audio-bus.js"></script>\n</body>#I' fbf432/index.html
+          fi
           # 2) Génère modules.js : liste {file,title} de tous les modules (hors accueil)
           {
             echo "window.FBF_MODULES = ["
@@ -85,6 +92,12 @@ jobs:
               printf "  {file:'%s', title:'%s', ico:'\\u25c9'}" "$f" "$t"
               first=0
             done
+            # Module dossier fbf432 (1ʳᵉ version FBF)
+            if [ -f fbf432/index.html ]; then
+              [ $first -eq 0 ] && echo ","
+              printf "  {file:'fbf432/index.html', title:'FBF 432 — 1re version', ico:'\\u25c8'}"
+              first=0
+            fi
             echo ""
             echo "];"
           } > modules.js
