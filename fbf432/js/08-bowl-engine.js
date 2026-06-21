@@ -160,8 +160,8 @@ const Bowl = (() => {
   };
 
   function _ctx() {
-    // réutilise le contexte Tone.js s'il existe (partage l'horloge audio)
-    try { return Tone.context.rawContext; } catch (e) { return (ctx ||= new AudioContext()); }
+    // réutilise le contexte natif partagé (window.AC, créé par 02-audio.js)
+    return window.AC || (ctx ||= new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' }));
   }
 
   async function init() {
@@ -189,7 +189,7 @@ const Bowl = (() => {
   // Branche la sortie bol dans la chaîne FX partagée si dispo, sinon destination.
   function _route() {
     try {
-      if (typeof eqLow !== 'undefined' && eqLow) { Tone.connect(outGain, eqLow); return; }
+      if (typeof eqLow !== 'undefined' && eqLow) { outGain.connect(eqLow); return; }
     } catch (e) {}
     outGain.connect(ctx.destination);
   }

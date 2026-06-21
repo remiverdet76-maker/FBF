@@ -1,45 +1,75 @@
 /* ═══════════════════════════════════════════
-   02-audio.js — Moteur audio, FX chain, Flow
+   02-audio.js — Moteur audio NATIF (Web Audio API)
+   Migration Tone.js → natif (anti-craquement APK / Bluetooth).
+   API publique inchangée : buildOsc, tuneOsc, releaseOsc, swap*,
+   initFXChain, setReverbSpace, lfoToggle/Set, filtLfo*, fxLfo*,
+   startFlow, stopFlow, masterTick…
    ═══════════════════════════════════════════ */
+
+/* ---------- 2.0 · HORLOGE AUDIO CENTRALE ---------- */
+function audioCtx() {
+  if (!AC) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    AC = new C({ latencyHint: 'playback' });
+    window.AC = AC;
+  }
+  return AC;
+}
+const aNow = () => audioCtx().currentTime;
 
 const swapTimers = {};
 let nodes = {}, masterGain = null, analyser = null;
 
 let limiter = null;
 let eqLow = null, eqMid = null, eqHigh = null;
-let masterDelay = null, masterReverb = null, pingPong = null, masterGlue = null;
-let chorus = null, compressor = null;
+let masterDelay = null, masterDelayFb = null;
+let masterReverb = null, reverbWetGain = null, reverbDryGain = null;
+let pingPongDelay = null, ppL = null, ppR = null, ppFb = null, ppWet = null;
+let compressor = null;
+let busTrim = null, mEqLow = null, mEqMid = null, mEqHigh = null, masterGlue = null, masterFader = null;
+let _fxInput = null;
+let _fxRefs = {};
+// Filtre de bus (lowpass) + LFO filtre (timbre) + LFO FX (intensité) — features 19h43.
+let _busLP = null;
+let _filtLFO = null, _filtLFODepth = null;
+let _fxLFO = null, _fxLFODepth = null;
 const LFO_STATE = {on:false, rate:.25, depth:.08};
-let _lfoNode = null, _lfoGain = null;  // LFO natif Tone.js (audio thread)
+let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
 let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
-let _busLP=null, _filtLFO=null, _fxLFO=null;  // LFO filtre + LFO FX intensité
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
+let _waveBuf = null;
 
+// Constantes LFO filtre/FX (équivalent natif des Tone.LFO d'origine)
+const _FILT_LFO_MIN = 500,  _FILT_LFO_MAX = 16000;   // coupure du _busLP
+const _FILT_LFO_OPEN = 18000;                         // coupure repos (filtre ouvert)
+const _FX_LFO_MIN = 0,      _FX_LFO_MAX = 0.5;        // wet du delay
+
+/* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
 // ── Bande aiguë 432–648 Hz : HPF (~420) + volume −25 % (comme Omcha396) ──
 function applyHiBand(node, freq) {
-  if (!node || !node.hpf || !node.trim) return;
-  const hi = freq > 432;
+  if (!node) return;
+  const hi = freq > 432, now = aNow();
   try {
-    node.hpf.frequency.rampTo(hi ? 420 : 20, 0.05);
-    node.trim.gain.rampTo(hi ? 0.75 : 1.0, 0.08);
+    if (node.hpf)  node.hpf.frequency.setTargetAtTime(hi ? 420 : 20, now, 0.05);
+    if (node.trim) node.trim.gain.setTargetAtTime(hi ? 0.75 : 1.0, now, 0.08);
   } catch(e) {}
 }
 
-// ── Oscillateurs ─────────────────────────────────────────────
 function buildOsc(id, freq, vol, pan) {
-  const p   = new Tone.Panner(pan);
-  const o   = new Tone.Oscillator({ frequency: safeF(freq), type: 'sine' });
-  const hpf = new Tone.Filter({ type: 'highpass', frequency: 20, Q: 0.707 });
-  const trim = new Tone.Gain(1);
-  const g   = new Tone.Gain(0);
+  const c = audioCtx();
+  const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = safeF(freq);
+  const p = c.createStereoPanner(); p.pan.value = pan;
+  const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
+  const trim = c.createGain(); trim.gain.value = 1;
+  const g = c.createGain(); g.gain.value = 0;
   // o → pan → HPF → trim(−25% si aigu) → gain → master
   o.connect(p); p.connect(hpf); hpf.connect(trim); trim.connect(g); g.connect(masterGain);
   o.start();
   const node = { o, g, p, hpf, trim };
   applyHiBand(node, safeF(freq));
   if (!mutedOscs[id] && vol > 0) {
-    const now = Tone.now();
+    const now = c.currentTime;
     g.gain.cancelScheduledValues(now);
     g.gain.setValueAtTime(0, now);
     g.gain.setTargetAtTime(vol, now, FADE / 5);
@@ -50,7 +80,7 @@ function buildOsc(id, freq, vol, pan) {
 function tuneOsc(id, freq) {
   const node = nodes[id]; if (!node) return;
   try {
-    const f = safeF(freq), now = Tone.now();
+    const f = safeF(freq), now = aNow();
     node.o.frequency.cancelScheduledValues(now);
     node.o.frequency.setValueAtTime(node.o.frequency.value, now);
     node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
@@ -60,14 +90,14 @@ function tuneOsc(id, freq) {
 
 function releaseOsc(node) {
   try {
-    const now = Tone.now();
+    const now = aNow();
     node.g.gain.cancelScheduledValues(now);
     node.g.gain.setValueAtTime(node.g.gain.value, now);
     node.g.gain.setTargetAtTime(0, now, FADE / 5);
     node.o.stop(now + FADE + 0.1);
   } catch(e) {}
   setTimeout(() => {
-    ['o','g','p','hpf','trim'].forEach(k => { try { node[k]?.dispose?.(); } catch(e){} });
+    ['o','g','p','hpf','trim'].forEach(k => { try { node[k]?.disconnect?.(); } catch(e){} });
   }, (FADE + 0.4) * 1000);
 }
 
@@ -98,56 +128,120 @@ function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] 
 function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
 
 function safeRamp(gainParam, target, duration) {
-  const now = Tone.now();
+  const now = aNow();
   gainParam.cancelScheduledValues(now);
   gainParam.setValueAtTime(gainParam.value, now);
   gainParam.setTargetAtTime(target, now, Math.max(0.01, duration / 5));
 }
 
-// ── FX Chain (créée une seule fois) ──────────────────────────
-function initFXChain() {
-  if (eqLow) return;
-  eqLow       = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
-  eqMid       = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
-  eqHigh      = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
-  chorus      = new Tone.Chorus({ frequency: 0.8, delayTime: 3.5, depth: 0, wet: 1 }).start();
-  compressor  = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
-  // Glue de bus (cohésion douce — comme Omcha396), toujours actif.
-  masterGlue   = new Tone.Compressor({ threshold: -18, ratio: 2, knee: 6, attack: 0.05, release: 0.3 });
-  masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
-  // Ping-pong stéréo (disponible, wet pilotable) — spatialisation Omcha396.
-  pingPong     = new Tone.PingPongDelay({ delayTime: 0.25, feedback: 0.3, wet: 0 });
-  masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
-  limiter      = new Tone.Limiter(-1.5).toDestination();
-  // Filtre de bus (lowpass) + LFOs filtre/FX
-  _busLP   = new Tone.Filter({ type:'lowpass', frequency:18000, Q:0.6 });
-  _filtLFO = new Tone.LFO({ frequency:0.1, min:500,  max:16000, type:'sine' }).start();
-  _fxLFO   = new Tone.LFO({ frequency:0.12, min:0,   max:0.5,   type:'sine' }).start();
-  // Réverbe à convolution NON inline par défaut (off) : elle convolue en
-  // permanence sinon = gros coût CPU mobile → underrun BT. On la branche
-  // seulement quand wet > 0 (voir _setReverbActive).
-  eqLow.chain(eqMid, eqHigh, _busLP, chorus, compressor, masterGlue, masterDelay, pingPong, limiter);
+/* ---------- 2.3 · IR DE RÉVERBE GÉNÉRÉE PAR CODE ---------- */
+function _makeIR(decay, preDelay) {
+  const c = audioCtx(), sr = c.sampleRate;
+  const len = Math.max(1, Math.floor(sr * (preDelay + decay)));
+  const pd  = Math.floor(sr * preDelay);
+  const ir  = c.createBuffer(2, len, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      if (i < pd) { d[i] = 0; continue; }
+      const t = (i - pd) / (sr * decay);
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.4);
+    }
+  }
+  return ir;
 }
 
-// Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
+/* ---------- 2.4 · FX CHAIN NATIVE (créée une seule fois) ---------- */
+function initFXChain() {
+  if (eqLow) return;
+  const c = audioCtx();
+
+  eqLow  = c.createBiquadFilter(); eqLow.type='lowshelf';  eqLow.frequency.value=200;  eqLow.gain.value=0;
+  eqMid  = c.createBiquadFilter(); eqMid.type='peaking';   eqMid.frequency.value=1000; eqMid.Q.value=1; eqMid.gain.value=0;
+  eqHigh = c.createBiquadFilter(); eqHigh.type='highshelf';eqHigh.frequency.value=5000; eqHigh.gain.value=0;
+
+  // Filtre de bus (lowpass) — repos grand ouvert (18 kHz), piloté par le LFO filtre.
+  _busLP = c.createBiquadFilter(); _busLP.type='lowpass'; _busLP.frequency.value=_FILT_LFO_OPEN; _busLP.Q.value=0.6;
+
+  compressor = c.createDynamicsCompressor();
+  compressor.threshold.value=-24; compressor.ratio.value=4; compressor.attack.value=0.02; compressor.release.value=0.25;
+
+  masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
+  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.3;
+  masterDelay.connect(masterDelayFb); masterDelayFb.connect(masterDelay);
+  const delayWet = c.createGain(); delayWet.gain.value=0; masterDelay.connect(delayWet);
+
+  masterReverb = c.createConvolver();
+  masterReverb.buffer = _makeIR(1.5, 0.05);
+  reverbWetGain = c.createGain(); reverbWetGain.gain.value=0;
+  reverbDryGain = c.createGain(); reverbDryGain.gain.value=1;
+
+  ppL = c.createDelay(1.0); ppL.delayTime.value=0.25;
+  ppR = c.createDelay(1.0); ppR.delayTime.value=0.25;
+  ppFb = c.createGain(); ppFb.gain.value=0.3;
+  ppL.connect(ppR); ppR.connect(ppFb); ppFb.connect(ppL);
+  const splitMerge = c.createChannelMerger(2);
+  ppL.connect(splitMerge, 0, 0); ppR.connect(splitMerge, 0, 1);
+  ppWet = c.createGain(); ppWet.gain.value=0; splitMerge.connect(ppWet);
+  pingPongDelay = { delayTime: ppL.delayTime, _fb: ppFb, _wet: ppWet };
+
+  busTrim = c.createGain(); busTrim.gain.value = 1;
+
+  mEqLow  = c.createBiquadFilter(); mEqLow.type='lowshelf';  mEqLow.frequency.value=54;   mEqLow.gain.value=0;
+  mEqMid  = c.createBiquadFilter(); mEqMid.type='peaking';   mEqMid.frequency.value=216;  mEqMid.Q.value=0.9; mEqMid.gain.value=0;
+  mEqHigh = c.createBiquadFilter(); mEqHigh.type='highshelf';mEqHigh.frequency.value=432; mEqHigh.gain.value=0;
+
+  masterGlue = c.createDynamicsCompressor();
+  masterGlue.threshold.value=-18; masterGlue.knee.value=6; masterGlue.ratio.value=2;
+  masterGlue.attack.value=0.05; masterGlue.release.value=0.3;
+
+  masterFader = c.createGain(); masterFader.gain.value = 1;
+
+  limiter = c.createDynamicsCompressor();
+  limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
+  limiter.attack.value=0.002; limiter.release.value=0.18;
+
+  // Bus master : busTrim → mEQ → glue → fader → limiter → sortie
+  busTrim.connect(mEqLow); mEqLow.connect(mEqMid); mEqMid.connect(mEqHigh);
+  mEqHigh.connect(masterGlue); masterGlue.connect(masterFader);
+  masterFader.connect(limiter); limiter.connect(c.destination);
+
+  // Chaîne : eqLow → eqMid → eqHigh → _busLP → compressor → (dry + FX parallèles) → busTrim
+  eqLow.connect(eqMid); eqMid.connect(eqHigh);
+  eqHigh.connect(_busLP); _busLP.connect(compressor);
+  compressor.connect(busTrim);                       // dry direct
+  compressor.connect(masterDelay);   delayWet.connect(busTrim);
+  compressor.connect(reverbDryGain); reverbDryGain.connect(busTrim);
+  compressor.connect(ppL);           ppWet.connect(busTrim);
+  reverbWetGain.connect(masterReverb); masterReverb.connect(busTrim);
+
+  // ── LFO filtre (timbre) : oscillateur natif → depth → _busLP.frequency ──
+  _filtLFO = c.createOscillator(); _filtLFO.type='sine'; _filtLFO.frequency.value=0.1;
+  _filtLFODepth = c.createGain(); _filtLFODepth.gain.value=(_FILT_LFO_MAX-_FILT_LFO_MIN)/2;
+  _filtLFO.connect(_filtLFODepth);   // branché sur _busLP.frequency au toggle
+  _filtLFO.start();
+
+  // ── LFO FX (intensité) : oscillateur natif → depth → delayWet.gain ──
+  _fxLFO = c.createOscillator(); _fxLFO.type='sine'; _fxLFO.frequency.value=0.12;
+  _fxLFODepth = c.createGain(); _fxLFODepth.gain.value=(_FX_LFO_MAX-_FX_LFO_MIN)/2;
+  _fxLFO.connect(_fxLFODepth);       // branché sur delayWet.gain au toggle
+  _fxLFO.start();
+
+  _fxInput = eqLow;
+  _fxRefs = { delayWet };
+}
+
+/* ---------- 2.5 · REVERB ON/OFF (anti-CPU BT : convolution branchée si wet>0) ---------- */
 let _reverbActive = false;
 function _setReverbActive(on) {
-  if (!masterReverb || !pingPong || !limiter || on === _reverbActive) return;
+  if (!compressor || !reverbWetGain || on === _reverbActive) return;
   try {
-    if (on) {
-      pingPong.disconnect(limiter);
-      pingPong.connect(masterReverb);
-      masterReverb.connect(limiter);
-    } else {
-      pingPong.disconnect(masterReverb);
-      try { masterReverb.disconnect(limiter); } catch(e) {}
-      pingPong.connect(limiter);
-    }
+    if (on) compressor.connect(reverbWetGain);
+    else    compressor.disconnect(reverbWetGain);
     _reverbActive = on;
   } catch(e) {}
 }
 
-// Espaces de réverbe spatiale
 const REVERB_SPACES = {
   sec:        { decay: 0.4,  preDelay: 0.01 },
   grotte:     { decay: 2.8,  preDelay: 0.08 },
@@ -156,8 +250,7 @@ const REVERB_SPACES = {
 };
 async function setReverbSpace(name) {
   const s = REVERB_SPACES[name]; if (!s || !masterReverb) return;
-  masterReverb.decay = s.decay; masterReverb.preDelay = s.preDelay;
-  try { await masterReverb.generate(); } catch(e) {}
+  masterReverb.buffer = _makeIR(s.decay, s.preDelay);
   const sl = document.getElementById('reverbWet');
   if (sl && parseFloat(sl.value) < 0.05) { sl.value = 0.32; updateFX('reverbWet', 0.32); }
 }
@@ -167,55 +260,83 @@ function setFadeDur(v) {
   const el = document.getElementById('sv-fade'); if (el) el.textContent = _fadeDur.toFixed(1) + 's';
 }
 
+/* ---------- 2.6 · LFO VOLUME (natif, dans l'audio thread) ---------- */
 function lfoToggle(on) {
   LFO_STATE.on = on;
-  if (!_lfoNode || !_lfoGain) return;
-  if (on) {
-    _lfoNode.connect(_lfoGain.gain);
-  } else {
-    try { _lfoNode.disconnect(); } catch(e) {}
-    _lfoGain.gain.setTargetAtTime(1, Tone.now(), 0.1);
-  }
+  if (!_lfoNode || !_lfoDepthGain || !_lfoGain) return;
+  if (on) _lfoDepthGain.gain.setTargetAtTime(LFO_STATE.depth, aNow(), 0.1);
+  else    _lfoDepthGain.gain.setTargetAtTime(0, aNow(), 0.1);
 }
 function lfoSet(param, v) {
   LFO_STATE[param] = parseFloat(v);
   if (_lfoNode) {
-    if (param === 'rate')  _lfoNode.frequency.value = LFO_STATE.rate;
-    if (param === 'depth') { _lfoNode.min = 1 - LFO_STATE.depth; _lfoNode.max = 1 + LFO_STATE.depth; }
+    if (param === 'rate')  _lfoNode.frequency.setTargetAtTime(LFO_STATE.rate, aNow(), 0.05);
+    if (param === 'depth' && LFO_STATE.on) _lfoDepthGain.gain.setTargetAtTime(LFO_STATE.depth, aNow(), 0.05);
   }
   const el = document.getElementById('sv-lfo-' + param); if (el) el.textContent = parseFloat(v).toFixed(2);
 }
 
-// ── LFO filtre (timbre) & LFO FX (intensité) ──
-function filtLfoToggle(on){ if(!_filtLFO||!_busLP)return; if(on){try{_filtLFO.connect(_busLP.frequency);}catch(e){}} else {try{_filtLFO.disconnect();}catch(e){} try{_busLP.frequency.rampTo(18000,0.2);}catch(e){}} }
-function filtLfoRate(v){ if(_filtLFO)try{_filtLFO.frequency.value=parseFloat(v);}catch(e){} }
-function fxLfoToggle(on){ if(!_fxLFO||!masterDelay)return; if(on){try{_fxLFO.connect(masterDelay.wet);}catch(e){}} else {try{_fxLFO.disconnect();}catch(e){}} }
-function fxLfoRate(v){ if(_fxLFO)try{_fxLFO.frequency.value=parseFloat(v);}catch(e){} }
+/* ---------- 2.6b · LFO FILTRE (timbre) & LFO FX (intensité) ---------- */
+function filtLfoToggle(on) {
+  if (!_busLP || !_filtLFODepth) return;
+  if (on) {
+    // recentre la coupure puis branche l'oscillation 500 ↔ 16 000 Hz
+    _busLP.frequency.setTargetAtTime((_FILT_LFO_MIN+_FILT_LFO_MAX)/2, aNow(), 0.1);
+    try { _filtLFODepth.connect(_busLP.frequency); } catch(e) {}
+  } else {
+    try { _filtLFODepth.disconnect(); } catch(e) {}
+    _busLP.frequency.setTargetAtTime(_FILT_LFO_OPEN, aNow(), 0.2);   // filtre ré-ouvert
+  }
+}
+function filtLfoRate(v) { if (_filtLFO) try { _filtLFO.frequency.setTargetAtTime(parseFloat(v), aNow(), 0.05); } catch(e) {} }
+
+function fxLfoToggle(on) {
+  if (!_fxLFODepth || !_fxRefs.delayWet) return;
+  if (on) {
+    _fxRefs.delayWet.gain.setTargetAtTime((_FX_LFO_MIN+_FX_LFO_MAX)/2, aNow(), 0.1);
+    try { _fxLFODepth.connect(_fxRefs.delayWet.gain); } catch(e) {}
+  } else {
+    try { _fxLFODepth.disconnect(); } catch(e) {}
+    // revient à la valeur du curseur Delay (ou 0)
+    const sl = document.getElementById('delayWet');
+    const target = sl ? parseFloat(sl.value) : 0;
+    _fxRefs.delayWet.gain.setTargetAtTime(target, aNow(), 0.2);
+  }
+}
+function fxLfoRate(v) { if (_fxLFO) try { _fxLFO.frequency.setTargetAtTime(parseFloat(v), aNow(), 0.05); } catch(e) {} }
 
 function _startBTKeepalive() {
   if (_btKeepalive) return;
   try {
-    const ctx = Tone.context.rawContext;
-    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-    const src = ctx.createBufferSource();
+    const c = audioCtx();
+    const buf = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const src = c.createBufferSource();
     src.buffer = buf; src.loop = true;
-    src.connect(ctx.destination);
+    src.connect(c.destination);
     src.start();
     _btKeepalive = src;
   } catch(e) {}
 }
 
-function setChorusDepth(v) { if (chorus) try { chorus.depth = parseFloat(v); } catch(e) {} }
-function setChorusRate(v)  { if (chorus) try { chorus.frequency.value = parseFloat(v); } catch(e) {} }
+function setChorusDepth(v) { /* no-op : chorus supprimé (ScriptProcessor = craquements BT) */ }
+function setChorusRate(v)  { /* no-op */ }
 function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
 function setCompRatio(v)   { if (compressor) try { compressor.ratio.value = parseFloat(v); } catch(e) {} }
 
 function playBell() {
   try {
-    if (Tone.context.state !== 'running') return;
-    const b = new Tone.Synth({ oscillator:{type:'sine'}, envelope:{attack:.001, decay:3, sustain:.1, release:4} }).toDestination();
-    b.triggerAttackRelease(432, '8n', Tone.now());
-    setTimeout(() => { try { b.dispose(); } catch(e) {} }, 9000);
+    const c = audioCtx();
+    if (c.state !== 'running') return;
+    const o = c.createOscillator(); o.type='sine'; o.frequency.value=432;
+    const g = c.createGain();
+    const now = c.currentTime;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.5, now + 0.001);
+    g.gain.setTargetAtTime(0.05, now + 0.001, 1);
+    g.gain.setTargetAtTime(0, now + 0.3, 1.3);
+    o.connect(g); g.connect(limiter || c.destination);
+    o.start(now); o.stop(now + 8);
+    o.onended = () => { try { o.disconnect(); g.disconnect(); } catch(e){} };
   } catch(e) {}
 }
 
@@ -225,25 +346,46 @@ let flowing = false;
 async function startFlow() {
   ui('idle', '✦ Éveil du Metatron…');
   try {
-    await Tone.start();
-    if (Tone.context.state !== 'running') await Tone.context.resume();
+    const c = audioCtx();
+    if (c.state !== 'running') await c.resume();
+    if (!startFlow._visBound) {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && AC && AC.state !== 'running') AC.resume();
+      });
+      startFlow._visBound = true;
+    }
     _startBTKeepalive();
     initFXChain();
-    analyser   = new Tone.Analyser('waveform', 256);
-    masterGain = new Tone.Gain(0);
-    _lfoGain   = new Tone.Gain(1);
-    const _now = Tone.now();
-    masterGain.gain.setValueAtTime(0, _now);
-    masterGain.gain.setTargetAtTime(masterVol, _now, _fadeDur / 3);
-    masterGain.connect(_lfoGain);
-    _lfoGain.connect(eqLow);
-    masterGain.connect(analyser);
-    // LFO natif Tone.js — fonctionne dans l'audio thread, zéro commandes JS
-    _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: 1 - LFO_STATE.depth, max: 1 + LFO_STATE.depth, type: 'sine' }).start();
-    if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
+
+    // analyser natif + shim getValue() pour compatibilité 06-ui-builders / masterTick
+    const _rawAnalyser = c.createAnalyser(); _rawAnalyser.fftSize = 256;
+    _waveBuf = new Float32Array(_rawAnalyser.frequencyBinCount);
+    analyser = {
+      getValue() { _rawAnalyser.getFloatTimeDomainData(_waveBuf); return _waveBuf; },
+      getFloatTimeDomainData(buf) { _rawAnalyser.getFloatTimeDomainData(buf); },
+      fftSize: _rawAnalyser.fftSize,
+      frequencyBinCount: _rawAnalyser.frequencyBinCount,
+      _node: _rawAnalyser,
+      connect(dest) { _rawAnalyser.connect(dest && dest._node ? dest._node : dest); },
+      disconnect() { try { _rawAnalyser.disconnect(); } catch(e) {} }
+    };
+
+    masterGain = c.createGain(); masterGain.gain.value = 0;
+    const now = c.currentTime;
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.setTargetAtTime(masterVol, now, _fadeDur / 3);
+
+    _lfoGain = c.createGain(); _lfoGain.gain.value = 1;
+    masterGain.connect(_lfoGain); _lfoGain.connect(_fxInput);
+    masterGain.connect(_rawAnalyser);
+
+    // LFO volume natif — oscillateur dans l'audio thread, zéro commande JS périodique
+    _lfoNode = c.createOscillator(); _lfoNode.type='sine'; _lfoNode.frequency.value=LFO_STATE.rate;
+    _lfoDepthGain = c.createGain(); _lfoDepthGain.gain.value = LFO_STATE.on ? LFO_STATE.depth : 0;
+    _lfoNode.connect(_lfoDepthGain); _lfoDepthGain.connect(_lfoGain.gain); _lfoNode.start();
+
     flowing = true;
-    // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
-    // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
+    // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle Doze → moins de craquement BT).
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
@@ -257,13 +399,13 @@ async function startFlow() {
 async function stopFlow() {
   ui('idle', 'Dissolution…');
   try { window.Capacitor?.Plugins?.KeepAwake?.allowSleep?.(); } catch(e) {}
-  if (progRunning) stopProgression();
+  if (typeof progRunning !== 'undefined' && progRunning) stopProgression();
   Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
   try {
     if (masterGain) {
-      const _t = Tone.now();
-      masterGain.gain.cancelScheduledValues(_t);
-      masterGain.gain.setTargetAtTime(0, _t, _fadeDur / 8);
+      const t = aNow();
+      masterGain.gain.cancelScheduledValues(t);
+      masterGain.gain.setTargetAtTime(0, t, _fadeDur / 8);
     }
   } catch(e) {}
   const nodesCopy = {...nodes};
@@ -272,19 +414,18 @@ async function stopFlow() {
   Object.values(nodesCopy).forEach(n => {
     if (!n) return;
     try {
-      const _t = Tone.now();
-      n.g.gain.cancelScheduledValues(_t);
-      n.g.gain.setTargetAtTime(0, _t, 0.05);
-      n.o.stop(_t + 0.3);
+      const t = aNow();
+      n.g.gain.cancelScheduledValues(t);
+      n.g.gain.setTargetAtTime(0, t, 0.05);
+      n.o.stop(t + 0.3);
     } catch(e) {}
-    setTimeout(() => { ['o','g','p','hpf','trim'].forEach(k => { try { n[k]?.dispose?.(); } catch(e){} }); }, 500);
+    setTimeout(() => { ['o','g','p','hpf','trim'].forEach(k => { try { n[k]?.disconnect?.(); } catch(e){} }); }, 500);
   });
   setTimeout(() => {
-    [_lfoNode, _lfoGain, masterGain, analyser].forEach(x => {
-      try { x?.disconnect(); } catch(e){}
-      try { x?.dispose?.(); } catch(e){}
-    });
-    _lfoNode = null; _lfoGain = null; masterGain = null; analyser = null;
+    try { _lfoNode?.stop(); } catch(e){}
+    [_lfoNode, _lfoGain, _lfoDepthGain, masterGain].forEach(x => { try { x?.disconnect(); } catch(e){} });
+    if (analyser) { try { analyser.disconnect(); } catch(e){} }
+    _lfoNode = _lfoGain = _lfoDepthGain = masterGain = analyser = null;
     PAIRS.forEach((_, i) => updateOrbUI(i));
     const mc = document.getElementById('vpc-p' + MASTER_IDX);
     if (mc) mc.style.boxShadow = '';
@@ -298,7 +439,7 @@ function masterTick() {
   masterRAF = requestAnimationFrame(masterTick);
   metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
   drawMetatron();
-  // LFO géré nativement par Tone.LFO — aucun traitement JS ici
+  // LFO géré nativement (Web Audio) — aucun traitement JS ici
   if (!flowing || !analyser || document.visibilityState === 'hidden') return;
   // Throttle des écritures boxShadow (style-recalc) : 1 frame sur 2.
   // Soulage le thread principal → moins d'underruns audio sur mobile/BT.

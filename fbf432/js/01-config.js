@@ -88,5 +88,6 @@ function safeF(f)    { return Math.max(36, Math.min(648, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
-// AudioContext optimisé pour casques Bluetooth — grands buffers + scheduling lookahead 500 ms
-try { Tone.setContext(new Tone.Context({ latencyHint: 'playback', lookAhead: 0.5 })); } catch(e) {}
+// AudioContext NATIF (Web Audio) — exposé via window.AC, partagé par 02-audio + 08-bowl-engine.
+// latencyHint:'playback' = gros buffers → zéro underrun sur casques Bluetooth (anti-craquement).
+let AC = null;

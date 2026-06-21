@@ -500,9 +500,9 @@ function updateFX(paramId, value) {
   else if(paramId==='eqHighFreq') { if(valDisp)valDisp.textContent=Math.round(v)+' Hz'; if(eqHigh)eqHigh.frequency.value=v; EQ_BANDS[2].freq=v; }
   else if(paramId==='eqHighGain') { if(valDisp)valDisp.textContent=v.toFixed(1)+' dB'; if(eqHigh)eqHigh.gain.value=v; EQ_BANDS[2].gain=v; }
   else if(paramId==='delayTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(masterDelay)masterDelay.delayTime.value=v;}catch(e){} }
-  else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelay)masterDelay.feedback.value=v;}catch(e){} }
-  else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterDelay)masterDelay.wet.value=v; }
-  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
+  else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelayFb)masterDelayFb.gain.value=v;}catch(e){} }
+  else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(_fxRefs&&_fxRefs.delayWet)_fxRefs.delayWet.gain.setTargetAtTime(v,aNow(),0.05);}catch(e){} }
+  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(reverbWetGain){_setReverbActive(v>0.001);reverbWetGain.gain.setTargetAtTime(v,aNow(),0.05);if(reverbDryGain)reverbDryGain.gain.setTargetAtTime(1-v*0.4,aNow(),0.05);}}catch(e){} }
 }
 
 // ── updateMasterState ─────────────────────────────────────────────
