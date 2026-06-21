@@ -1,29 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<script>
-/* OmCha396 — audio centralise : ce module reste muet quand il est embarque
-   (le binaural d'Omcha396 est la seule source). En page autonome : inchange. */
-(function(){
-  if (window.self === window.top) return;
-  try {
-    var P = window.AudioNode && AudioNode.prototype;
-    if (P && P.connect) {
-      var _c = P.connect;
-      P.connect = function(dest){
-        try {
-          if (dest && ((window.AudioDestinationNode && dest instanceof window.AudioDestinationNode) ||
-              (dest.constructor && dest.constructor.name === "AudioDestinationNode"))) {
-            return dest;
-          }
-        } catch(e){}
-        return _c.apply(this, arguments);
-      };
-    }
-  } catch(e){}
-})();
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMCHA 432 — Flux Hélicoïdal</title>
@@ -114,6 +91,11 @@ input[type=checkbox]{accent-color:var(--c432);width:13px;height:13px;cursor:poin
 @keyframes mxring{0%{transform:translate(-50%,-50%) scale(.4);opacity:.7;}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0;}}
 .mxr{position:absolute;border-radius:50%;border-style:solid;left:50%;top:50%;transform:translate(-50%,-50%);opacity:0;}
 #khint{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.16em;opacity:.13;text-transform:uppercase;pointer-events:none;white-space:nowrap;}
+</style>
+<link rel="stylesheet" href="bg-rotator.css">
+<style id="cosmic-bg-override">
+  html,body{background:transparent !important;}
+  #cvM,#cvF{mix-blend-mode:screen;}
 </style>
 </head>
 <body>
@@ -937,5 +919,7 @@ resize();
 initParts();
 draw();
 </script>
+<script>window.__BG_IMAGES__=['img/bg-cosmic.jpg'];</script>
+<script src="bg-rotator.js"></script>
 </body>
 </html>
