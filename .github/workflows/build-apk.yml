@@ -50,6 +50,8 @@ jobs:
           cp ../bg-rotator.css ../bg-rotator.js ../audio-bus.js www/
           mkdir -p www/img
           cp ../img/*.jpg www/img/
+          # Module FBF 432 1re version (natif Web Audio, sans Tone.js)
+          cp -r ../fbf432 www/fbf432
           echo "www/ contents:"; ls -lh www/; echo "www/img:"; ls -lh www/img/
 
       - name: Remove Google Fonts (offline fallback)
@@ -85,6 +87,9 @@ jobs:
               printf "  {file:'%s', title:'%s', ico:'\\u25c9'}" "$f" "$t"
               first=0
             done
+            # Module split-file FBF 432 (dans son sous-dossier)
+            [ $first -eq 0 ] && echo ","
+            printf "  {file:'fbf432/index.html', title:'FBF 432', ico:'\\u25c9'}"
             echo ""
             echo "];"
           } > modules.js
