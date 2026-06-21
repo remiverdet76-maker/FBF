@@ -1168,25 +1168,30 @@ function startMaxExpSound(){
   ME.oscMaxL = AC.createOscillator();
   ME.oscMaxR = AC.createOscillator();
   ME.oscMaxSub = AC.createOscillator();
-  ME.oscMaxGain = AC.createGain();
 
   var panL=AC.createStereoPanner(); panL.pan.value=-1;
   var panR=AC.createStereoPanner(); panR.pan.value=1;
-  var gainL=AC.createGain(); gainL.gain.value=0.08;
-  var gainR=AC.createGain(); gainR.gain.value=0.08;
-  var gainSub=AC.createGain(); gainSub.gain.value=0.12;
+  ME._gainL=AC.createGain(); ME._gainL.gain.value=0;
+  ME._gainR=AC.createGain(); ME._gainR.gain.value=0;
+  ME._gainSub=AC.createGain(); ME._gainSub.gain.value=0;
+  ME._panL=panL; ME._panR=panR;
 
   // 360 Hz gauche, 432 Hz droite → battement 72 Hz
   ME.oscMaxL.frequency.value=360;
   ME.oscMaxR.frequency.value=432;
   ME.oscMaxSub.frequency.value=54; // sub-basse profonde
 
-  ME.oscMaxL.connect(gainL); gainL.connect(panL); panL.connect(eqIn());
-  ME.oscMaxR.connect(gainR); gainR.connect(panR); panR.connect(eqIn());
-  ME.oscMaxSub.connect(gainSub); gainSub.connect(eqIn());
+  ME.oscMaxL.connect(ME._gainL); ME._gainL.connect(panL); panL.connect(eqIn());
+  ME.oscMaxR.connect(ME._gainR); ME._gainR.connect(panR); panR.connect(eqIn());
+  ME.oscMaxSub.connect(ME._gainSub); ME._gainSub.connect(eqIn());
 
   ME.oscMaxL.start(); ME.oscMaxR.start(); ME.oscMaxSub.start();
-  ME.oscMaxGain = gainSub;
+
+  // Fade in progressif (évite le clic DC au démarrage)
+  var _mn=AC.currentTime;
+  ME._gainL.gain.setTargetAtTime(0.08,_mn,0.16);
+  ME._gainR.gain.setTargetAtTime(0.08,_mn,0.16);
+  ME._gainSub.gain.setTargetAtTime(0.12,_mn,0.16);
 
   // LFO pour faire évoluer les fréquences vers l'infini progressivement
   var lfo=AC.createOscillator(); lfo.frequency.value=0.04;
@@ -1197,9 +1202,18 @@ function startMaxExpSound(){
 }
 
 function stopMaxExpSound(){
-  ['oscMaxL','oscMaxR','oscMaxSub','_lfo'].forEach(function(k){
-    if(ME[k]){ try{ME[k].stop();}catch(e){} try{ME[k].disconnect();}catch(e){} ME[k]=null; }
-  });
+  var _cap={}, _ks=['oscMaxL','oscMaxR','oscMaxSub','_lfo','_gainL','_gainR','_gainSub','_panL','_panR','_lfoG'];
+  _ks.forEach(function(k){if(ME[k]){_cap[k]=ME[k];ME[k]=null;}});
+  if(AC&&(_cap._gainL||_cap._gainR||_cap._gainSub)){
+    var _mn=AC.currentTime;
+    ['_gainL','_gainR','_gainSub'].forEach(function(k){
+      if(_cap[k]){try{_cap[k].gain.cancelScheduledValues(_mn);_cap[k].gain.setValueAtTime(_cap[k].gain.value,_mn);_cap[k].gain.setTargetAtTime(0,_mn,0.08);}catch(e){}}
+    });
+  }
+  setTimeout(function(){
+    ['oscMaxL','oscMaxR','oscMaxSub','_lfo'].forEach(function(k){if(_cap[k]){try{_cap[k].stop();}catch(e){}try{_cap[k].disconnect();}catch(e){}}});
+    ['_gainL','_gainR','_gainSub','_panL','_panR','_lfoG'].forEach(function(k){if(_cap[k]){try{_cap[k].disconnect();}catch(e){}}});
+  },400);
 }
 
 function toggleMaxExp(){
@@ -1398,10 +1412,13 @@ function startBpm(){
     if(AC&&AC.state==='running'){
       try{
         var o=AC.createOscillator(), g=AC.createGain();
-        o.frequency.value=900; g.gain.value=.12;
+        o.frequency.value=432; g.gain.value=0;
         o.connect(g); g.connect(masterGain||AC.destination);
-        o.start(); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.04);
-        setTimeout(function(){try{o.stop();o.disconnect();}catch(e){}},80);
+        o.start();
+        var _nt=AC.currentTime;
+        g.gain.setTargetAtTime(0.12,_nt,0.006);
+        g.gain.setTargetAtTime(0,_nt+0.04,0.008);
+        setTimeout(function(){try{o.stop();o.disconnect();}catch(e){}},200);
       }catch(e){}
     }
   },ms);
@@ -1417,7 +1434,7 @@ function setBpm(v){
 // ═══════════════════════════════════════════════════════════
 // AUDIO ENGINE
 // ═══════════════════════════════════════════════════════════
-var AC=null, masterGain=null, compressor=null;
+var AC=null, masterGain=null, compressor=null, limiter=null;
 var bassF=null, midF=null, trebleF=null, reverbN=null, revGain=null, dryGain=null;
 var oscL=null, oscR=null, binGain=null, binMerger=null;
 var ppLFO=null, ppLFOGL=null, ppLFOGR=null;
@@ -1428,7 +1445,7 @@ var binSt={fL:432,fR:440,vol:.6};
 
 function ensureAC(){
   if(AC) return;
-  AC=new(window.AudioContext||window.webkitAudioContext)();
+  AC=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
   masterGain=AC.createGain(); masterGain.gain.value=.8;
   bassF=AC.createBiquadFilter(); bassF.type='lowshelf'; bassF.frequency.value=200;
   midF=AC.createBiquadFilter(); midF.type='peaking'; midF.frequency.value=1000; midF.Q.value=1;
@@ -1447,7 +1464,10 @@ function ensureAC(){
   bassF.connect(midF); midF.connect(trebleF); trebleF.connect(compressor);
   compressor.connect(dryGain); compressor.connect(reverbN);
   reverbN.connect(revGain); revGain.connect(masterGain);
-  dryGain.connect(masterGain); masterGain.connect(AC.destination);
+  limiter=AC.createDynamicsCompressor();
+  limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
+  limiter.attack.value=0.002; limiter.release.value=0.18;
+  dryGain.connect(masterGain); masterGain.connect(limiter); limiter.connect(AC.destination);
 }
 function resumeAC(){ if(AC&&AC.state==='suspended') AC.resume(); }
 function eqIn(){ return bassF; }
@@ -1458,16 +1478,18 @@ function startOscA(){
   if(oscA){stopOscA();}
   ensureAC(); resumeAC();
   oscA=AC.createOscillator(); oscA.type=oscASt.type; oscA.frequency.value=oscASt.freq;
-  oscAG=AC.createGain(); oscAG.gain.value=oscASt.vol*.22;
+  oscAG=AC.createGain(); oscAG.gain.value=0;
   oscAP=AC.createStereoPanner(); oscAP.pan.value=oscASt.pan/100;
   oscA.connect(oscAG); oscAG.connect(oscAP); oscAP.connect(eqIn());
-  oscA.start(); oscASt.on=true;
+  oscA.start(); oscAG.gain.setTargetAtTime(oscASt.vol*.22,AC.currentTime,0.08); oscASt.on=true;
   document.getElementById('dotA').classList.add('on');
 }
 function stopOscA(){
-  if(oscA){try{oscA.stop();}catch(e){} oscA.disconnect(); oscA=null;}
-  if(oscAG){oscAG.disconnect();oscAG=null;}
-  if(oscAP){oscAP.disconnect();oscAP=null;}
+  if(oscA){
+    var _o=oscA,_g=oscAG,_p=oscAP; oscA=oscAG=oscAP=null;
+    if(AC&&_g){var _n=AC.currentTime;_g.gain.cancelScheduledValues(_n);_g.gain.setValueAtTime(_g.gain.value,_n);_g.gain.setTargetAtTime(0,_n,0.08);}
+    setTimeout(function(){try{_o.stop();}catch(e){}try{_o.disconnect();_g.disconnect();if(_p)_p.disconnect();}catch(e){}},400);
+  }
   oscASt.on=false; document.getElementById('dotA').classList.remove('on');
 }
 
@@ -1477,16 +1499,18 @@ function startOscB(){
   if(oscB){stopOscB();}
   ensureAC(); resumeAC();
   oscB=AC.createOscillator(); oscB.type=oscBSt.type; oscB.frequency.value=oscBSt.freq;
-  oscBG=AC.createGain(); oscBG.gain.value=oscBSt.vol*.22;
+  oscBG=AC.createGain(); oscBG.gain.value=0;
   oscBP=AC.createStereoPanner(); oscBP.pan.value=oscBSt.pan/100;
   oscB.connect(oscBG); oscBG.connect(oscBP); oscBP.connect(eqIn());
-  oscB.start(); oscBSt.on=true;
+  oscB.start(); oscBG.gain.setTargetAtTime(oscBSt.vol*.22,AC.currentTime,0.08); oscBSt.on=true;
   document.getElementById('dotB').classList.add('on');
 }
 function stopOscB(){
-  if(oscB){try{oscB.stop();}catch(e){} oscB.disconnect(); oscB=null;}
-  if(oscBG){oscBG.disconnect();oscBG=null;}
-  if(oscBP){oscBP.disconnect();oscBP=null;}
+  if(oscB){
+    var _o=oscB,_g=oscBG,_p=oscBP; oscB=oscBG=oscBP=null;
+    if(AC&&_g){var _n=AC.currentTime;_g.gain.cancelScheduledValues(_n);_g.gain.setValueAtTime(_g.gain.value,_n);_g.gain.setTargetAtTime(0,_n,0.08);}
+    setTimeout(function(){try{_o.stop();}catch(e){}try{_o.disconnect();_g.disconnect();if(_p)_p.disconnect();}catch(e){}},400);
+  }
   oscBSt.on=false; document.getElementById('dotB').classList.remove('on');
 }
 
@@ -1517,11 +1541,15 @@ function startBin(){
   startWave();
 }
 function stopBin(){
-  [oscL,oscR].forEach(function(o){if(o){try{o.stop();}catch(e){} o.disconnect();}});
-  oscL=oscR=null;
-  if(ppLFO){try{ppLFO.stop();}catch(e){} ppLFO.disconnect(); ppLFO=null;}
-  if(binGain){binGain.disconnect();binGain=null;}
-  if(binMerger){binMerger.disconnect();binMerger=null;}
+  var _L=oscL,_R=oscR,_pp=ppLFO,_bg=binGain,_bm=binMerger;
+  oscL=oscR=ppLFO=binGain=binMerger=null;
+  if(AC&&_bg){var _n=AC.currentTime;_bg.gain.cancelScheduledValues(_n);_bg.gain.setValueAtTime(_bg.gain.value,_n);_bg.gain.setTargetAtTime(0,_n,0.08);}
+  setTimeout(function(){
+    [_L,_R].forEach(function(o){if(o){try{o.stop();}catch(e){}try{o.disconnect();}catch(e){}}});
+    if(_pp){try{_pp.stop();}catch(e){}try{_pp.disconnect();}catch(e){}}
+    if(_bg){try{_bg.disconnect();}catch(e){}}
+    if(_bm){try{_bm.disconnect();}catch(e){}}
+  },400);
   binPlaying=false;
   document.getElementById('binPlay').textContent='▶ Activer';
   document.getElementById('binPlay').classList.remove('on');
