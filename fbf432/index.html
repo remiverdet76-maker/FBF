@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<title>FBF 432</title>
+<!-- Tone.js en local (fonctionne hors-ligne dans l'APK) -->
+<script src="js/lib/Tone.js"></script>
+<link rel="stylesheet" href="css/01-base.css">
+<link rel="stylesheet" href="css/02-vesica.css">
+<link rel="stylesheet" href="css/03-controls.css">
+<link rel="stylesheet" href="css/04-ui.css">
+<link rel="stylesheet" href="css/05-mobile.css">
+<style>
+/* ── Point 1 : menus derrière le bouton « FBF options » ── */
+#tab-nav{ display:none; }
+#right-dock.opts-open #tab-nav{ display:flex; }
+#fbf-opts-btn{
+  margin-top:.4rem; width:100%;
+  font-family:'IM Fell English',serif; font-size:.74rem; letter-spacing:.06em;
+  padding:.5rem .6rem; border-radius:12px; cursor:pointer;
+  color:#E0C8FF; background:rgba(80,40,140,.32);
+  border:1px solid rgba(200,100,255,.4);
+  box-shadow:0 0 14px rgba(160,80,220,.25); transition:all .18s;
+}
+#fbf-opts-btn:hover{ background:rgba(140,80,240,.4); color:#fff; }
+#fbf-opts-btn.on{ background:rgba(200,100,255,.32); border-color:#F3D9FF; color:#fff; box-shadow:0 0 18px rgba(200,100,255,.45); }
+
+/* ── Point 2 : 4 bulles d'options masquées par défaut, pop à l'appui long ── */
+.vp-wrap .micro-btn, .vp-center-wrap .micro-btn{
+  opacity:0; pointer-events:none; transform:scale(.45);
+  transition:opacity .18s ease, transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.vp-wrap.opts-open .micro-btn, .vp-center-wrap.opts-open .micro-btn{
+  opacity:1; pointer-events:auto; transform:scale(1);
+}
+</style>
+</head>
+<body>
+
+<img id="cosmic-bg" src="img/cosmic-flux.jpg" alt="" onerror="this.style.display='none'">
+<canvas id="meta-canvas"></canvas>
+<div id="sphere-layer"></div>
+
+<!-- Dock droit : Flux (au-dessus) + Navigation (en dessous) -->
+<div id="right-dock">
+  <div id="flux-side">
+    <button id="flux-btn" onclick="fbfToggle()">
+      <span class="flux-icon" id="flux-icon">◉</span>
+      <span class="flux-txt" id="flux-txt">FLUX</span>
+      <span class="flux-state" id="flux-state-side">OFF</span>
+    </button>
+  </div>
+  <button id="fbf-opts-btn" onclick="toggleFbfOpts()">✦ FBF options</button>
+  <nav id="tab-nav">
+    <button class="tnav-btn tnav-geo"     id="tGeo"    onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
+    <button class="tnav-btn tnav-random"  id="tRand"   onclick="tPanel('panRand','tRand')">⚄ Aléatoire</button>
+    <button class="tnav-btn tnav-horloge" id="tUT"     onclick="tPanel('panUT','tUT')">⊙ UT432</button>
+    <button class="tnav-btn tnav-fx"      id="tFX"     onclick="tPanel('panFX','tFX')">✦ FX</button>
+    <button class="tnav-btn tnav-notice"  id="tNotice" onclick="tPanel('panNotice','tNotice')">≡ Notice</button>
+    <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
+  </nav>
+</div>
+
+<!-- Panel : Géométrie 3D — gauche -->
+<div class="pan-left" id="panGeo">
+  <div class="pct">Géométrie Sacrée — 13 Vivantes</div>
+  <div class="geometry-grid" id="geo-grid"></div>
+
+  <div class="pct" style="margin-top:.9rem">Paramètres Omcha</div>
+  <div class="sl-row">
+    <label>Torsion ω <span id="sv-wi">3.5×</span></label>
+    <input type="range" min="5" max="90" value="63" oninput="g3dSetWi(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Densité <span id="sv-ns">160</span></label>
+    <input type="range" min="40" max="320" value="160" oninput="g3dSetNs(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Vitesse <span id="sv-spd">1.0×</span></label>
+    <input type="range" min="0" max="30" value="10" oninput="g3dSetSpd(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Expansion radiale <span id="sv-ex">0.14</span></label>
+    <input type="range" min="2" max="45" value="14" oninput="g3dSetEx(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Étendue axiale <span id="sv-tm">7.0</span></label>
+    <input type="range" min="20" max="120" value="70" oninput="g3dSetTM(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Glow <span id="sv-glow">60%</span></label>
+    <input type="range" min="0" max="100" value="60" oninput="g3dSetGlow(this.value)">
+  </div>
+  <div class="sw-row">Rotation auto     <input type="checkbox" class="sw" id="ckRot" checked onchange="V.autoRot=this.checked"></div>
+  <div class="sw-row">Ponts harmoniques <input type="checkbox" class="sw" id="ckBr"  checked onchange="HP.br=this.checked"></div>
+  <div class="sw-row">Particules flux   <input type="checkbox" class="sw" id="ckPa"  checked onchange="HP.pa=this.checked"></div>
+  <div class="sw-row">Mandala fond      <input type="checkbox" class="sw" id="ckMa"  checked onchange="HP.ma=this.checked"></div>
+  <div class="sw-row">Labels fractals   <input type="checkbox" class="sw" id="ckLa"  checked onchange="HP.la=this.checked"></div>
+
+  <div class="pct" style="margin-top:.9rem">Auto-Évolution</div>
+  <div class="sw-row">Mode évolution <input type="checkbox" class="sw" id="ckAE" onchange="g3dToggleAE(this.checked)"></div>
+  <div class="sl-row">
+    <label>Vitesse évolution <span id="sv-ae-spd">0.3×</span></label>
+    <input type="range" min="1" max="30" value="3" oninput="g3dSetAESpd(this.value)">
+  </div>
+  <div class="geo-med-note">
+    Les 13 structures morphent organiquement en boucle.<br>Torsion, expansion et champ toroïdal s'animent seuls.
+  </div>
+</div>
+
+<!-- Panel : Jeu Aléatoire — droite -->
+<div class="pan-right" id="panRand">
+  <div class="pct">Jeu Aléatoire</div>
+  <button class="btn-magic-rand" onclick="triggerMagicAuto()">⚄ Omchaléatoire</button>
+
+  <!-- Options aléatoire -->
+  <div style="margin:.6rem 0 .3rem;padding:.55rem .65rem;background:rgba(99,230,255,.05);border:1px solid rgba(99,230,255,.14);border-radius:10px;">
+    <div style="font-size:.68rem;color:rgba(99,230,255,.65);letter-spacing:.1em;font-style:italic;margin-bottom:.4rem;">OPTIONS ALÉATOIRE</div>
+    <div class="sw-row" style="font-size:.7rem;padding:.1rem 0 .35rem;">Plage fréquence (36–648) <input type="checkbox" class="sw" id="ck-rand-range" onchange="setRandRange(this.checked)"></div>
+    <div class="sl-row">
+      <label style="font-size:.7rem;color:rgba(200,170,255,.7);min-width:76px;">Min <span id="rv-fmin" style="color:#63E6FF">36</span> Hz</label>
+      <input type="range" id="sl-fmin" min="36" max="863" value="36" style="flex:1;accent-color:#63E6FF;" oninput="setRandFreqMin(this.value)">
+    </div>
+    <div class="sl-row">
+      <label style="font-size:.7rem;color:rgba(200,170,255,.7);min-width:76px;">Max <span id="rv-fmax" style="color:#63E6FF">648</span> Hz</label>
+      <input type="range" id="sl-fmax" min="37" max="648" value="648" style="flex:1;accent-color:#63E6FF;" oninput="setRandFreqMax(this.value)">
+    </div>
+    <div style="font-size:.66rem;color:rgba(200,170,255,.4);font-style:italic;margin:.15rem 0 .3rem;">Si freq &gt; 432 Hz → HPF + volume −25 %</div>
+    <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.35rem;">
+      <button class="fbf-step active" id="rrm-random"   onclick="setRandRatioMode('random',this)">⚄ Ratio ⌀</button>
+      <button class="fbf-step"        id="rrm-same"     onclick="setRandRatioMode('same',this)">=  Identique</button>
+      <button class="fbf-step"        id="rrm-harmonic" onclick="setRandRatioMode('harmonic',this)">♪ Harmonique</button>
+    </div>
+    <div class="sw-row" style="font-size:.7rem;padding:.1rem 0;">FX aléatoire <input type="checkbox" class="sw" id="ck-rand-fx" onchange="setRandUseFX(this.checked)"></div>
+  </div>
+
+  <div class="rand-steps-grid" style="margin-top:.5rem">
+    <button class="fbf-step" onclick="masterStep(108)">+108</button>
+    <button class="fbf-step" onclick="masterStep(72)">+72</button>
+    <button class="fbf-step" onclick="masterStep(36)">+36</button>
+    <button class="fbf-step" onclick="masterStep(18)">+18</button>
+    <button class="fbf-step" onclick="masterStep(-18)">−18</button>
+    <button class="fbf-step" onclick="masterStep(-36)">−36</button>
+    <button class="fbf-step" onclick="masterStep(-72)">−72</button>
+    <button class="fbf-step" onclick="masterStep(-108)">−108</button>
+  </div>
+  <div id="random-table" class="random-table"></div>
+  <div class="rand-prog-section" id="rand-prog-wrap"></div>
+</div>
+
+<!-- Panel : Horloge UT432 — droite -->
+<div class="pan-right" id="panUT">
+  <div id="panel-horloge-body"></div>
+</div>
+
+<!-- Panel : Master FX — droite -->
+<div class="pan-right" id="panFX">
+  <div id="panel-fx-body"></div>
+</div>
+
+<!-- Panel : Notice — droite -->
+<div class="pan-right" id="panNotice">
+  <div class="pct">FBF 432 — Harmonique Cosmique</div>
+  <div class="notice-panel">
+    <div class="notice-block">
+      <div class="notice-term">FBF — Flux Binaural Fractal</div>
+      <div class="notice-def">7 oscillateurs binauraux accordés sur les fréquences harmoniques sacrées. Chaque sphère représente un canal.</div>
+    </div>
+    <div class="notice-block">
+      <div class="notice-term">Bouton FLUX (gauche)</div>
+      <div class="notice-def">Active ou désactive le flux harmonique global. Barre espace = raccourci clavier.</div>
+    </div>
+    <div class="notice-block">
+      <div class="notice-term">Géométrie 3D Omcha</div>
+      <div class="notice-def">Double hélice morphant vers le tore. Chaque preset sacré configure le moteur Omcha. Glissez pour orbiter, molette pour zoomer.</div>
+    </div>
+    <div class="notice-block">
+      <div class="notice-term">Auto-Évolution</div>
+      <div class="notice-def">Active le morphing organique continu — torsion, expansion et champ toroïdal s'animent seuls entre les 13 géométries.</div>
+    </div>
+    <div class="notice-block">
+      <div class="notice-term">Horloge UT432</div>
+      <div class="notice-def">Temps solaire Paris → 0–432 Hz, résonance avec les 9 Sephirot.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay portrait — force mode paysage -->
+<div id="rotate-overlay">
+  <div id="rotate-icon">⟳</div>
+  <div id="rotate-msg">FBF 432<br>Mode Portrait Requis</div>
+  <div id="rotate-sub">Tournez votre appareil</div>
+</div>
+
+<!-- Modal oscillateur -->
+<div id="osc-modal">
+  <div id="osc-modal-inner">
+    <div id="osc-modal-head">
+      <span id="osc-modal-title">Canal</span>
+      <button class="panel-close" onclick="closeOscModal()">✕</button>
+    </div>
+    <div id="osc-modal-body"></div>
+  </div>
+</div>
+<div id="backdrop" onclick="closeOscModal()"></div>
+
+<script src="js/01-config.js"></script>
+<script src="js/02-audio.js"></script>
+<script src="js/03-geometry.js"></script>
+<script src="js/04-vesica-ui.js"></script>
+<script src="js/05-controls.js"></script>
+<script src="js/06-ui-builders.js"></script>
+<script src="js/07-app.js"></script>
+<script src="js/08-bowl-engine.js"></script>
+<script>
+/* ── Point 1 : bouton « FBF options » ouvre/ferme les menus ── */
+function toggleFbfOpts(){
+  const d = document.getElementById('right-dock');
+  const b = document.getElementById('fbf-opts-btn');
+  if (!d) return;
+  const open = d.classList.toggle('opts-open');
+  if (b) b.classList.toggle('on', open);
+}
+/* ── Point 2 : appui long sur une cellule = pop des 4 bulles ── */
+function toggleOptsPop(i){
+  const wrap = document.getElementById('vp' + i);
+  if (!wrap) return;
+  const wasOpen = wrap.classList.contains('opts-open');
+  document.querySelectorAll('.vp-wrap.opts-open, .vp-center-wrap.opts-open')
+          .forEach(w => w.classList.remove('opts-open'));
+  if (!wasOpen) wrap.classList.add('opts-open');
+}
+// Refermer les bulles si on tape ailleurs (hors cellule / hors bulle)
+document.addEventListener('pointerdown', function(e){
+  if (e.target.closest('.vp-wrap, .vp-center-wrap')) return;
+  document.querySelectorAll('.vp-wrap.opts-open, .vp-center-wrap.opts-open')
+          .forEach(w => w.classList.remove('opts-open'));
+}, true);
+</script>
+</body>
+</html>
