@@ -4099,6 +4099,8 @@ function openScreen(src, title){
   if(!ov||!fr) return;
   if(tt) tt.textContent = title || 'Module';
   fr.src = src; ov.classList.add('open'); _resumeAudioSafe();
+  // Anti-craquement : on met en pause le rendu 3D de l'accueil pendant le module
+  try{ if(masterRAF){ cancelAnimationFrame(masterRAF); masterRAF=null; } }catch(e){}
   try{ history.pushState({omchaScreen:true},''); }catch(e){}
 }
 function closeScreen(){
@@ -4106,6 +4108,7 @@ function closeScreen(){
   if(!ov||!ov.classList.contains('open')) return;
   ov.classList.remove('open'); if(fr) fr.src='about:blank';
   _moduleAudioActive = false; _resumeAudioSafe();   // module fermé → le binaural revient
+  try{ if(typeof masterTick==='function' && !masterRAF) masterTick(); }catch(e){}  // reprise du rendu
   if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
 }
 window.addEventListener('popstate', function(){

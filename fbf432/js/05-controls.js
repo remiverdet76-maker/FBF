@@ -3,7 +3,9 @@
    ═══════════════════════════════════════════ */
 
 // ── Options mode aléatoire ────────────────────────────────────────
-const RAND_OPTS={freqMin:36,freqMax:648,ratioMode:'random',useFX:false,rangeOn:false};
+const RAND_OPTS={freqMin:36,freqMax:648,ratioMode:'random',useFX:false,rangeOn:false,customRi:4,beatMin:0.5,beatMax:8};
+function setCustomRatio(ri){RAND_OPTS.customRi=parseInt(ri);}
+function setBeatRange(mn,mx){if(mn!=null)RAND_OPTS.beatMin=parseFloat(mn);if(mx!=null)RAND_OPTS.beatMax=parseFloat(mx);}
 function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
 function setRandFreqMin(v){
   RAND_OPTS.freqMin=Math.max(36,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
@@ -188,31 +190,50 @@ function fbfToggle() {
   if (flowing) stopFlow(); else startFlow();
 }
 
+function _randN(){ return +(0.25 + Math.random()*4.0).toFixed(2); }
+
 function triggerMagicAuto() {
-  const {freqMin,freqMax,ratioMode,useFX,rangeOn}=RAND_OPTS;
-  // Plage active → on confine entre min/max ; sinon plage complète 36–648.
+  const {freqMin,freqMax,ratioMode,useFX,rangeOn,customRi,beatMin,beatMax}=RAND_OPTS;
   const lo = rangeOn ? freqMin : 36;
   const hi = rangeOn ? freqMax : 648;
-  const newMaster=Math.floor(lo+Math.random()*(hi-lo));
-  // L'atténuation des aigus (432–648) est gérée par le HPF + volume −25 %
-  // du moteur (applyHiBand) → volume de base uniforme ici.
-  const volBase=.12;
-  let ri=Math.floor(Math.random()*RATIO_OPTS.length);
-  let baseN=0.2;
+  const newMaster = Math.floor(lo + Math.random()*(hi-lo));
+  const N = RATIO_OPTS.length;
+  // Battement binaural commun, aléatoire, signe ± aléatoire (appliqué à tous)
+  const beat = +((beatMin) + Math.random()*((beatMax)-(beatMin))).toFixed(2);
+  const sign = Math.random()<0.5 ? 1 : -1;
+  // Préparation des modes de ratio
+  const sharedRi = Math.floor(Math.random()*N);     // A · Identiques
+  const harmDir  = Math.random()<0.5 ? 1 : -1;      // B · sens harmonique
+  const harmStart= Math.floor(Math.random()*N);
   PAIRS.forEach((pair,idx)=>{
-    if(ratioMode==='random') ri=Math.floor(Math.random()*RATIO_OPTS.length);
-    else if(ratioMode==='harmonic') ri=idx%RATIO_OPTS.length;
-    pair.pingala.ri=ri;
-    pair.pingala.vol=volBase;
-    pair.ida.vol=volBase;
-    if(idx===MASTER_IDX){pair.pingala.n=1.0;}
-    else{pair.pingala.n=Math.round(baseN*10)/10;baseN+=0.4+Math.random()*.8;}
-    pair.ida.delta=1.8;
+    let ri;
+    if      (ratioMode==='same')     ri = sharedRi;
+    else if (ratioMode==='harmonic') { const k = harmDir>0 ? (harmStart+idx) : (harmStart-idx); ri = RATIO_SORTED[((k % N) + N) % N]; }
+    else if (ratioMode==='custom')   ri = (typeof customRi==='number') ? customRi : sharedRi;
+    else                              ri = Math.floor(Math.random()*N);   // C · Aléatoire
+    if (ri == null || isNaN(ri)) ri = sharedRi;
+    pair.pingala.ri  = ri;
+    pair.pingala.n   = (idx===MASTER_IDX) ? 1.0 : _randN();
+    pair.pingala.vol = (idx===MASTER_IDX) ? .14 : .12;
+    pair.ida.vol     = (idx===MASTER_IDX) ? .14 : .12;
+    pair.ida.delta   = beat;     // battement binaural
+    pair.ida.polarity= sign;     // signe ± commun
   });
-  setMasterFreq(newMaster);
-  setGlobalDelta(1.8);
-  if(useFX)randomizeFX();
-  if(!flowing)startFlow();
+  setMasterFreq(newMaster);   // re-tune Pingala + Ida de tous les oscillateurs
+  if (useFX) randomizeFX();
+  if (!flowing) startFlow();
+}
+
+// Relance l'aléatoire pour UN seul oscillateur (bouton 🎲 par ligne)
+function randomizeOsc(i) {
+  const N = RATIO_OPTS.length;
+  if (i !== MASTER_IDX) PAIRS[i].pingala.ri = Math.floor(Math.random()*N);
+  PAIRS[i].pingala.n = (i===MASTER_IDX) ? 1.0 : _randN();
+  PAIRS[i].ida.polarity = Math.random()<0.5 ? 1 : -1;
+  updatePairUI(i);
+  if (flowing) swapPingala(i);   // swapPingala enchaîne swapIda
+  if (typeof buildOscPanel==='function') buildOscPanel();
+  saveState();
 }
 
 function toggleFullscreen() {

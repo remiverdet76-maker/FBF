@@ -38,6 +38,17 @@
 .vp-wrap.opts-open .micro-btn, .vp-center-wrap.opts-open .micro-btn{
   opacity:1; pointer-events:auto; transform:scale(1);
 }
+
+/* Onglet Oscillateurs */
+#panOsc .pct{margin-bottom:.4rem}
+.osc-head,.osc-row{display:grid;grid-template-columns:26px 1fr 1fr 1fr .8fr;align-items:center;gap:.3rem;font-size:.68rem;}
+.osc-head{color:rgba(200,170,255,.45);text-transform:uppercase;letter-spacing:.08em;padding:.2rem .1rem;border-bottom:1px solid rgba(200,100,255,.15);}
+.osc-row{padding:.35rem .1rem;border-bottom:1px solid rgba(255,255,255,.05);}
+.osc-row .osc-name{font-weight:bold}
+.osc-row .osc-f,.osc-row .osc-b{font-family:'Share Tech Mono',monospace;color:#E8DDFF}
+.osc-row .osc-r{color:rgba(200,170,255,.7);text-align:center}
+.osc-dice{background:none;border:none;cursor:pointer;font-size:.95rem;padding:0;line-height:1}
+.osc-dice:active{transform:scale(.85)}
 </style>
 </head>
 <body>
@@ -59,6 +70,7 @@
   <nav id="tab-nav">
     <button class="tnav-btn tnav-geo"     id="tGeo"    onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
     <button class="tnav-btn tnav-random"  id="tRand"   onclick="tPanel('panRand','tRand')">⚄ Aléatoire</button>
+    <button class="tnav-btn"              id="tOsc"    onclick="tPanel('panOsc','tOsc');buildOscPanel()">◉ Oscillateurs</button>
     <button class="tnav-btn tnav-horloge" id="tUT"     onclick="tPanel('panUT','tUT')">⊙ UT432</button>
     <button class="tnav-btn tnav-fx"      id="tFX"     onclick="tPanel('panFX','tFX')">✦ FX</button>
     <button class="tnav-btn tnav-notice"  id="tNotice" onclick="tPanel('panNotice','tNotice')">≡ Notice</button>
@@ -132,9 +144,17 @@
     </div>
     <div style="font-size:.66rem;color:rgba(200,170,255,.4);font-style:italic;margin:.15rem 0 .3rem;">Si freq &gt; 432 Hz → HPF + volume −25 %</div>
     <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.35rem;">
-      <button class="fbf-step active" id="rrm-random"   onclick="setRandRatioMode('random',this)">⚄ Ratio ⌀</button>
-      <button class="fbf-step"        id="rrm-same"     onclick="setRandRatioMode('same',this)">=  Identique</button>
+      <button class="fbf-step"        id="rrm-same"     onclick="setRandRatioMode('same',this)">= Identiques</button>
       <button class="fbf-step"        id="rrm-harmonic" onclick="setRandRatioMode('harmonic',this)">♪ Harmonique</button>
+      <button class="fbf-step active" id="rrm-random"   onclick="setRandRatioMode('random',this)">⚄ Aléatoire</button>
+      <button class="fbf-step"        id="rrm-custom"   onclick="setRandRatioMode('custom',this)">✎ Personnalisé</button>
+    </div>
+    <div id="custom-ratio-row" style="display:none;align-items:center;gap:.4rem;margin-bottom:.35rem;font-size:.7rem;color:rgba(200,170,255,.7);">
+      Ratio : <select id="custom-ratio-sel" onchange="setCustomRatio(this.value)" style="flex:1;background:rgba(25,8,48,.85);color:#E0C8FF;border:1px solid rgba(200,100,255,.3);border-radius:6px;padding:.25rem;"></select>
+    </div>
+    <div class="sl-row">
+      <label style="font-size:.7rem;color:rgba(200,170,255,.7);min-width:96px;">Battement max <span id="rv-beat" style="color:#63E6FF">8</span> Hz</label>
+      <input type="range" id="sl-beat" min="0.5" max="20" step="0.5" value="8" style="flex:1;accent-color:#63E6FF;" oninput="setBeatRange(0.5,this.value);document.getElementById('rv-beat').textContent=this.value">
     </div>
     <div class="sw-row" style="font-size:.7rem;padding:.1rem 0;">FX aléatoire <input type="checkbox" class="sw" id="ck-rand-fx" onchange="setRandUseFX(this.checked)"></div>
   </div>
@@ -151,6 +171,13 @@
   </div>
   <div id="random-table" class="random-table"></div>
   <div class="rand-prog-section" id="rand-prog-wrap"></div>
+</div>
+
+<!-- Panel : Oscillateurs — droite -->
+<div class="pan-right" id="panOsc">
+  <div class="pct">Oscillateurs — jeu en cours</div>
+  <div class="osc-head"><span></span><span>Osc</span><span>Freq</span><span>Binaural</span><span>Ratio</span></div>
+  <div id="osc-list"></div>
 </div>
 
 <!-- Panel : Horloge UT432 — droite -->
@@ -226,6 +253,39 @@ function toggleFbfOpts(){
   const open = d.classList.toggle('opts-open');
   if (b) b.classList.toggle('on', open);
 }
+/* ── Onglet Oscillateurs : colonne live + 🎲 par oscillateur ── */
+function buildOscPanel(){
+  var box=document.getElementById('osc-list'); if(!box||typeof PAIRS==='undefined') return;
+  var h='';
+  for(var i=0;i<PAIRS.length;i++){
+    var p=PAIRS[i], c=p.color, isM=(i===MASTER_IDX);
+    var pf=calcPFreq(i), iff=calcIFreq(i), ratio=RATIO_OPTS[p.pingala.ri].l;
+    h+='<div class="osc-row" style="border-left:3px solid '+c+';padding-left:.3rem">'
+      +'<button class="osc-dice" style="color:'+c+'" onclick="randomizeOsc('+i+')" title="Aléatoire">🎲</button>'
+      +'<span class="osc-name" style="color:'+c+'">'+(isM?'Maître':'Osc '+(i+1))+'</span>'
+      +'<span class="osc-f">'+pf.toFixed(1)+'</span>'
+      +'<span class="osc-b">'+iff.toFixed(1)+'</span>'
+      +'<span class="osc-r">'+(isM?'—':ratio)+'</span></div>';
+  }
+  box.innerHTML=h;
+}
+// Remplir le sélecteur de ratio (mode Personnalisé)
+(function(){
+  function fill(){
+    var sel=document.getElementById('custom-ratio-sel');
+    if(sel && typeof RATIO_OPTS!=='undefined' && !sel.options.length){
+      RATIO_OPTS.forEach(function(o,i){ var op=document.createElement('option'); op.value=i; op.textContent=o.l; sel.appendChild(op); });
+      sel.value = (typeof RAND_OPTS!=='undefined')?RAND_OPTS.customRi:4;
+    }
+  }
+  fill(); setTimeout(fill,300);
+})();
+// Afficher le choix de ratio uniquement en mode Personnalisé
+var _origSetMode = window.setRandRatioMode;
+window.setRandRatioMode = function(m,btn){ if(_origSetMode) _origSetMode(m,btn); var r=document.getElementById('custom-ratio-row'); if(r) r.style.display=(m==='custom')?'flex':'none'; };
+// Rafraîchit la colonne quand l'onglet est ouvert
+setInterval(function(){ var p=document.getElementById('panOsc'); if(p && p.classList.contains('open')) buildOscPanel(); }, 700);
+
 /* ── Point 2 : appui long sur une cellule = pop des 4 bulles ── */
 function toggleOptsPop(i){
   const wrap = document.getElementById('vp' + i);

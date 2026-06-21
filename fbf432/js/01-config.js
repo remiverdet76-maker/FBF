@@ -59,14 +59,30 @@ function waveState(hz) {
   return              {s:'Gamma', c:'#FF9A8B'};
 }
 
+// Indices des ratios triés par valeur (mode Harmonique)
+const RATIO_SORTED = RATIO_OPTS.map((o,i)=>i).sort((a,b)=>RATIO_OPTS[a].r-RATIO_OPTS[b].r);
+
+// Repliement d'octave : ramène f dans [lo,hi] sans écrêter (préserve la variété)
+function foldFreq(f, lo, hi) {
+  lo = lo || 36; hi = hi || 648;
+  if (!(f > 0)) return lo;
+  while (f > hi) f /= 2;
+  while (f < lo) f *= 2;
+  return f;
+}
 function calcPFreq(i) {
   const p = PAIRS[i].pingala;
-  if (i === MASTER_IDX) return masterFreq;
-  return Math.max(36, Math.min(648, masterFreq * RATIO_OPTS[p.ri].r * p.n));
+  if (i === MASTER_IDX) return Math.max(36, Math.min(648, masterFreq));
+  return foldFreq(masterFreq * RATIO_OPTS[p.ri].r * p.n);
 }
+// Binaural garanti : Ida = Pingala ± beat (calculé APRÈS repliement). Si hors
+// bande, on inverse le signe → le battement est conservé, jamais Pingala=Ida.
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(36, Math.min(648, calcPFreq(i) + ida.polarity * ida.delta));
+  const pf = calcPFreq(i);
+  let f = pf + ida.polarity * ida.delta;
+  if (f > 648 || f < 36) f = pf - ida.polarity * ida.delta;
+  return Math.max(36, Math.min(648, f));
 }
 function safeF(f)    { return Math.max(36, Math.min(648, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
