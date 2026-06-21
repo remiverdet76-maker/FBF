@@ -1313,21 +1313,7 @@ input.param-input{
   </button>
   <div class="dmenu-sep"></div>
   <div class="dmenu-section">Modules · 432</div>
-  <button class="dmenu-item" onclick="openScreen('theme432.html','Thème 432 — Sphère Omcha');closeMenu()">
-    <span class="dmenu-ico">◍</span>Thème 432 — Sphère Omcha
-  </button>
-  <button class="dmenu-item" onclick="openScreen('utc432project.html','UTC432 · Project');closeMenu()">
-    <span class="dmenu-ico">⏣</span>UTC432 · Project
-  </button>
-  <button class="dmenu-item" onclick="openScreen('omcha432flux.html','Omcha 432 — Flux Hélicoïdal');closeMenu()">
-    <span class="dmenu-ico">∿</span>Omcha 432 — Flux Hélicoïdal
-  </button>
-  <button class="dmenu-item" onclick="openScreen('copilot432.html','UT36 · 360 · 396 · 432');closeMenu()">
-    <span class="dmenu-ico">⊛</span>UT36 · 360 · 396 · 432
-  </button>
-  <button class="dmenu-item" onclick="openScreen('sphere3d432.html','Sphère 432 — 3D');closeMenu()">
-    <span class="dmenu-ico">◉</span>Sphère 432 — 3D
-  </button>
+  <div id="dmenu-modules"></div>
   <div class="dmenu-sep"></div>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
@@ -1443,9 +1429,9 @@ function calcPFreq(i) {
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(36, Math.min(864, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(36, Math.min(648, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(36, Math.min(864, f)); }
+function safeF(f)    { return Math.max(36, Math.min(648, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
@@ -1524,7 +1510,7 @@ function applyHiBand(node, freq) {
   const hi = freq > 432, now = aNow();
   try {
     if (node.hpf)    node.hpf.frequency.setTargetAtTime(hi ? 420 : 20, now, 0.05);
-    if (node.hiTrim) node.hiTrim.gain.setTargetAtTime(hi ? 0.55 : 1.0, now, 0.08);
+    if (node.hiTrim) node.hiTrim.gain.setTargetAtTime(hi ? 0.75 : 1.0, now, 0.08); // -25% sur 432-648
     if (node.dSend)  node.dSend.gain.setTargetAtTime(hi ? 0.40 : 0.0, now, 0.08);
   } catch(e) {}
 }
@@ -1881,7 +1867,7 @@ async function startFlow() {
     // Reprendre l'audio après retour de veille (Android Doze / écran off)
     if (!startFlow._visBound) {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && AC && AC.state !== 'running') AC.resume();
+        if (document.visibilityState === 'visible' && AC && AC.state !== 'running' && !_moduleAudioActive) AC.resume();
       });
       startFlow._visBound = true;
     }
@@ -4097,7 +4083,15 @@ function closeMenu() {
 }
 
 // ── Modules en surimpression (iframe) — le binaural d'Omcha396 continue ──
+// ── Exclusivité audio : un module qui joue coupe le binaural d'accueil ──
+let _moduleAudioActive = false;
 function _resumeAudioSafe(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='suspended')AC.resume(); }catch(e){} }
+function _suspendHomeAudio(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='running')AC.suspend(); }catch(e){} }
+// Le module (iframe) signale qu'il lance un son → on coupe le son maison.
+window.addEventListener('message', function(e){
+  const d = e.data || {};
+  if (d.fbf === 'audio-claim'){ _moduleAudioActive = true; _suspendHomeAudio(); }
+});
 function openScreen(src, title){
   const ov=document.getElementById('screen-overlay'),
         fr=document.getElementById('screen-frame'),
@@ -4110,12 +4104,13 @@ function openScreen(src, title){
 function closeScreen(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
   if(!ov||!ov.classList.contains('open')) return;
-  ov.classList.remove('open'); if(fr) fr.src='about:blank'; _resumeAudioSafe();
+  ov.classList.remove('open'); if(fr) fr.src='about:blank';
+  _moduleAudioActive = false; _resumeAudioSafe();   // module fermé → le binaural revient
   if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
 }
 window.addEventListener('popstate', function(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
-  if(ov&&ov.classList.contains('open')){ ov.classList.remove('open'); if(fr) fr.src='about:blank'; _resumeAudioSafe(); }
+  if(ov&&ov.classList.contains('open')){ ov.classList.remove('open'); if(fr) fr.src='about:blank'; _moduleAudioActive=false; _resumeAudioSafe(); }
 });
 window.addEventListener('keydown', function(e){ if(e.key==='Escape') closeScreen(); });
 
@@ -4777,6 +4772,31 @@ const Bowl = (() => {
 if (typeof window !== 'undefined') window.Bowl = Bowl;
 
 
+</script>
+<script>
+window.FBF_MODULES = window.FBF_MODULES || [
+  {file:'theme432.html',     title:'Th\u00e8me 432 \u2014 Sph\u00e8re Omcha', ico:'\u25cd'},
+  {file:'utc432project.html',title:'UTC432 \u00b7 Project',            ico:'\u23e3'},
+  {file:'omcha432flux.html', title:'Omcha 432 \u2014 Flux H\u00e9lico\u00efdal', ico:'\u223f'},
+  {file:'copilot432.html',   title:'UT36 \u00b7 360 \u00b7 396 \u00b7 432',     ico:'\u229b'},
+  {file:'sphere3d432.html',  title:'Sph\u00e8re 432 \u2014 3D',            ico:'\u25c9'}
+];
+</script>
+<script src="modules.js"></script>
+<script>
+(function(){
+  function build(){
+    var box=document.getElementById('dmenu-modules'); if(!box) return;
+    var list=window.FBF_MODULES||[]; box.innerHTML="";
+    list.forEach(function(m){
+      var b=document.createElement("button"); b.className="dmenu-item";
+      b.onclick=function(){ openScreen(m.file, m.title); closeMenu(); };
+      b.innerHTML="<span class=\"dmenu-ico\">"+(m.ico||"\u25c9")+"</span>"+(m.title||m.file);
+      box.appendChild(b);
+    });
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",build); else build();
+})();
 </script>
 <script src="bg-rotator.js"></script>
 </body>

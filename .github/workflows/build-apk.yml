@@ -41,15 +41,13 @@ jobs:
         working-directory: apk
         run: |
           mkdir -p www
-          # Page d'accueil = Omcha396 (binaural app-wide)
+          # Tous les HTML de la racine sont embarqués (modules auto-détectés).
+          for f in ../*.html; do [ -f "$f" ] && cp "$f" www/; done
+          # Page d'accueil = Omcha396
           cp ../0mcha396_v2.html www/index.html
-          # Modules ouverts en surimpression depuis le menu bas
-          for f in ../theme432.html ../utc432project.html ../omcha432flux.html \
-                   ../copilot432.html ../sphere3d432.html; do
-            [ -f "$f" ] && cp "$f" www/
-          done
-          # Fond cosmique rotatif partagé + 9 images recalibrées 9:16
-          cp ../bg-rotator.css ../bg-rotator.js www/
+          rm -f www/0mcha396_v2.html
+          # Fond cosmique rotatif + bus audio + 9:16 images
+          cp ../bg-rotator.css ../bg-rotator.js ../audio-bus.js www/
           mkdir -p www/img
           cp ../img/*.jpg www/img/
           echo "www/ contents:"; ls -lh www/; echo "www/img:"; ls -lh www/img/
@@ -64,6 +62,33 @@ jobs:
             sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">||g' "$f"
             sed -i "s|@import url('https://fonts\.googleapis\.com[^']*');||g" "$f"
           done
+
+      - name: Audio-bus + manifeste des modules
+        working-directory: apk/www
+        run: |
+          # 1) Injecte le bus d'exclusivité audio dans chaque MODULE (pas l'accueil)
+          for f in *.html; do
+            [ "$f" = "index.html" ] && continue
+            grep -q 'audio-bus.js' "$f" || \
+              sed -i 's#</body>#<script src="audio-bus.js"></script>\n</body>#I' "$f"
+          done
+          # 2) Génère modules.js : liste {file,title} de tous les modules (hors accueil)
+          {
+            echo "window.FBF_MODULES = ["
+            first=1
+            for f in *.html; do
+              [ "$f" = "index.html" ] && continue
+              t=$(grep -o '<title>[^<]*</title>' "$f" | head -1 | sed 's/<[^>]*>//g')
+              [ -z "$t" ] && t="$f"
+              t=$(printf '%s' "$t" | sed "s/'/\\\\'/g")
+              [ $first -eq 0 ] && echo ","
+              printf "  {file:'%s', title:'%s', ico:'\\u25c9'}" "$f" "$t"
+              first=0
+            done
+            echo ""
+            echo "];"
+          } > modules.js
+          echo "=== modules.js ==="; cat modules.js
 
       - name: Add Android platform
         working-directory: apk

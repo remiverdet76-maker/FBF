@@ -1,28 +1,5 @@
 <!doctype html>
 <html lang="fr"><head>
-<script>
-/* OmCha396 — audio centralise : ce module reste muet quand il est embarque
-   (le binaural d'Omcha396 est la seule source). En page autonome : inchange. */
-(function(){
-  if (window.self === window.top) return;
-  try {
-    var P = window.AudioNode && AudioNode.prototype;
-    if (P && P.connect) {
-      var _c = P.connect;
-      P.connect = function(dest){
-        try {
-          if (dest && ((window.AudioDestinationNode && dest instanceof window.AudioDestinationNode) ||
-              (dest.constructor && dest.constructor.name === "AudioDestinationNode"))) {
-            return dest;
-          }
-        } catch(e){}
-        return _c.apply(this, arguments);
-      };
-    }
-  } catch(e){}
-})();
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SPHÈRE 432</title>
