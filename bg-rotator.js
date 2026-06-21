@@ -1,14 +1,20 @@
 /* ════════════════════════════════════════════════════════════════
    bg-rotator.js — Diaporama de fond cosmique (crossfade) partagé.
-   Injecte #bg-rotator (9 calques) derrière le contenu et fait tourner
-   les 9 images recalibrées 9:16. Aucune dépendance.
+   Injecte #bg-rotator (calques) derrière le contenu et fait tourner
+   les images recalibrées 9:16. Aucune dépendance.
+
+   Override possible par page (avant ce script) :
+     window.__BG_IMAGES__ = ['img/bg-cosmic.jpg'];  // jeu d'images dédié
+     window.__BG_HOLD__   = 108000;                 // durée par image (ms)
    ════════════════════════════════════════════════════════════════ */
 (function () {
-  var IMGS = [
+  var DEFAULT = [
     'img/bg1.jpg','img/bg2.jpg','img/bg3.jpg','img/bg4.jpg','img/bg5.jpg',
-    'img/bg6.jpg','img/bg7.jpg','img/bg8.jpg','img/bg9.jpg'
+    'img/bg6.jpg','img/bg7.jpg','img/bg8.jpg','img/bg9.jpg','img/bg10.jpg',
+    'img/bg11.jpg','img/bg12.jpg'
   ];
-  var HOLD = 11000;   // durée d'affichage par image (ms)
+  var IMGS = (window.__BG_IMAGES__ && window.__BG_IMAGES__.length) ? window.__BG_IMAGES__ : DEFAULT;
+  var HOLD = window.__BG_HOLD__ || 108000;   // changement toutes les 108 s
 
   function init() {
     if (document.getElementById('bg-rotator')) return;
@@ -27,7 +33,6 @@
     veil.className = 'bg-veil';
     root.appendChild(veil);
 
-    // insère en tout premier pour rester derrière le reste
     document.body.insertBefore(root, document.body.firstChild);
 
     var i = 0;

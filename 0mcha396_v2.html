@@ -31,7 +31,7 @@ body{
 #cosmic-bg{
   position:fixed;inset:0;z-index:-1;
   width:100%;height:100%;object-fit:cover;
-  opacity:0.30;transition:opacity 1.2s ease,transform 1.2s ease,filter 1.5s ease;
+  opacity:0.55;transition:opacity 1.2s ease,transform 1.2s ease,filter 1.5s ease;
   will-change:transform;
 }
 
@@ -278,13 +278,19 @@ body{
 }
 
 .sph-freq {
-  font-family: 'IM Fell English', serif;
-  font-size: clamp(2.2rem, 9vmin, 4rem);
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 0 0 32px rgba(0,0,0,.95), 0 0 16px rgba(255,255,255,.55);
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(2rem, 8.5vmin, 3.6rem);
+  font-weight: 400;
+  color: #FF2020;
+  text-shadow:
+    0 1px 0 rgba(255,100,100,1),
+    0 2px 0 rgba(200,20,20,.9),
+    0 3px 0 rgba(160,0,0,.75),
+    0 4px 3px rgba(120,0,0,.45),
+    0 0 22px rgba(255,70,70,.6),
+    0 0 50px rgba(255,0,0,.25);
   line-height: 1;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
 }
 
 .sph-sub {
@@ -469,6 +475,15 @@ body{
   color: rgba(200,170,255,.32);
   padding: 6px 24px 2px;
 }
+
+/* ── Surimpression module (iframe plein écran) ── */
+#screen-overlay{position:fixed;inset:0;z-index:400;display:none;flex-direction:column;background:#02010D;}
+#screen-overlay.open{display:flex;}
+#screen-overlay-bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(2,1,18,.97);border-bottom:1.5px solid rgba(200,100,255,.28);backdrop-filter:blur(22px);}
+#screen-overlay-title{font-family:'Cinzel Decorative',serif;font-size:.82rem;letter-spacing:.12em;color:rgba(220,200,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#screen-overlay-close{flex-shrink:0;width:38px;height:38px;border-radius:12px;background:rgba(255,80,80,.12);border:1px solid rgba(255,120,120,.35);color:#ff9999;font-size:1.1rem;line-height:1;cursor:pointer;}
+#screen-overlay-close:active{background:rgba(255,80,80,.28);}
+#screen-frame{flex:1 1 auto;width:100%;height:100%;border:none;background:#02010D;}
 
 /* ── Spectroid éventuel dans panel FX ───── */
 #spectroid-bar { display: none; }
@@ -1205,6 +1220,12 @@ input.param-input{
 
 
 </style>
+<link rel="stylesheet" href="bg-rotator.css">
+<style id="cosmic-bg-override">
+  html,body{background:transparent !important;}
+  #cosmic-bg{display:none!important;}
+  #meta-canvas{filter:contrast(1.16) saturate(1.18);}
+</style>
 </head>
 <body>
 
@@ -1232,11 +1253,38 @@ input.param-input{
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
   </button>
+  <div class="dmenu-sep"></div>
+  <div class="dmenu-section">Modules · 432</div>
+  <button class="dmenu-item" onclick="openScreen('theme432.html','Thème 432 — Sphère Omcha');closeMenu()">
+    <span class="dmenu-ico">◍</span>Thème 432 — Sphère Omcha
+  </button>
+  <button class="dmenu-item" onclick="openScreen('utc432project.html','UTC432 · Project');closeMenu()">
+    <span class="dmenu-ico">⏣</span>UTC432 · Project
+  </button>
+  <button class="dmenu-item" onclick="openScreen('omcha432flux.html','Omcha 432 — Flux Hélicoïdal');closeMenu()">
+    <span class="dmenu-ico">∿</span>Omcha 432 — Flux Hélicoïdal
+  </button>
+  <button class="dmenu-item" onclick="openScreen('copilot432.html','UT36 · 360 · 396 · 432');closeMenu()">
+    <span class="dmenu-ico">⊛</span>UT36 · 360 · 396 · 432
+  </button>
+  <button class="dmenu-item" onclick="openScreen('sphere3d432.html','Sphère 432 — 3D');closeMenu()">
+    <span class="dmenu-ico">◉</span>Sphère 432 — 3D
+  </button>
+  <div class="dmenu-sep"></div>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
   </button>
 </div>
 <div id="menu-backdrop" onclick="closeMenu()"></div>
+
+<!-- ── Surimpression module (iframe) — le binaural d'Omcha396 continue dessous ── -->
+<div id="screen-overlay">
+  <div id="screen-overlay-bar">
+    <span id="screen-overlay-title">Module</span>
+    <button id="screen-overlay-close" onclick="closeScreen()" aria-label="Fermer">✕</button>
+  </div>
+  <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
+</div>
 
 <div id="osc-modal">
   <div id="osc-modal-inner">
@@ -1284,7 +1332,9 @@ const RATIO_OPTS = [
   {r:12/11, l:'12/11'},
   {r:11/12, l:'11/12'},
   {r:10/12, l:'10/12'},
-  {r:12/10, l:'12/10'}
+  {r:12/10, l:'12/10'},
+  {r:13/12, l:'13/12'},
+  {r:12/13, l:'12/13'}
 ];
 
 // Band A : 36–108 Hz  (oscs 0,1)
@@ -1330,7 +1380,7 @@ function waveState(hz) {
 
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
-  if (i === MASTER_IDX) return masterFreq;
+  if (i === MASTER_IDX) return Math.min(648, masterFreq);
   return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
@@ -1387,20 +1437,62 @@ let _waveBuf = null;          // buffer de lecture de l'analyser
 let _spectroidBuf = null;     // buffer dédié au rendu du spectroïde 2D
 
 /* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
+// ── Bus delay stéréo (ping-pong) pour les fréquences > 432 ──────────
+// Construit une seule fois ; partagé par tous les oscillateurs aigus.
+let hiDelayBus = null;
+function ensureHiDelay() {
+  if (hiDelayBus) return hiDelayBus;
+  if (!masterGain) return null;
+  const c = audioCtx();
+  hiDelayBus = c.createGain(); hiDelayBus.gain.value = 1;
+  const dL = c.createDelay(1.0); dL.delayTime.value = 0.18;
+  const dR = c.createDelay(1.0); dR.delayTime.value = 0.27;
+  const fbL = c.createGain(); fbL.gain.value = 0.30;
+  const fbR = c.createGain(); fbR.gain.value = 0.30;
+  const panL = c.createStereoPanner(); panL.pan.value = -0.85;
+  const panR = c.createStereoPanner(); panR.pan.value =  0.85;
+  const outG = c.createGain(); outG.gain.value = 0.5;
+  hiDelayBus.connect(dL); hiDelayBus.connect(dR);
+  dL.connect(fbL); fbL.connect(dR);   // ping-pong croisé L→R
+  dR.connect(fbR); fbR.connect(dL);   //               R→L
+  dL.connect(panL); dR.connect(panR);
+  panL.connect(outG); panR.connect(outG);
+  outG.connect(masterGain);
+  return hiDelayBus;
+}
+// Fréquences > 432 : HPF engagé + réduction de volume + envoi delay stéréo.
+function applyHiBand(node, freq) {
+  if (!node) return;
+  const hi = freq > 432, now = aNow();
+  try {
+    if (node.hpf)    node.hpf.frequency.setTargetAtTime(hi ? 420 : 20, now, 0.05);
+    if (node.hiTrim) node.hiTrim.gain.setTargetAtTime(hi ? 0.55 : 1.0, now, 0.08);
+    if (node.dSend)  node.dSend.gain.setTargetAtTime(hi ? 0.40 : 0.0, now, 0.08);
+  } catch(e) {}
+}
+
 function buildOsc(id, freq, vol, pan) {
   const c = audioCtx();
   const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = safeF(freq);
   const p = c.createStereoPanner(); p.pan.value = pan;
+  const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
   const g = c.createGain(); g.gain.value = 0;
-  o.connect(p); p.connect(g); g.connect(masterGain);
+  const hiTrim = c.createGain(); hiTrim.gain.value = 1;
+  // o → pan → HPF → gain (géré par l'anti-crack) → hiTrim → master
+  o.connect(p); p.connect(hpf); hpf.connect(g); g.connect(hiTrim); hiTrim.connect(masterGain);
+  // envoi parallèle vers le delay stéréo (ouvert seulement si freq > 432)
+  const dSend = c.createGain(); dSend.gain.value = 0; hiTrim.connect(dSend);
+  const bus = ensureHiDelay(); if (bus) dSend.connect(bus);
   o.start();
+  const node = { o, g, p, hpf, hiTrim, dSend };
+  applyHiBand(node, safeF(freq));
   if (!mutedOscs[id] && vol > 0) {
     const now = c.currentTime;
     g.gain.cancelScheduledValues(now);
     g.gain.setValueAtTime(0, now);
     g.gain.setTargetAtTime(vol, now, FADE / 5);
   }
-  return { o, g, p };
+  return node;
 }
 
 function tuneOsc(id, freq) {
@@ -1410,6 +1502,7 @@ function tuneOsc(id, freq) {
     node.o.frequency.cancelScheduledValues(now);
     node.o.frequency.setValueAtTime(node.o.frequency.value, now);
     node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
+    applyHiBand(node, f);   // met à jour HPF / volume / delay selon la cible
   } catch(e) {}
 }
 
@@ -1422,7 +1515,12 @@ function releaseOsc(node) {
     node.o.stop(now + FADE + 0.1);
   } catch(e) {}
   setTimeout(() => {
-    try { node.o.disconnect(); node.g.disconnect(); node.p.disconnect(); } catch(e){}
+    try {
+      node.o.disconnect(); node.g.disconnect(); node.p.disconnect();
+      if (node.hpf) node.hpf.disconnect();
+      if (node.hiTrim) node.hiTrim.disconnect();
+      if (node.dSend) node.dSend.disconnect();
+    } catch(e){}
   }, (FADE + 0.4) * 1000);
 }
 
@@ -1817,7 +1915,7 @@ function masterTick() {
   const bgEl = document.getElementById('cosmic-bg');
   if (bgEl) {
     const br = BREATH_STATE.on ? Math.sin(V.t * BREATH_STATE.rate * 6.28) : Math.sin(V.t * 0.13 * 6.28);
-    const op = 0.26 + 0.10 * (0.5 + 0.5 * br);
+    const op = 0.48 + 0.10 * (0.5 + 0.5 * br);
     const sc = 1.0 + 0.012 * (0.5 + 0.5 * br);
     bgEl.style.opacity = op.toFixed(3);
     bgEl.style.transform = `scale(${sc.toFixed(4)})`;
@@ -2235,12 +2333,12 @@ function drawCenter(ctx){
   ctx.beginPath();ctx.arc(p0.sx,p0.sy,2*pulse,0,Math.PI*2);ctx.fill();
   ctx.shadowBlur=0;ctx.globalAlpha=1;
 
-  // Fréquence Maître — seul chiffre visible à l'écran, discret, doré
+  // Fréquence Maître — seul chiffre visible, rouge lumineux
   if(typeof masterFreq!=='undefined'&&masterFreq>0){
-    ctx.font='300 13px Georgia, serif';
+    ctx.font=`300 14px 'Cinzel Decorative', Georgia, serif`;
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle=`rgba(255,215,0,${(.45+.15*pulse).toFixed(2)})`;
-    ctx.shadowColor='rgba(255,215,0,.5)';ctx.shadowBlur=6;
+    ctx.fillStyle=`rgba(255,40,40,${(.55+.15*pulse).toFixed(2)})`;
+    ctx.shadowColor='rgba(255,0,0,.7)';ctx.shadowBlur=10;
     ctx.fillText(Math.round(masterFreq)+' Hz',p0.sx,p0.sy+18);
     ctx.shadowBlur=0;
   }
@@ -2659,7 +2757,7 @@ function toggleAccord(id) {
 // Band C (256–432): oscs 4,5
 // Maître : aléatoire 36–432
 function trigger0mcha396() {
-  masterFreq = 36 + Math.floor(Math.random() * 397);
+  masterFreq = 36 + Math.floor(Math.random() * 613);
 
   PAIRS[0].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
   PAIRS[1].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
@@ -2693,7 +2791,7 @@ function trigger0mcha396() {
 
 // ── Bouton +/− sur la sphère : ±36 Hz maître + ratio aléatoire pour chaque osc ──
 function fbfStep(delta) {
-  masterFreq = Math.max(36, Math.min(432, masterFreq + delta));
+  masterFreq = Math.max(36, Math.min(648, masterFreq + delta));
 
   for (let i = 0; i < MASTER_IDX; i++) {
     const ratio = RATIO_OPTS[Math.floor(Math.random() * RATIO_OPTS.length)].r;
@@ -2832,7 +2930,7 @@ function setMasterVol(v) {
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(36, Math.min(432, f));
+  masterFreq = Math.max(36, Math.min(648, f));
   updateDisplay();
   if (typeof flowing !== 'undefined' && flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -2875,7 +2973,7 @@ function nRandom(i) {
 }
 
 function masterStep(delta) {
-  setMasterFreq(Math.max(36, Math.min(432, masterFreq + delta)));
+  setMasterFreq(Math.max(36, Math.min(648, masterFreq + delta)));
 }
 function onMasterInput(raw) {
   const v = parseInt(raw);
@@ -3190,7 +3288,7 @@ function buildMasterFXHTML() {
       <div class="mfreq-label">Fréquence maître</div>
       <div class="mfreq-row">
         <button class="mfreq-btn sm" onclick="masterStep(-1)">−</button>
-        <input type="number" id="master-input" class="mfreq-input" min="36" max="864" value="432" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
+        <input type="number" id="master-input" class="mfreq-input" min="36" max="648" value="432" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
         <button class="mfreq-btn" onclick="masterStep(1)">+</button>
       </div>
       <div class="mfreq-range">36 — 864 Hz</div>
@@ -3763,7 +3861,7 @@ function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(LS_KEY));
     if (!s) return;
-    if (s.masterFreq>=36&&s.masterFreq<=432) masterFreq = s.masterFreq;
+    if (s.masterFreq>=36&&s.masterFreq<=648) masterFreq = s.masterFreq;
     if (s.globalDelta>0) globalDelta = s.globalDelta;
     if (s.masterVol>=0&&s.masterVol<=1) masterVol = s.masterVol;
     if (typeof s.activeGeometry==='number') activeGeometry = s.activeGeometry;
@@ -3853,6 +3951,29 @@ function closeMenu() {
   if (b) b.classList.remove('open');
   if (btn) btn.classList.remove('on');
 }
+
+// ── Modules en surimpression (iframe) — le binaural d'Omcha396 continue ──
+function _resumeAudioSafe(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='suspended')AC.resume(); }catch(e){} }
+function openScreen(src, title){
+  const ov=document.getElementById('screen-overlay'),
+        fr=document.getElementById('screen-frame'),
+        tt=document.getElementById('screen-overlay-title');
+  if(!ov||!fr) return;
+  if(tt) tt.textContent = title || 'Module';
+  fr.src = src; ov.classList.add('open'); _resumeAudioSafe();
+  try{ history.pushState({omchaScreen:true},''); }catch(e){}
+}
+function closeScreen(){
+  const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
+  if(!ov||!ov.classList.contains('open')) return;
+  ov.classList.remove('open'); if(fr) fr.src='about:blank'; _resumeAudioSafe();
+  if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
+}
+window.addEventListener('popstate', function(){
+  const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
+  if(ov&&ov.classList.contains('open')){ ov.classList.remove('open'); if(fr) fr.src='about:blank'; _resumeAudioSafe(); }
+});
+window.addEventListener('keydown', function(e){ if(e.key==='Escape') closeScreen(); });
 
 // ── Panel navigation (tab-nav centré) ────────────────────────────
 let _openPanel = null;
@@ -4513,5 +4634,6 @@ if (typeof window !== 'undefined') window.Bowl = Bowl;
 
 
 </script>
+<script src="bg-rotator.js"></script>
 </body>
 </html>
