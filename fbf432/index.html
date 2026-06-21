@@ -49,6 +49,13 @@
 .osc-row .osc-r{color:rgba(200,170,255,.7);text-align:center}
 .osc-dice{background:none;border:none;cursor:pointer;font-size:.95rem;padding:0;line-height:1}
 .osc-dice:active{transform:scale(.85)}
+
+/* Menus en bas de l'écran (paysage + portrait) */
+#right-dock{position:fixed!important;left:0;right:0;bottom:0;top:auto!important;width:auto!important;height:auto!important;display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:.5rem;padding:.35rem .5rem;flex-wrap:wrap;background:rgba(2,1,14,.55);backdrop-filter:blur(8px);z-index:60;}
+#flux-side{position:static!important;}
+#fbf-opts-btn{width:auto!important;margin-top:0!important;}
+#right-dock.opts-open #tab-nav{display:flex!important;}
+#tab-nav{flex-direction:row!important;flex-wrap:wrap;gap:.3rem;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;}
 </style>
 </head>
 <body>
@@ -159,6 +166,14 @@
     <div class="sw-row" style="font-size:.7rem;padding:.1rem 0;">FX aléatoire <input type="checkbox" class="sw" id="ck-rand-fx" onchange="setRandUseFX(this.checked)"></div>
   </div>
 
+  <div style="margin:.5rem 0;padding:.55rem .65rem;background:rgba(160,100,255,.06);border:1px solid rgba(200,100,255,.16);border-radius:10px;">
+    <div style="font-size:.68rem;color:rgba(200,150,255,.7);letter-spacing:.1em;font-style:italic;margin-bottom:.4rem;">MODULATIONS LFO</div>
+    <div class="sw-row" style="font-size:.7rem;padding:.12rem 0;">Volume <input type="checkbox" class="sw" onchange="lfoToggle(this.checked)"></div>
+    <div class="sw-row" style="font-size:.7rem;padding:.12rem 0;">Filtre <input type="checkbox" class="sw" onchange="filtLfoToggle(this.checked)"></div>
+    <input type="range" min="0.02" max="2" step="0.01" value="0.1" style="width:100%;accent-color:#A060F0" oninput="filtLfoRate(this.value)">
+    <div class="sw-row" style="font-size:.7rem;padding:.12rem 0;">FX intensité <input type="checkbox" class="sw" onchange="fxLfoToggle(this.checked)"></div>
+    <input type="range" min="0.02" max="2" step="0.01" value="0.12" style="width:100%;accent-color:#A060F0" oninput="fxLfoRate(this.value)">
+  </div>
   <div class="rand-steps-grid" style="margin-top:.5rem">
     <button class="fbf-step" onclick="masterStep(108)">+108</button>
     <button class="fbf-step" onclick="masterStep(72)">+72</button>

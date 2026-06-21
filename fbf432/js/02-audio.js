@@ -12,6 +12,7 @@ let chorus = null, compressor = null;
 const LFO_STATE = {on:false, rate:.25, depth:.08};
 let _lfoNode = null, _lfoGain = null;  // LFO natif Tone.js (audio thread)
 let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
+let _busLP=null, _filtLFO=null, _fxLFO=null;  // LFO filtre + LFO FX intensité
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 
@@ -118,10 +119,14 @@ function initFXChain() {
   pingPong     = new Tone.PingPongDelay({ delayTime: 0.25, feedback: 0.3, wet: 0 });
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
   limiter      = new Tone.Limiter(-1.5).toDestination();
+  // Filtre de bus (lowpass) + LFOs filtre/FX
+  _busLP   = new Tone.Filter({ type:'lowpass', frequency:18000, Q:0.6 });
+  _filtLFO = new Tone.LFO({ frequency:0.1, min:500,  max:16000, type:'sine' }).start();
+  _fxLFO   = new Tone.LFO({ frequency:0.12, min:0,   max:0.5,   type:'sine' }).start();
   // Réverbe à convolution NON inline par défaut (off) : elle convolue en
   // permanence sinon = gros coût CPU mobile → underrun BT. On la branche
   // seulement quand wet > 0 (voir _setReverbActive).
-  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterGlue, masterDelay, pingPong, limiter);
+  eqLow.chain(eqMid, eqHigh, _busLP, chorus, compressor, masterGlue, masterDelay, pingPong, limiter);
 }
 
 // Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
@@ -180,6 +185,12 @@ function lfoSet(param, v) {
   }
   const el = document.getElementById('sv-lfo-' + param); if (el) el.textContent = parseFloat(v).toFixed(2);
 }
+
+// ── LFO filtre (timbre) & LFO FX (intensité) ──
+function filtLfoToggle(on){ if(!_filtLFO||!_busLP)return; if(on){try{_filtLFO.connect(_busLP.frequency);}catch(e){}} else {try{_filtLFO.disconnect();}catch(e){} try{_busLP.frequency.rampTo(18000,0.2);}catch(e){}} }
+function filtLfoRate(v){ if(_filtLFO)try{_filtLFO.frequency.value=parseFloat(v);}catch(e){} }
+function fxLfoToggle(on){ if(!_fxLFO||!masterDelay)return; if(on){try{_fxLFO.connect(masterDelay.wet);}catch(e){}} else {try{_fxLFO.disconnect();}catch(e){}} }
+function fxLfoRate(v){ if(_fxLFO)try{_fxLFO.frequency.value=parseFloat(v);}catch(e){} }
 
 function _startBTKeepalive() {
   if (_btKeepalive) return;
