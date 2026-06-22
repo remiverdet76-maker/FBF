@@ -33,13 +33,14 @@ let _fxRefs = {};
 let _busLP = null;
 let _filtLFO = null, _filtLFODepth = null;
 let _fxLFO = null, _fxLFODepth = null;
-const LFO_STATE = {on:false, rate:.25, depth:.30};
+const LFO_STATE = {on:false, rate:.27, depth:.27};
 // Anti-crack (∝ 1/√voix actives) : empêche la sommation des oscillateurs de
 // saturer le limiteur → 0 craquement + dynamique préservée (recette Omcha396).
+// Grille 432 : plancher 0.18 (= 18/100, 18=2×9) → plus de headroom.
 let _antiCrackTarget = 1;
 function _applyAntiCrack() {
   const active = Object.keys(nodes).length || 1;
-  _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+  _antiCrackTarget = Math.max(0.18, 1 / Math.sqrt(active));
 }
 let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
 let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
@@ -48,7 +49,7 @@ let metaAngle = 0, masterRAF = null;
 let _waveBuf = null;
 
 // Constantes LFO filtre/FX (équivalent natif des Tone.LFO d'origine)
-const _FILT_LFO_MIN = 120,  _FILT_LFO_MAX = 1800;    // coupure du _busLP (basse → audible sur sinus ≤648 Hz)
+const _FILT_LFO_MIN = 108,  _FILT_LFO_MAX = 1800;    // grille 432 : 108=12×9, 1800=200×9 (audible sur sinus ≤648 Hz)
 const _FILT_LFO_OPEN = 18000;                         // coupure repos (filtre ouvert)
 const _FX_LFO_MIN = 0,      _FX_LFO_MAX = 0.5;        // wet du delay
 
@@ -173,7 +174,8 @@ function initFXChain() {
   _busLP = c.createBiquadFilter(); _busLP.type='lowpass'; _busLP.frequency.value=_FILT_LFO_OPEN; _busLP.Q.value=0.6;
 
   compressor = c.createDynamicsCompressor();
-  compressor.threshold.value=-24; compressor.ratio.value=4; compressor.attack.value=0.02; compressor.release.value=0.25;
+  // Grille 432 : seuil −27 (3×9), ratio 9, attaque 0.009, release 0.27.
+  compressor.threshold.value=-27; compressor.ratio.value=9; compressor.attack.value=0.009; compressor.release.value=0.27;
 
   masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
   masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.3;
@@ -201,14 +203,16 @@ function initFXChain() {
   mEqHigh = c.createBiquadFilter(); mEqHigh.type='highshelf';mEqHigh.frequency.value=432; mEqHigh.gain.value=0;
 
   masterGlue = c.createDynamicsCompressor();
-  masterGlue.threshold.value=-18; masterGlue.knee.value=6; masterGlue.ratio.value=2;
-  masterGlue.attack.value=0.05; masterGlue.release.value=0.3;
+  // Grille 432 : seuil −18 (2×9), knee 9, attaque 0.009, release 0.27.
+  masterGlue.threshold.value=-18; masterGlue.knee.value=9; masterGlue.ratio.value=2;
+  masterGlue.attack.value=0.009; masterGlue.release.value=0.27;
 
   masterFader = c.createGain(); masterFader.gain.value = 1;
 
   limiter = c.createDynamicsCompressor();
-  limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
-  limiter.attack.value=0.002; limiter.release.value=0.18;
+  // Grille 432 : seuil −1.8 (18), ratio 18 (2×9), attaque douce 0.009, release 0.18.
+  limiter.threshold.value=-1.8; limiter.knee.value=0; limiter.ratio.value=18;
+  limiter.attack.value=0.009; limiter.release.value=0.18;
 
   // Bus master : busTrim → mEQ → glue → fader → limiter → sortie
   busTrim.connect(mEqLow); mEqLow.connect(mEqMid); mEqMid.connect(mEqHigh);

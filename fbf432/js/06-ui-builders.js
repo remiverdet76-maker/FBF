@@ -285,13 +285,13 @@ function buildMasterFXHTML() {
       <div class="fx-row">
         <div class="fx-control-group">
           <span class="fx-label">Rythme</span>
-          <input type="range" class="fx-slider" id="lfo-rate" min="0.02" max="2" step="0.01" value="0.25" oninput="lfoSet('rate',this.value)">
-          <span class="fx-val-disp" id="sv-lfo-rate">0.25</span>
+          <input type="range" class="fx-slider" id="lfo-rate" min="0.09" max="1.8" step="0.09" value="0.27" oninput="lfoSet('rate',this.value)">
+          <span class="fx-val-disp" id="sv-lfo-rate">0.27</span>
         </div>
         <div class="fx-control-group">
           <span class="fx-label">Profond.</span>
-          <input type="range" class="fx-slider" id="lfo-depth" min="0.01" max="0.7" step="0.01" value="0.30" oninput="lfoSet('depth',this.value)">
-          <span class="fx-val-disp" id="sv-lfo-depth">0.30</span>
+          <input type="range" class="fx-slider" id="lfo-depth" min="0.09" max="0.72" step="0.09" value="0.27" oninput="lfoSet('depth',this.value)">
+          <span class="fx-val-disp" id="sv-lfo-depth">0.27</span>
         </div>
       </div>
     </div>
