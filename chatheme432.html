@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ChaThème 432</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --e1:#e84a6f;--e2:#f07b38;--e3:#f5c842;
+  --e4:#6ab84e;--e5:#3ab8a0;--e6:#4a8fe8;
+  --e7:#7b58d4;--e8:#c45bbf;--e9:#d44a4a;
+  --gold:#d4a843;--gold2:#f5d97a;--gold3:#b8882a;
+  --s1:#f5c842;--s2:#e84a6f;--s3:#3ab8a0;--s4:#7b58d4;
+  --text:#ECE3FF;--muted:rgba(206,184,255,0.72);
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;-webkit-font-smoothing:antialiased}
+body{
+  font-family:'Nunito',system-ui,sans-serif;
+  /* Ambiance cosmique : image de fond appliquée + voile sombre (comme Omcha/FBF) */
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(123,88,212,0.30) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(8,3,24,0.82), rgba(2,1,13,0.92)),
+    url('img/bg-cosmic.jpg') center/cover fixed no-repeat,
+    #02010D;
+  color:var(--text);
+  padding:18px;
+}
+header{max-width:1200px;margin:0 auto 20px;padding:0 4px}
+.header-inner{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo-sphere{width:54px;height:54px;flex-shrink:0}
+h1{
+  font-family:'Cinzel',serif;font-size:1.7rem;letter-spacing:0.04em;
+  background:linear-gradient(100deg,var(--e1),var(--e2),var(--e3),var(--e4),var(--e5),var(--e6),var(--e7),var(--e8));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 1px 8px rgba(212,168,67,0.22));
+}
+p.lead{color:var(--muted);font-size:0.86rem;margin-top:3px;font-weight:400}
+main{max-width:1200px;margin:0 auto 60px;display:grid;grid-template-columns:280px 1fr;gap:16px}
+nav.nav-panel{
+  background:linear-gradient(155deg,rgba(253,240,232,0.92),rgba(232,240,253,0.88),rgba(237,253,245,0.82));
+  border:1.5px solid rgba(212,168,67,0.28);
+  padding:16px;border-radius:var(--r);height:fit-content;
+  box-shadow:0 8px 40px rgba(212,168,67,0.12),0 2px 10px rgba(123,88,212,0.08);
+  position:sticky;top:18px;
+}
+nav h2{
+  font-family:'Cinzel',serif;font-size:0.95rem;
+  background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:5px;
+}
+nav .nav-sub{font-size:0.78rem;color:var(--muted)}
+.tabs{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.tab-btn{
+  display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;
+  border:1px solid rgba(212,168,67,0.18);
+  background:linear-gradient(110deg,rgba(253,246,238,0.72),rgba(240,236,255,0.55));
+  cursor:pointer;font-family:'Nunito',sans-serif;font-weight:600;font-size:0.86rem;
+  color:var(--text);transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);text-align:left;
+}
+.tab-btn:hover{transform:translateX(3px) scale(1.01);box-shadow:0 4px 16px rgba(212,168,67,0.18);border-color:rgba(212,168,67,0.38)}
+.tab-btn.active{
+  background:linear-gradient(110deg,rgba(245,200,66,0.20),rgba(74,143,232,0.13),rgba(123,88,212,0.10));
+  border-color:rgba(212,168,67,0.50);
+  box-shadow:0 6px 24px rgba(212,168,67,0.22);transform:translateX(3px);
+}
+.tab-icon{font-size:1rem;flex-shrink:0}.tab-label{flex:1}
+.tab-bar{width:3px;height:18px;border-radius:2px;background:linear-gradient(180deg,var(--e1),var(--e7));opacity:0;transition:opacity 0.2s}
+.tab-btn.active .tab-bar{opacity:1}
+.nav-actions{margin-top:12px;display:flex;gap:8px}
+.btn-ghost{
+  flex:1;padding:7px 8px;border-radius:8px;border:1px solid rgba(212,168,67,0.25);
+  background:linear-gradient(110deg,rgba(253,246,238,0.80),rgba(240,236,255,0.60));
+  color:var(--muted);cursor:pointer;font-size:0.80rem;font-family:'Nunito',sans-serif;font-weight:500;transition:all 0.2s;
+}
+.btn-ghost:hover{background:linear-gradient(110deg,rgba(245,200,66,0.18),rgba(74,143,232,0.12));color:var(--text);border-color:rgba(212,168,67,0.48)}
+section.content{
+  background:linear-gradient(155deg,rgba(253,246,238,0.88),rgba(240,236,255,0.82),rgba(237,253,245,0.82));
+  border:1.5px solid rgba(212,168,67,0.20);border-radius:var(--r);padding:20px;
+  box-shadow:0 8px 40px rgba(123,88,212,0.08);min-height:640px;
+}
+/* ONGLETS : display:none / display:block uniquement */
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card{
+  background:linear-gradient(135deg,rgba(253,246,238,0.78),rgba(237,253,245,0.68),rgba(240,236,255,0.65));
+  border:1px solid rgba(212,168,67,0.22);border-radius:12px;padding:14px;
+  box-shadow:0 2px 12px rgba(212,168,67,0.08);
+}
+.card+.card,.card+.row,.row+.card{margin-top:12px}
+.panel-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.panel-title h2{
+  font-family:'Cinzel',serif;font-size:1.15rem;
+  background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.panel-sub{font-size:0.80rem;color:var(--muted);margin-top:4px}
+h3{
+  font-family:'Cinzel',serif;font-size:0.95rem;
+  background:linear-gradient(90deg,var(--gold3),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+}
+.small{font-size:0.82rem;color:var(--muted);line-height:1.55}
+label{display:block;font-size:0.80rem;color:var(--muted);font-weight:600;margin-bottom:5px;font-family:'Nunito',sans-serif}
+input[type="date"],select{
+  width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(212,168,67,0.28);
+  background:linear-gradient(110deg,rgba(253,246,238,0.90),rgba(240,236,255,0.72));
+  color:var(--text);font-family:'Nunito',sans-serif;font-size:0.86rem;transition:border-color 0.2s;
+}
+input[type="date"]:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,168,67,0.14)}
+.btn-primary{
+  background:linear-gradient(100deg,var(--gold3),var(--gold),var(--gold2));
+  color:#3a2010;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:0.88rem;box-shadow:0 4px 16px rgba(212,168,67,0.32);
+  transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.btn-primary:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 24px rgba(212,168,67,0.42)}
+.btn-primary:active{transform:scale(0.98)}
+.btn-fiche{
+  background:linear-gradient(100deg,var(--e5),var(--e6));color:#edfdf5;border:none;
+  padding:9px 14px;border-radius:10px;font-weight:700;cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:0.82rem;transition:all 0.2s;
+}
+.btn-fiche:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.row{display:flex;gap:12px;align-items:stretch}.col{flex:1;min-width:0}
+.readout-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.readout-item{
+  padding:10px 12px;border-radius:10px;border-left:3px solid var(--e6);
+  background:linear-gradient(135deg,rgba(253,246,238,0.82),rgba(237,253,245,0.65));
+  border-top:1px solid rgba(212,168,67,0.18);border-right:1px solid rgba(212,168,67,0.12);border-bottom:1px solid rgba(212,168,67,0.12);
+}
+.readout-label{font-size:0.70rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:700}
+.readout-val{font-size:1rem;font-weight:700;color:var(--text);margin-top:2px;font-family:'Cinzel',serif}
+.readout-sub{font-size:0.73rem;color:var(--muted)}
+.badge-spiral{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+  font-size:0.78rem;font-weight:700;
+  background:linear-gradient(90deg,rgba(123,88,212,0.20),rgba(196,91,191,0.12));
+  border:1px solid rgba(123,88,212,0.38);color:var(--e7);
+  animation:pulseSpiral 2.5s ease-in-out infinite;
+}
+@keyframes pulseSpiral{0%,100%{box-shadow:0 0 0 0 rgba(123,88,212,0)}50%{box-shadow:0 0 0 5px rgba(123,88,212,0.12)}}
+.analysis-box{
+  margin-top:12px;padding:14px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(253,246,238,0.82),rgba(240,236,255,0.68));
+  border:1px solid rgba(212,168,67,0.22);
+}
+.analysis-section{margin-top:10px}
+.analysis-section-title{
+  font-family:'Cinzel',serif;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;
+  font-weight:700;color:var(--gold);margin-bottom:5px;
+}
+.analysis-list{list-style:none;padding:0}
+.analysis-list li{
+  padding:5px 10px 5px 22px;position:relative;font-size:0.82rem;color:var(--muted);
+  border-bottom:1px solid rgba(212,168,67,0.08);line-height:1.5;
+}
+.analysis-list li::before{content:'◆';position:absolute;left:7px;top:6px;font-size:0.50rem;color:var(--gold)}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(212,168,67,0.18);margin-top:12px}
+table.theme36{
+  width:100%;border-collapse:collapse;font-size:0.80rem;
+  background:linear-gradient(160deg,rgba(253,246,238,0.62),rgba(240,236,255,0.42));
+}
+table.theme36 th{
+  padding:9px 10px;text-align:left;font-family:'Cinzel',serif;font-size:0.70rem;
+  text-transform:uppercase;letter-spacing:0.06em;font-weight:600;
+  background:linear-gradient(90deg,rgba(212,168,67,0.20),rgba(74,143,232,0.12),rgba(106,184,78,0.08));
+  color:var(--gold3);position:sticky;top:0;
+}
+table.theme36 td{padding:7px 10px;border-bottom:1px solid rgba(212,168,67,0.08);vertical-align:middle;color:var(--text)}
+table.theme36 tr:hover td{background:rgba(212,168,67,0.09)}
+table.theme36 tr.active-row td{background:linear-gradient(90deg,rgba(245,200,66,0.20),rgba(245,200,66,0.07));font-weight:700}
+.energy-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.phase-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:0.70rem;font-weight:700;background:rgba(212,168,67,0.14);color:var(--gold3)}
+.archetypes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.archetype-card{
+  padding:12px;border-radius:10px;border-top:3px solid var(--e1);
+  background:linear-gradient(135deg,rgba(253,246,238,0.78),rgba(240,236,255,0.62));
+  border-left:1px solid rgba(212,168,67,0.15);border-right:1px solid rgba(212,168,67,0.15);border-bottom:1px solid rgba(212,168,67,0.15);
+  transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1);cursor:default;
+}
+.archetype-card:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 8px 24px rgba(212,168,67,0.16)}
+.archetype-num{font-size:1.2rem;font-family:'Cinzel',serif;font-weight:700}
+.archetype-name{font-weight:700;font-size:0.85rem;margin-top:2px;font-family:'Nunito',sans-serif}
+.archetype-desc{font-size:0.74rem;color:var(--muted);margin-top:4px;line-height:1.40}
+.states-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.state-card{
+  padding:12px;border-radius:10px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(253,246,238,0.78),rgba(237,253,245,0.62));
+  border:1px solid rgba(212,168,67,0.16);
+}
+.state-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
+.state-card.s1::before{background:linear-gradient(90deg,var(--s1),#ffe89a,var(--e2))}
+.state-card.s2::before{background:linear-gradient(90deg,var(--s2),#ff8fa8,var(--e8))}
+.state-card.s3::before{background:linear-gradient(90deg,var(--s3),#80e8d8,var(--e4))}
+.state-card.s4::before{background:linear-gradient(90deg,var(--s4),#b09ae0,var(--e8))}
+.state-code{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700}
+.state-name{font-weight:700;font-size:0.83rem;margin-top:2px;color:var(--muted)}
+.state-desc{font-size:0.74rem;color:var(--muted);margin-top:4px;line-height:1.40}
+.stat-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stat-pill{
+  flex:1;min-width:120px;padding:8px 12px;border-radius:10px;font-size:0.78rem;font-weight:600;
+  background:linear-gradient(110deg,rgba(253,246,238,0.82),rgba(240,236,255,0.65));
+  border:1px solid rgba(212,168,67,0.20);color:var(--text);
+}
+.stat-pill span{display:block;font-family:'Cinzel',serif;font-size:1rem;color:var(--gold3);margin-top:2px}
+.spiral-hero{
+  text-align:center;padding:20px 12px;border-radius:12px;border:1px solid rgba(123,88,212,0.20);
+  background:linear-gradient(135deg,rgba(123,88,212,0.10),rgba(196,91,191,0.08),rgba(232,74,111,0.06));
+}
+.spiral-hero h3{
+  font-family:'Cinzel',serif;font-size:1.3rem;
+  background:linear-gradient(100deg,var(--e7),var(--e8),var(--e1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.spiral-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.spiral-card{
+  padding:12px 14px;border-radius:10px;border:1px solid rgba(123,88,212,0.16);
+  background:linear-gradient(135deg,rgba(253,246,238,0.78),rgba(240,236,255,0.68));
+}
+.spiral-card-title{
+  font-family:'Cinzel',serif;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;
+  background:linear-gradient(90deg,var(--e7),var(--e8));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+}
+.clock-outer{display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center}
+canvas#clock{
+  border-radius:50%;border:2px solid rgba(212,168,67,0.32);
+  box-shadow:0 0 60px rgba(212,168,67,0.22),0 0 120px rgba(123,88,212,0.10);
+}
+.clock-legend{font-size:0.82rem}
+.legend-item{
+  display:flex;align-items:center;gap:8px;margin-bottom:7px;padding:6px 10px;border-radius:8px;
+  background:linear-gradient(110deg,rgba(253,246,238,0.78),rgba(240,236,255,0.58));
+  border:1px solid rgba(212,168,67,0.14);
+}
+.legend-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+footer{
+  max-width:1200px;margin:18px auto;font-size:0.76rem;text-align:center;padding:6px;
+  background:linear-gradient(90deg,var(--e1),var(--e2),var(--e3),var(--e4),var(--e5),var(--e6),var(--e7),var(--e8));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-family:'Cinzel',serif;letter-spacing:0.05em;
+}
+@media(max-width:980px){
+  main{grid-template-columns:1fr}nav.nav-panel{position:static}
+  .archetypes-grid{grid-template-columns:repeat(2,1fr)}.readout-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .archetypes-grid,.spiral-grid,.states-grid{grid-template-columns:1fr}
+  body{padding:10px}h1{font-size:1.3rem}
+}
+
+/* ═══ Skin cosmique sombre (ChaThème 432) — surfaces en verre translucide ═══ */
+nav.nav-panel,
+section.content,
+.card,
+.readout-item,
+.analysis-box,
+.table-wrap,
+.spiral-hero,
+.spiral-card{
+  background:linear-gradient(155deg,rgba(28,12,58,0.62),rgba(14,6,34,0.55)) !important;
+  border-color:rgba(200,140,255,0.20) !important;
+  -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  box-shadow:0 8px 34px rgba(80,30,140,0.30) !important;
+}
+.tab-btn{
+  background:linear-gradient(110deg,rgba(40,18,78,0.55),rgba(20,8,44,0.45)) !important;
+  border-color:rgba(200,140,255,0.18) !important;color:var(--text) !important;
+}
+.tab-btn.active{
+  background:linear-gradient(110deg,rgba(123,88,212,0.42),rgba(196,91,191,0.26)) !important;
+  border-color:rgba(212,168,67,0.55) !important;
+}
+.btn-ghost{
+  background:linear-gradient(110deg,rgba(40,18,78,0.55),rgba(20,8,44,0.45)) !important;
+  color:var(--muted) !important;border-color:rgba(200,140,255,0.22) !important;
+}
+.btn-ghost:hover{color:var(--text) !important;}
+input[type="date"],select{
+  background:rgba(20,8,44,0.78) !important;color:var(--text) !important;
+  border-color:rgba(200,140,255,0.30) !important;
+}
+.small,.panel-sub,.nav-sub,.readout-label,.state-desc,label{color:var(--muted) !important;}
+table.theme36 td{color:var(--text) !important;}
+table.theme36 th{color:var(--gold2) !important;}
+.state-card,.archetype-card{
+  background:linear-gradient(135deg,rgba(28,12,58,0.55),rgba(14,6,34,0.45)) !important;
+  border-color:rgba(200,140,255,0.18) !important;
+}
+footer{color:var(--muted);}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo-sphere">
+      <svg viewBox="0 0 54 54" fill="none" width="54" height="54">
+        <defs>
+          <radialGradient id="sg1" cx="38%" cy="32%" r="68%">
+            <stop offset="0%"   stop-color="#f5c842" stop-opacity="0.95"/>
+            <stop offset="30%"  stop-color="#e84a6f" stop-opacity="0.75"/>
+            <stop offset="65%"  stop-color="#4a8fe8" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="#7b58d4" stop-opacity="0.30"/>
+          </radialGradient>
+          <radialGradient id="sg2" cx="35%" cy="30%" r="55%">
+            <stop offset="0%"   stop-color="#fdf6ee" stop-opacity="0.65"/>
+            <stop offset="100%" stop-color="#fdf6ee" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="27" cy="27" r="25" fill="url(#sg1)"/>
+        <ellipse cx="27" cy="27" rx="10.5" ry="25" fill="none" stroke="rgba(245,200,66,0.50)" stroke-width="1.2"/>
+        <ellipse cx="27" cy="27" rx="25" ry="10.5" fill="none" stroke="rgba(74,143,232,0.40)" stroke-width="1.2"/>
+        <ellipse cx="27" cy="27" rx="18" ry="25" fill="none" stroke="rgba(196,91,191,0.25)" stroke-width="0.8" transform="rotate(40,27,27)"/>
+        <circle cx="27" cy="27" r="25" fill="url(#sg2)"/>
+        <circle cx="27" cy="27" r="3.5" fill="rgba(245,200,66,0.90)"/>
+      </svg>
+    </div>
+    <div>
+      <h1>ChaThème 432</h1>
+      <p class="lead">12 archétypes · 36 jours · Cycle 432 · J0 = naissance − 288 jours · Lecture biologique fractale</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav class="nav-panel" aria-label="Navigation">
+    <h2>Navigation</h2>
+    <p class="nav-sub">Cinq onglets · Calcul J0 → lecture · 36 axes · horloge · spirale</p>
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-target="tab-1" role="tab"><span class="tab-icon">🌐</span><span class="tab-label">1 — Sphère &amp; Archétypes</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-2" role="tab"><span class="tab-icon">🌱</span><span class="tab-label">2 — Lecture J0</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-3" role="tab"><span class="tab-icon">🔢</span><span class="tab-label">3 — Tableau 36 axes</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-4" role="tab"><span class="tab-icon">⏱</span><span class="tab-label">4 — Horloge 432</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-5" role="tab"><span class="tab-icon">🌀</span><span class="tab-label">5 — Zone Spirale</span><span class="tab-bar"></span></button>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-ghost" id="btn-reset">Réinitialiser</button>
+      <button class="btn-ghost" id="btn-sample">Exemple</button>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <!-- TAB 1 -->
+    <article id="tab-1" class="tab-panel active" role="tabpanel">
+      <div class="panel-title">
+        <div><h2>Sphère Omcha — 12 Archétypes</h2>
+        <p class="panel-sub">9 énergies fondamentales + 3 archétypes spirale (phases 10–12) · 4 états respiratoires · 36 axes</p></div>
+      </div>
+      <div class="card">
+        <h3>Structure sphérique</h3>
+        <p class="small">Le cycle 432 = <strong>12 phases × 36 jours</strong>. Les phases 1–10 portent l'expansion et la contraction fondamentales. Les phases 11–12 (jours 361–432) ouvrent la <strong>zone spirale</strong> : densification, intégration, préparation du cycle suivant.</p>
+        <div class="stat-row">
+          <div class="stat-pill">432 = 12 × 36<span>phases × jours</span></div>
+          <div class="stat-pill">36 axes<span>9 énergies × 4 états</span></div>
+          <div class="stat-pill">J0 = naissance − 288j<span>point germinal</span></div>
+          <div class="stat-pill">Spirale : phases 11–12<span>jours 361–432</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <h3>Les 12 archétypes</h3>
+        <p class="small" style="margin-bottom:6px">Les 9 premières énergies forment le corps du cycle. Les archétypes 10–12 appartiennent à la zone spirale.</p>
+        <div class="archetypes-grid" id="archetypes-grid"></div>
+      </div>
+      <div style="margin-top:16px">
+        <h3>Les 4 états respiratoires</h3>
+        <div class="states-grid">
+          <div class="state-card s1"><div class="state-code">11/10</div><div class="state-name">Expansion douce</div><p class="state-desc">Ouverture progressive, activation contrôlée. Curiosité, souplesse, apprentissage.</p></div>
+          <div class="state-card s2"><div class="state-code">12/10</div><div class="state-name">Expansion maximale</div><p class="state-desc">Pic d'extériorisation, intensité. Projection, expression maximale.</p></div>
+          <div class="state-card s3"><div class="state-code">10/11</div><div class="state-name">Contraction douce</div><p class="state-desc">Retour vers l'intérieur, tri et recentrage. Discernement, récupération.</p></div>
+          <div class="state-card s4"><div class="state-code">10/12</div><div class="state-name">Contraction maximale</div><p class="state-desc">Densification, incubation, protection. Profondeur, transformation.</p></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- TAB 2 -->
+    <article id="tab-2" class="tab-panel" role="tabpanel">
+      <div class="panel-title">
+        <div><h2>Lecture — Date de naissance &amp; J0</h2>
+        <p class="panel-sub">J0 = date de naissance − 288 jours · Lecture biologique fractale indépendante du calendrier civil</p></div>
+        <button class="btn-fiche" id="gen-fiche">📄 Fiche</button>
+      </div>
+      <div class="row">
+        <div class="col card">
+          <label for="birthdate">Date de naissance</label>
+          <input id="birthdate" type="date"/>
+          <div style="height:8px"></div>
+          <button class="btn-primary" id="btn-calc-j0">Calculer J0 (−288 jours)</button>
+          <div style="height:12px"></div>
+          <label for="j0date">Ou saisir J0 libre</label>
+          <input id="j0date" type="date"/>
+          <div style="height:8px"></div>
+          <button class="btn-ghost" id="btn-apply-j0" style="width:100%">Appliquer J0</button>
+        </div>
+        <div class="col card">
+          <h3 style="margin-bottom:6px">Lecture basée sur J0</h3>
+          <div class="readout-grid">
+            <div class="readout-item"><div class="readout-label">J0</div><div class="readout-val" id="r-j0">—</div></div>
+            <div class="readout-item"><div class="readout-label">Jours depuis J0</div><div class="readout-val" id="r-days">—</div></div>
+            <div class="readout-item"><div class="readout-label">Cycle (1–108)</div><div class="readout-val" id="r-cycle">—</div></div>
+            <div class="readout-item"><div class="readout-label">Jour dans cycle</div><div class="readout-val" id="r-day">—</div></div>
+            <div class="readout-item" id="ri-arch"><div class="readout-label">Archétype (1–12)</div><div class="readout-val" id="r-arch">—</div><div class="readout-sub" id="r-arch-name"></div></div>
+            <div class="readout-item"><div class="readout-label">État respiratoire</div><div class="readout-val" id="r-state">—</div><div class="readout-sub" id="r-state-name"></div></div>
+            <div class="readout-item"><div class="readout-label">Axe (1–36)</div><div class="readout-val" id="r-axis">—</div><div class="readout-sub" id="r-axis-pos"></div></div>
+            <div class="readout-item"><div class="readout-label">Cycle préc. / suiv.</div><div class="readout-val" id="r-prev-next">—</div></div>
+          </div>
+          <div id="spiral-badge-wrap" style="margin-top:8px;display:none"><span class="badge-spiral">🌀 Zone Spirale active — phases 11–12</span></div>
+        </div>
+      </div>
+      <div class="analysis-box" style="margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <h3 style="margin:0">Analyse vivante</h3>
+          <div style="display:flex;gap:6px">
+            <button class="anlz-tab-btn active" data-anlz="quick" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(212,168,67,0.35);background:linear-gradient(90deg,rgba(245,200,66,0.20),rgba(212,168,67,0.10));font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;color:var(--gold3);transition:all 0.2s">Rapide · 9</button>
+            <button class="anlz-tab-btn" data-anlz="deep" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(123,88,212,0.28);background:linear-gradient(90deg,rgba(123,88,212,0.10),rgba(196,91,191,0.06));font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;color:var(--e7);transition:all 0.2s">Profonde · 36</button>
+          </div>
+        </div>
+        <div id="analysis-quick" class="small">Saisir une date de naissance ou un J0 pour obtenir l'analyse.</div>
+        <div id="analysis-deep" class="small" style="display:none"></div>
+      </div>
+    </article>
+
+    <!-- TAB 3 -->
+    <article id="tab-3" class="tab-panel" role="tabpanel">
+      <div class="panel-title">
+        <div><h2>Tableau — 36 axes du cycle 432</h2>
+        <p class="panel-sub">9 archétypes × 4 états · La ligne dorée = votre position actuelle (J0)</p></div>
+      </div>
+      <div class="table-wrap">
+        <table class="theme36" aria-label="Tableau 36 axes Omcha">
+          <thead><tr><th>#</th><th>Archétype</th><th>État</th><th>Phase</th><th>Tonalité</th><th>Tension</th><th>Action recommandée</th></tr></thead>
+          <tbody id="table36-body"></tbody>
+        </table>
+      </div>
+    </article>
+
+    <!-- TAB 4 -->
+    <article id="tab-4" class="tab-panel" role="tabpanel">
+      <div class="panel-title">
+        <div><h2>Horloge 432 — Sphère animée</h2>
+        <p class="panel-sub">Trois anneaux concentriques synchronisés sur J0 (onglet Lecture)</p></div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div class="clock-outer">
+          <canvas id="clock" width="340" height="340"></canvas>
+          <div class="clock-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--e5);box-shadow:0 0 8px var(--e5)"></div><div><strong>Anneau A</strong> — Archétype (1–9, rapide)</div></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--gold);box-shadow:0 0 8px var(--gold)"></div><div><strong>Anneau B</strong> — Jour dans cycle (1–432)</div></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--e7);box-shadow:0 0 8px var(--e7)"></div><div><strong>Anneau C</strong> — Cycle canonique (1–108)</div></div>
+            <div class="legend-item" id="spiral-legend" style="display:none"><div class="legend-dot" style="background:var(--e8);box-shadow:0 0 12px var(--e8)"></div><div><strong>🌀 Zone Spirale</strong> — Phases 11–12</div></div>
+            <p class="small" style="margin-top:8px">Rotation continue proportionnelle à la position dans le cycle.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- TAB 5 -->
+    <article id="tab-5" class="tab-panel" role="tabpanel">
+      <div class="panel-title">
+        <div><h2>Zone Spirale — Phases 11 &amp; 12</h2>
+        <p class="panel-sub">Jours 361–432 · Densification · Intégration · Préparation du cycle suivant</p></div>
+      </div>
+      <div class="spiral-hero">
+        <h3>🌀 La Spirale Omcha</h3>
+        <p class="small" style="margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto">Les phases 11 et 12 (jours 361–432) forment la zone spirale du cycle. L'énergie se densifie, s'enroule sur elle-même pour préparer la germination du cycle suivant. Le pivot J+288 a initié ce mouvement.</p>
+      </div>
+      <div class="spiral-grid">
+        <div class="spiral-card"><div class="spiral-card-title">Phase 11 — Jours 361–396</div><p class="small">Retour vers le centre. Les expériences se condensent en apprentissages essentiels. Tri profond : ce qui ne sert plus est relâché.</p><p class="small" style="margin-top:5px"><strong>Tonalité</strong> : introspection structurée, discernement.<br><strong>Actions</strong> : clôturer projets inachevés, journaling de cycle.</p></div>
+        <div class="spiral-card"><div class="spiral-card-title">Phase 12 — Jours 397–432</div><p class="small">Germination silencieuse. Densité maximale précède l'ouverture du cycle suivant. Incubation de ce qui naîtra au prochain J0.</p><p class="small" style="margin-top:5px"><strong>Tonalité</strong> : silence, profondeur, potentiel non manifesté.<br><strong>Actions</strong> : rituels de clôture, repos profond.</p></div>
+        <div class="spiral-card"><div class="spiral-card-title">Pivot J+288</div><p class="small">Point de bascule à l'intérieur du cycle. Correspond aux 2/3 du cycle 432. Marque le début du mouvement de retour vers la zone spirale.</p><p class="small" style="margin-top:5px"><strong>Tonalité</strong> : bascule, changement de polarité énergétique.</p></div>
+        <div class="spiral-card"><div class="spiral-card-title">Relation avec J0</div><p class="small">J0 (naissance − 288 jours) est le miroir du pivot J+288. Ensemble ils définissent les deux points d'ancrage du cycle. La spirale referme le cycle et prépare le J0 du suivant.</p><p class="small" style="margin-top:5px"><strong>Formule</strong> : J0 = naissance − 288j · Spirale = jours 361–432.</p></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Statut spirale (J0 appliqué)</h3>
+        <div id="spiral-status" class="small">Applique un J0 (onglet 2) pour connaître ta position par rapport à la zone spirale.</div>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<footer>ChaThème 432 · Lecture biologique fractale · J0 = naissance − 288 jours · Tous les calculs sont locaux</footer>
+<script src="chatheme432.js"></script>
+</body>
+</html>

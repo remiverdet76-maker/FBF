@@ -1250,6 +1250,15 @@ input.param-input{
   <div id="panel-fx-body"></div>
 </div>
 
+<!-- ── Onglet Studio — Sample, entrée micro, enregistrement ── -->
+<div class="pan-right" id="panStudio">
+  <div class="pan3d-head">
+    <span>◈ Studio — Sample</span>
+    <button class="panel-close" onclick="tPanel('panStudio',null)">✕</button>
+  </div>
+  <div id="studio-body"></div>
+</div>
+
 <!-- ── Onglet 3D — Géométrie (réseau de lignes flux) ── -->
 <div class="pan-right" id="pan3D">
   <div class="pan3d-head">
@@ -1294,9 +1303,13 @@ input.param-input{
 </div>
 
 <nav id="bottom-nav">
-  <button class="bnav active" id="bnt-main" onclick="closePanel();closeMenu()">
+  <button class="bnav active" id="bnt-main" onclick="closeScreen();closePanel();closeMenu()">
     <span class="bnav-icon">◉</span>
     <span class="bnav-lbl">0mcha396</span>
+  </button>
+  <button class="bnav" id="bnt-fbf" onclick="openScreen('fbf432/index.html','FBF 432')">
+    <span class="bnav-icon">◈</span>
+    <span class="bnav-lbl">FBF 432</span>
   </button>
   <button class="bnav" id="bnt-menu" onclick="toggleMenu()">
     <span class="bnav-icon">☰</span>
@@ -1310,6 +1323,9 @@ input.param-input{
   </button>
   <button class="dmenu-item" onclick="tPanel('pan3D',null);closeMenu()">
     <span class="dmenu-ico">✶</span>3D — Géométrie
+  </button>
+  <button class="dmenu-item" onclick="tPanel('panStudio',null);SampleStudio.buildUI('studio-body');closeMenu()">
+    <span class="dmenu-ico">◈</span>Studio — Sample &amp; Record
   </button>
   <div class="dmenu-sep"></div>
   <div class="dmenu-section">Modules · 432</div>
@@ -1422,14 +1438,24 @@ function waveState(hz) {
   return              {s:'Gamma', c:'#FF9A8B'};
 }
 
+// Bande active : pleine (36–648) ou plage utilisateur si « Plage fréquence » ON (parité FBF 432).
+function _activeBand() {
+  if (typeof RAND_OPTS !== 'undefined' && RAND_OPTS && RAND_OPTS.rangeOn)
+    return { lo: RAND_OPTS.freqMin, hi: RAND_OPTS.freqMax };
+  return { lo: 36, hi: 648 };
+}
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
-  if (i === MASTER_IDX) return Math.min(648, masterFreq);
-  return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
+  const { lo, hi } = _activeBand();
+  if (i === MASTER_IDX) return Math.max(lo, Math.min(hi, masterFreq));
+  return Math.max(lo, Math.min(hi, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(36, Math.min(648, calcPFreq(i) + ida.polarity * ida.delta));
+  const { lo, hi } = _activeBand();
+  let f = calcPFreq(i) + ida.polarity * ida.delta;
+  if (f > hi || f < lo) f = calcPFreq(i) - ida.polarity * ida.delta;
+  return Math.max(lo, Math.min(hi, f));
 }
 function safeF(f)    { return Math.max(36, Math.min(648, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
@@ -1470,9 +1496,13 @@ let compressor = null;
 // ── Rack master (style DB4) : trim → EQ 3B → glue → fader → limiteur ──
 let busTrim = null, mEqLow = null, mEqMid = null, mEqHigh = null, masterGlue = null, masterFader = null;
 let _fxInput = null;          // point d'entrée de la chaîne FX (= ancien eqLow.in)
-const LFO_STATE    = {on:false, rate:.25,  depth:.08};
+const LFO_STATE    = {on:false, rate:.27,  depth:.27};
 const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
 let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
+// Filtre de bus (lowpass) + LFO filtre (timbre) + LFO FX (intensité) — parité FBF 432.
+let _busLP = null, _filtLFO = null, _filtLFODepth = null, _fxLFO = null, _fxLFODepth = null;
+const _FILT_LFO_MIN = 108, _FILT_LFO_MAX = 1800, _FILT_LFO_OPEN = 18000; // grille 432
+const _FX_LFO_MIN = 0, _FX_LFO_MAX = 0.5;
 let _breathLFO = null, _breathGain = null, _breathDepthGain = null;
 let _btKeepalive = null;
 let _fadeDur = 2;
@@ -1610,8 +1640,8 @@ let _antiCrackTarget = 1;
 function _applyAntiCrack() {
   if (!masterGain) return;
   const active = Object.keys(nodes).length || 1;
-  // 1 voix → 1.0 ; 14 voix → ~0.27. Borne basse 0.25 pour rester audible.
-  _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+  // Grille 432 : plancher 0.18 (=18/100, 2×9) → plus de headroom, 0 craquement.
+  _antiCrackTarget = Math.max(0.18, 1 / Math.sqrt(active));
 }
 
 /* ---------- 2.3 · IR DE RÉVERBE GÉNÉRÉE PAR CODE (convolution, option A) ---------- */
@@ -1643,8 +1673,12 @@ function initFXChain() {
   eqMid  = c.createBiquadFilter(); eqMid.type='peaking';   eqMid.frequency.value=1000; eqMid.Q.value=1; eqMid.gain.value=0;
   eqHigh = c.createBiquadFilter(); eqHigh.type='highshelf';eqHigh.frequency.value=5000; eqHigh.gain.value=0;
 
+  // Filtre de bus (lowpass) — repos ouvert (18 kHz), piloté par le LFO filtre.
+  _busLP = c.createBiquadFilter(); _busLP.type='lowpass'; _busLP.frequency.value=_FILT_LFO_OPEN; _busLP.Q.value=0.6;
+
   compressor = c.createDynamicsCompressor();
-  compressor.threshold.value=-24; compressor.ratio.value=4; compressor.attack.value=0.02; compressor.release.value=0.25;
+  // Grille 432 : seuil −27 (3×9), ratio 9, attaque 0.009, release 0.27.
+  compressor.threshold.value=-27; compressor.ratio.value=9; compressor.attack.value=0.009; compressor.release.value=0.27;
 
   // — Feedback delay natif —
   masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
@@ -1683,16 +1717,17 @@ function initFXChain() {
 
   // — GLUE : compresseur de bus doux (colle le mix, ~1-2 dB max) —
   masterGlue = c.createDynamicsCompressor();
-  masterGlue.threshold.value=-18; masterGlue.knee.value=6; masterGlue.ratio.value=2;
-  masterGlue.attack.value=0.03;   masterGlue.release.value=0.25;
+  masterGlue.threshold.value=-18; masterGlue.knee.value=9; masterGlue.ratio.value=2;
+  masterGlue.attack.value=0.009;  masterGlue.release.value=0.27;
 
   // — FADER master (le vrai volume de sortie, distinct des voies) —
   masterFader = c.createGain(); masterFader.gain.value = 1;
 
   // — LIMITEUR brickwall (sécurité auditive, intouchable) — plafond −3,6 dB —
   limiter = c.createDynamicsCompressor();
-  limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
-  limiter.attack.value=0.002; limiter.release.value=0.18;
+  // Grille 432 : seuil −1.8 (18), ratio 18 (2×9), attaque douce 0.009, release 0.18.
+  limiter.threshold.value=-1.8; limiter.knee.value=0; limiter.ratio.value=18;
+  limiter.attack.value=0.009; limiter.release.value=0.18;
 
   // — Chaînage du rack : busTrim → EQ → glue → fader → limiteur → sortie —
   busTrim.connect(mEqLow); mEqLow.connect(mEqMid); mEqMid.connect(mEqHigh);
@@ -1701,7 +1736,7 @@ function initFXChain() {
 
   // — Câblage chaîne FX → entrée du bus master (busTrim) —
   eqLow.connect(eqMid); eqMid.connect(eqHigh);
-  eqHigh.connect(compressor);
+  eqHigh.connect(_busLP); _busLP.connect(compressor);
   // compressor → (delays en parallèle wet) + (dry direct) → BUS MASTER
   compressor.connect(busTrim);                  // dry direct
   compressor.connect(masterDelay);  delayWet.connect(busTrim);
@@ -1710,10 +1745,32 @@ function initFXChain() {
   // reverb wet (parallèle, alimentée seulement quand active)
   reverbWetGain.connect(masterReverb); masterReverb.connect(busTrim);
 
+  // ── LFO filtre (timbre) → _busLP.frequency ; LFO FX (intensité) → delayWet.gain ──
+  _filtLFO = c.createOscillator(); _filtLFO.type='sine'; _filtLFO.frequency.value=0.1;
+  _filtLFODepth = c.createGain(); _filtLFODepth.gain.value=(_FILT_LFO_MAX-_FILT_LFO_MIN)/2;
+  _filtLFO.connect(_filtLFODepth); _filtLFO.start();
+  _fxLFO = c.createOscillator(); _fxLFO.type='sine'; _fxLFO.frequency.value=0.12;
+  _fxLFODepth = c.createGain(); _fxLFODepth.gain.value=(_FX_LFO_MAX-_FX_LFO_MIN)/2;
+  _fxLFO.connect(_fxLFODepth); _fxLFO.start();
+
   _fxInput = eqLow;
   _fxRefs = { delayWet }; // gardé pour réglages wet
 }
 let _fxRefs = {};
+
+// ── LFO filtre & LFO FX (parité FBF 432) ──
+function filtLfoToggle(on) {
+  if (!_busLP || !_filtLFODepth) return;
+  if (on) { _busLP.frequency.setTargetAtTime((_FILT_LFO_MIN+_FILT_LFO_MAX)/2, aNow(), 0.1); try { _filtLFODepth.connect(_busLP.frequency); } catch(e){} }
+  else { try { _filtLFODepth.disconnect(); } catch(e){} _busLP.frequency.setTargetAtTime(_FILT_LFO_OPEN, aNow(), 0.2); }
+}
+function filtLfoRate(v) { if (_filtLFO) try { _filtLFO.frequency.setTargetAtTime(parseFloat(v), aNow(), 0.05); } catch(e){} }
+function fxLfoToggle(on) {
+  if (!_fxLFODepth || !_fxRefs.delayWet) return;
+  if (on) { _fxRefs.delayWet.gain.setTargetAtTime((_FX_LFO_MIN+_FX_LFO_MAX)/2, aNow(), 0.1); try { _fxLFODepth.connect(_fxRefs.delayWet.gain); } catch(e){} }
+  else { try { _fxLFODepth.disconnect(); } catch(e){} const sl=document.getElementById('delayWet'); _fxRefs.delayWet.gain.setTargetAtTime(sl?parseFloat(sl.value):0, aNow(), 0.2); }
+}
+function fxLfoRate(v) { if (_fxLFO) try { _fxLFO.frequency.setTargetAtTime(parseFloat(v), aNow(), 0.05); } catch(e){} }
 
 /* ---------- 2.5 · REVERB ON/OFF (alimente la branche convolution) ---------- */
 let _reverbActive = false;
@@ -4091,6 +4148,7 @@ function _suspendHomeAudio(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='r
 window.addEventListener('message', function(e){
   const d = e.data || {};
   if (d.fbf === 'audio-claim'){ _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'close'){ closeScreen(); }   // un module demande à revenir sur Omcha
 });
 function openScreen(src, title){
   const ov=document.getElementById('screen-overlay'),
@@ -4099,6 +4157,8 @@ function openScreen(src, title){
   if(!ov||!fr) return;
   if(tt) tt.textContent = title || 'Module';
   fr.src = src; ov.classList.add('open'); _resumeAudioSafe();
+  // Anti-craquement : on met en pause le rendu 3D de l'accueil pendant le module
+  try{ if(masterRAF){ cancelAnimationFrame(masterRAF); masterRAF=null; } }catch(e){}
   try{ history.pushState({omchaScreen:true},''); }catch(e){}
 }
 function closeScreen(){
@@ -4106,6 +4166,7 @@ function closeScreen(){
   if(!ov||!ov.classList.contains('open')) return;
   ov.classList.remove('open'); if(fr) fr.src='about:blank';
   _moduleAudioActive = false; _resumeAudioSafe();   // module fermé → le binaural revient
+  try{ if(typeof masterTick==='function' && !masterRAF) masterTick(); }catch(e){}  // reprise du rendu
   if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
 }
 window.addEventListener('popstate', function(){
@@ -4621,9 +4682,9 @@ const Bowl = (() => {
   };
 
   function _ctx() {
-    // partage l'horloge audio centrale native (window.AC), sinon en crée une
-    if (window.AC) return window.AC;
-    return (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+    // contexte natif partagé unique (window.AC) — même horloge que le moteur & SampleStudio
+    if (typeof audioCtx === 'function') return audioCtx();
+    return window.AC || (window.AC = (ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' })));
   }
 
   async function init() {
@@ -4648,11 +4709,11 @@ const Bowl = (() => {
     return initing;
   }
 
-  // Branche la sortie bol dans la chaîne FX partagée si dispo, sinon destination.
+  // Branche la sortie bol dans la voie Sample Studio (pré-mastering + bus DB4)
+  // si dispo, sinon directement la chaîne FX, sinon la destination.
   function _route() {
-    try {
-      if (typeof eqLow !== 'undefined' && eqLow) { outGain.connect(eqLow); return; }
-    } catch (e) {}
+    try { if (window.SampleStudio) { outGain.connect(SampleStudio.inputNode()); return; } } catch (e) {}
+    try { if (typeof eqLow !== 'undefined' && eqLow) { outGain.connect(eqLow); return; } } catch (e) {}
     outGain.connect(ctx.destination);
   }
 
@@ -4693,7 +4754,9 @@ const Bowl = (() => {
   function strike(opts = {}) {
     if (!ready) { init().then(() => strike(opts)); return; }
     const scale = SCALES[params.scale] || SCALES.base432;
-    const freq = opts.freq ?? scale[(Math.random() * scale.length) | 0] * (opts.octave ?? 1);
+    // Auto-sync : si une fréquence maître est imposée, elle devient le fondamental.
+    const base = (params.syncFreq && params.syncFreq > 0) ? params.syncFreq : scale[(Math.random() * scale.length) | 0];
+    const freq = opts.freq ?? base * (opts.octave ?? 1);
     const useSample = params.sampleIds.length && !opts.forceSynth;
     node.port.postMessage({
       type: 'trigger',
@@ -4775,11 +4838,12 @@ if (typeof window !== 'undefined') window.Bowl = Bowl;
 </script>
 <script>
 window.FBF_MODULES = window.FBF_MODULES || [
-  {file:'theme432.html',     title:'Th\u00e8me 432 \u2014 Sph\u00e8re Omcha', ico:'\u25cd'},
+  {file:'chatheme432.html',  title:'ChaTh\u00e8me 432', ico:'\u25cd'},
   {file:'utc432project.html',title:'UTC432 \u00b7 Project',            ico:'\u23e3'},
   {file:'omcha432flux.html', title:'Omcha 432 \u2014 Flux H\u00e9lico\u00efdal', ico:'\u223f'},
   {file:'copilot432.html',   title:'UT36 \u00b7 360 \u00b7 396 \u00b7 432',     ico:'\u229b'},
-  {file:'sphere3d432.html',  title:'Sph\u00e8re 432 \u2014 3D',            ico:'\u25c9'}
+  {file:'sphere3d432.html',  title:'Sph\u00e8re 432 \u2014 3D',            ico:'\u25c9'},
+  {file:'fbf432/index.html', title:'FBF 432 \u2014 1re version',          ico:'\u25c8'}
 ];
 </script>
 <script src="modules.js"></script>
@@ -4798,6 +4862,7 @@ window.FBF_MODULES = window.FBF_MODULES || [
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",build); else build();
 })();
 </script>
+<script src="sample-studio.js"></script>
 <script src="bg-rotator.js"></script>
 </body>
 </html>
