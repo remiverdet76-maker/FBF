@@ -15,18 +15,29 @@ function _retuneAll(){
     if(typeof updatePairUI==='function')updatePairUI(i);
   }
 }
-function setRandRange(v){RAND_OPTS.rangeOn=!!v;_retuneAll();}
+// La plage est TOUJOURS active. Décocher = remettre la plage pleine 36–648.
+function setRandRange(v){
+  RAND_OPTS.rangeOn=!!v;
+  if(!v){
+    RAND_OPTS.freqMin=36; RAND_OPTS.freqMax=648;
+    var a=document.getElementById('sl-fmin'),b=document.getElementById('sl-fmax');
+    if(a)a.value=36; if(b)b.value=648;
+    var ra=document.getElementById('rv-fmin'),rb=document.getElementById('rv-fmax');
+    if(ra)ra.textContent=36; if(rb)rb.textContent=648;
+  }
+  _retuneAll();
+}
 function setRandFreqMin(v){
   RAND_OPTS.freqMin=Math.max(36,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
   const el=document.getElementById('rv-fmin');if(el)el.textContent=RAND_OPTS.freqMin;
   const sl=document.getElementById('sl-fmin');if(sl)sl.value=RAND_OPTS.freqMin;
-  if(RAND_OPTS.rangeOn)_retuneAll();
+  _retuneAll();           // effet immédiat sur toutes les fréquences
 }
 function setRandFreqMax(v){
   RAND_OPTS.freqMax=Math.min(648,Math.max(RAND_OPTS.freqMin+1,parseInt(v)));
   const el=document.getElementById('rv-fmax');if(el)el.textContent=RAND_OPTS.freqMax;
   const sl=document.getElementById('sl-fmax');if(sl)sl.value=RAND_OPTS.freqMax;
-  if(RAND_OPTS.rangeOn)_retuneAll();
+  _retuneAll();           // effet immédiat sur toutes les fréquences
 }
 function setRandRatioMode(m,btn){
   RAND_OPTS.ratioMode=m;
@@ -204,9 +215,9 @@ function fbfToggle() {
 function _randN(){ return +(0.25 + Math.random()*4.0).toFixed(2); }
 
 function triggerMagicAuto() {
-  const {freqMin,freqMax,ratioMode,useFX,rangeOn,customRi,beatMin,beatMax}=RAND_OPTS;
-  const lo = rangeOn ? freqMin : 36;
-  const hi = rangeOn ? freqMax : 648;
+  const {freqMin,freqMax,ratioMode,useFX,customRi,beatMin,beatMax}=RAND_OPTS;
+  const lo = Math.max(36, +freqMin||36);          // plage de jeu toujours respectée
+  const hi = Math.min(648, Math.max(lo+1, +freqMax||648));
   const newMaster = Math.floor(lo + Math.random()*(hi-lo));
   const N = RATIO_OPTS.length;
   // Battement binaural commun, aléatoire, signe ± aléatoire (appliqué à tous)

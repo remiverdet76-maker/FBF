@@ -552,3 +552,6 @@ document.addEventListener('keydown', e => {
   if (e.code==='Space')  { e.preventDefault(); fbfToggle(); }
   if (e.code==='Escape') { closeOscModal(); closePanel(); }
 });
+
+// Bouton « ⇄ Omcha 396 » visible seulement quand FBF est embarqué (iframe Omcha)
+try { if (window.self !== window.top) { var _b=document.getElementById('toOmcha'); if(_b) _b.style.display='block'; } } catch(e) {}

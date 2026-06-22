@@ -74,10 +74,14 @@ function foldFreq(f, lo, hi) {
   while (f < lo && guard++ < 64) f *= 2;
   return Math.max(lo, Math.min(hi, f));
 }
-// Bande active : pleine (36–648) ou la plage utilisateur si « Plage fréquence » est ON.
+// Bande active = TOUJOURS la plage de jeu (freqMin..freqMax). Par défaut 36–648
+// (= sans effet). Dès qu'on resserre la plage, TOUTES les fréquences (maître +
+// dérivées) y sont repliées en direct. Garde-fous numériques.
 function _activeBand() {
-  if (typeof RAND_OPTS !== 'undefined' && RAND_OPTS && RAND_OPTS.rangeOn) {
-    return { lo: RAND_OPTS.freqMin, hi: RAND_OPTS.freqMax };
+  if (typeof RAND_OPTS !== 'undefined' && RAND_OPTS) {
+    var lo = +RAND_OPTS.freqMin || 36, hi = +RAND_OPTS.freqMax || 648;
+    if (hi < lo + 1) hi = lo + 1;
+    return { lo: Math.max(36, lo), hi: Math.min(648, hi) };
   }
   return { lo: 36, hi: 648 };
 }

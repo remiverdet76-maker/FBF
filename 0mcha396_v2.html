@@ -1303,9 +1303,13 @@ input.param-input{
 </div>
 
 <nav id="bottom-nav">
-  <button class="bnav active" id="bnt-main" onclick="closePanel();closeMenu()">
+  <button class="bnav active" id="bnt-main" onclick="closeScreen();closePanel();closeMenu()">
     <span class="bnav-icon">◉</span>
     <span class="bnav-lbl">0mcha396</span>
+  </button>
+  <button class="bnav" id="bnt-fbf" onclick="openScreen('fbf432/index.html','FBF 432')">
+    <span class="bnav-icon">◈</span>
+    <span class="bnav-lbl">FBF 432</span>
   </button>
   <button class="bnav" id="bnt-menu" onclick="toggleMenu()">
     <span class="bnav-icon">☰</span>
@@ -4144,6 +4148,7 @@ function _suspendHomeAudio(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='r
 window.addEventListener('message', function(e){
   const d = e.data || {};
   if (d.fbf === 'audio-claim'){ _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'close'){ closeScreen(); }   // un module demande à revenir sur Omcha
 });
 function openScreen(src, title){
   const ov=document.getElementById('screen-overlay'),

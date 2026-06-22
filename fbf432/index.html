@@ -59,6 +59,9 @@
 </head>
 <body>
 
+<button id="toOmcha" onclick="try{parent.postMessage({fbf:'close'},'*')}catch(e){}"
+  style="display:none;position:fixed;top:8px;left:8px;z-index:9999;padding:6px 11px;border-radius:18px;border:1px solid rgba(0,204,255,.45);background:rgba(2,1,14,.7);backdrop-filter:blur(8px);color:#9fe8ff;font-size:.72rem;cursor:pointer;">⇄ Omcha 396</button>
+
 <img id="cosmic-bg" src="img/cosmic-flux.jpg" alt="" onerror="this.style.display='none'">
 <canvas id="meta-canvas"></canvas>
 <div id="sphere-layer"></div>
