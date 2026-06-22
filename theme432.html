@@ -292,14 +292,14 @@ footer{
 
 <main>
   <nav class="nav-panel" aria-label="Navigation">
-    <h2>Navigation</h2>
-    <p class="nav-sub">Cinq onglets · Calcul J0 → lecture · 36 axes · horloge · spirale</p>
+    <h2>Menu principal</h2>
+    <p class="nav-sub">① Date de naissance ou J0 → ② Lecture (9 rapide / 36 détaillé). Les autres onglets sont informatifs.</p>
     <div class="tabs" role="tablist">
-      <button class="tab-btn active" data-target="tab-1" role="tab"><span class="tab-icon">🌐</span><span class="tab-label">1 — Sphère &amp; Archétypes</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-2" role="tab"><span class="tab-icon">🌱</span><span class="tab-label">2 — Lecture J0</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-3" role="tab"><span class="tab-icon">🔢</span><span class="tab-label">3 — Tableau 36 axes</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-4" role="tab"><span class="tab-icon">⏱</span><span class="tab-label">4 — Horloge 432</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-5" role="tab"><span class="tab-icon">🌀</span><span class="tab-label">5 — Zone Spirale</span><span class="tab-bar"></span></button>
+      <button class="tab-btn active" data-target="tab-2" role="tab"><span class="tab-icon">✦</span><span class="tab-label">J0 · Naissance &amp; Lecture</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-1" role="tab"><span class="tab-icon">🌐</span><span class="tab-label">Info — Sphère &amp; Archétypes</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-3" role="tab"><span class="tab-icon">🔢</span><span class="tab-label">Info — Tableau 36 axes</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-4" role="tab"><span class="tab-icon">⏱</span><span class="tab-label">Info — Horloge 432</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-5" role="tab"><span class="tab-icon">🌀</span><span class="tab-label">Info — Zone Spirale</span><span class="tab-bar"></span></button>
     </div>
     <div class="nav-actions">
       <button class="btn-ghost" id="btn-reset">Réinitialiser</button>
@@ -310,7 +310,7 @@ footer{
   <section class="content">
 
     <!-- TAB 1 -->
-    <article id="tab-1" class="tab-panel active" role="tabpanel">
+    <article id="tab-1" class="tab-panel" role="tabpanel">
       <div class="panel-title">
         <div><h2>Sphère Omcha — 12 Archétypes</h2>
         <p class="panel-sub">9 énergies fondamentales + 3 archétypes spirale (phases 10–12) · 4 états respiratoires · 36 axes</p></div>
@@ -342,10 +342,10 @@ footer{
     </article>
 
     <!-- TAB 2 -->
-    <article id="tab-2" class="tab-panel" role="tabpanel">
+    <article id="tab-2" class="tab-panel active" role="tabpanel">
       <div class="panel-title">
-        <div><h2>Lecture — Date de naissance &amp; J0</h2>
-        <p class="panel-sub">J0 = date de naissance − 288 jours · Lecture biologique fractale indépendante du calendrier civil</p></div>
+        <div><h2>Menu principal — Date de naissance &amp; J0</h2>
+        <p class="panel-sub">① Saisis ta date de naissance (ou un J0) → la lecture s'affiche directement. J0 = naissance − 288 jours (≈ 8 cycles de 36 j, naissance spirituelle).</p></div>
         <button class="btn-fiche" id="gen-fiche">📄 Fiche</button>
       </div>
       <div class="row">
@@ -897,6 +897,14 @@ document.getElementById('btn-sample').addEventListener('click',function(){
   var s=new Date();s.setUTCFullYear(s.getUTCFullYear()-30);s.setUTCMonth(5);s.setUTCDate(8);
   document.getElementById('birthdate').value=s.toISOString().slice(0,10);
   document.getElementById('btn-calc-j0').click();
+});
+/* Auto-lecture : dès qu'une date est saisie, la lecture s'affiche directement */
+document.getElementById('birthdate').addEventListener('change',function(){
+  var b=parseDate(this.value);if(!b)return;
+  var j0=addDays(b,-288);document.getElementById('j0date').value=j0.toISOString().slice(0,10);applyJ0(j0);
+});
+document.getElementById('j0date').addEventListener('change',function(){
+  var j=parseDate(this.value);if(j)applyJ0(j);
 });
 document.getElementById('gen-fiche').addEventListener('click',function(){
   if(!currentJ0||!lastComp){alert('Applique d\'abord un J0 (onglet Lecture).');return;}
