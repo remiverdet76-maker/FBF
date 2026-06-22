@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Thème 432 — Sphère Omcha v2</title>
+<title>ChaThème 432</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -12,20 +12,19 @@
   --e7:#7b58d4;--e8:#c45bbf;--e9:#d44a4a;
   --gold:#d4a843;--gold2:#f5d97a;--gold3:#b8882a;
   --s1:#f5c842;--s2:#e84a6f;--s3:#3ab8a0;--s4:#7b58d4;
-  --text:#3a2010;--muted:#7a5a3a;
+  --text:#ECE3FF;--muted:rgba(206,184,255,0.72);
   --r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%;-webkit-font-smoothing:antialiased}
 body{
   font-family:'Nunito',system-ui,sans-serif;
+  /* Ambiance cosmique : image de fond appliquée + voile sombre (comme Omcha/FBF) */
   background:
-    radial-gradient(ellipse 110% 55% at 0% 0%,   rgba(232,74,111,0.20) 0%,transparent 52%),
-    radial-gradient(ellipse 80%  65% at 100% 8%,  rgba(74,143,232,0.18) 0%,transparent 50%),
-    radial-gradient(ellipse 65%  55% at 50% 100%, rgba(106,184,78,0.15) 0%,transparent 48%),
-    radial-gradient(ellipse 55%  45% at 18% 60%,  rgba(245,200,66,0.13) 0%,transparent 44%),
-    radial-gradient(ellipse 50%  40% at 82% 72%,  rgba(123,88,212,0.13) 0%,transparent 44%),
-    linear-gradient(148deg,#fdf6ee 0%,#f0ecff 35%,#edfdf5 68%,#fff8ec 100%);
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(123,88,212,0.30) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(8,3,24,0.82), rgba(2,1,13,0.92)),
+    url('img/bg-cosmic.jpg') center/cover fixed no-repeat,
+    #02010D;
   color:var(--text);
   padding:18px;
 }
@@ -256,6 +255,46 @@ footer{
   .archetypes-grid,.spiral-grid,.states-grid{grid-template-columns:1fr}
   body{padding:10px}h1{font-size:1.3rem}
 }
+
+/* ═══ Skin cosmique sombre (ChaThème 432) — surfaces en verre translucide ═══ */
+nav.nav-panel,
+section.content,
+.card,
+.readout-item,
+.analysis-box,
+.table-wrap,
+.spiral-hero,
+.spiral-card{
+  background:linear-gradient(155deg,rgba(28,12,58,0.62),rgba(14,6,34,0.55)) !important;
+  border-color:rgba(200,140,255,0.20) !important;
+  -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  box-shadow:0 8px 34px rgba(80,30,140,0.30) !important;
+}
+.tab-btn{
+  background:linear-gradient(110deg,rgba(40,18,78,0.55),rgba(20,8,44,0.45)) !important;
+  border-color:rgba(200,140,255,0.18) !important;color:var(--text) !important;
+}
+.tab-btn.active{
+  background:linear-gradient(110deg,rgba(123,88,212,0.42),rgba(196,91,191,0.26)) !important;
+  border-color:rgba(212,168,67,0.55) !important;
+}
+.btn-ghost{
+  background:linear-gradient(110deg,rgba(40,18,78,0.55),rgba(20,8,44,0.45)) !important;
+  color:var(--muted) !important;border-color:rgba(200,140,255,0.22) !important;
+}
+.btn-ghost:hover{color:var(--text) !important;}
+input[type="date"],select{
+  background:rgba(20,8,44,0.78) !important;color:var(--text) !important;
+  border-color:rgba(200,140,255,0.30) !important;
+}
+.small,.panel-sub,.nav-sub,.readout-label,.state-desc,label{color:var(--muted) !important;}
+table.theme36 td{color:var(--text) !important;}
+table.theme36 th{color:var(--gold2) !important;}
+.state-card,.archetype-card{
+  background:linear-gradient(135deg,rgba(28,12,58,0.55),rgba(14,6,34,0.45)) !important;
+  border-color:rgba(200,140,255,0.18) !important;
+}
+footer{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -284,7 +323,7 @@ footer{
       </svg>
     </div>
     <div>
-      <h1>Thème 432 — Sphère Omcha</h1>
+      <h1>ChaThème 432</h1>
       <p class="lead">12 archétypes · 36 jours · Cycle 432 · J0 = naissance − 288 jours · Lecture biologique fractale</p>
     </div>
   </div>
@@ -292,14 +331,14 @@ footer{
 
 <main>
   <nav class="nav-panel" aria-label="Navigation">
-    <h2>Menu principal</h2>
-    <p class="nav-sub">① Date de naissance ou J0 → ② Lecture (9 rapide / 36 détaillé). Les autres onglets sont informatifs.</p>
+    <h2>Navigation</h2>
+    <p class="nav-sub">Cinq onglets · Calcul J0 → lecture · 36 axes · horloge · spirale</p>
     <div class="tabs" role="tablist">
-      <button class="tab-btn active" data-target="tab-2" role="tab"><span class="tab-icon">✦</span><span class="tab-label">J0 · Naissance &amp; Lecture</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-1" role="tab"><span class="tab-icon">🌐</span><span class="tab-label">Info — Sphère &amp; Archétypes</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-3" role="tab"><span class="tab-icon">🔢</span><span class="tab-label">Info — Tableau 36 axes</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-4" role="tab"><span class="tab-icon">⏱</span><span class="tab-label">Info — Horloge 432</span><span class="tab-bar"></span></button>
-      <button class="tab-btn" data-target="tab-5" role="tab"><span class="tab-icon">🌀</span><span class="tab-label">Info — Zone Spirale</span><span class="tab-bar"></span></button>
+      <button class="tab-btn active" data-target="tab-1" role="tab"><span class="tab-icon">🌐</span><span class="tab-label">1 — Sphère &amp; Archétypes</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-2" role="tab"><span class="tab-icon">🌱</span><span class="tab-label">2 — Lecture J0</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-3" role="tab"><span class="tab-icon">🔢</span><span class="tab-label">3 — Tableau 36 axes</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-4" role="tab"><span class="tab-icon">⏱</span><span class="tab-label">4 — Horloge 432</span><span class="tab-bar"></span></button>
+      <button class="tab-btn" data-target="tab-5" role="tab"><span class="tab-icon">🌀</span><span class="tab-label">5 — Zone Spirale</span><span class="tab-bar"></span></button>
     </div>
     <div class="nav-actions">
       <button class="btn-ghost" id="btn-reset">Réinitialiser</button>
@@ -310,7 +349,7 @@ footer{
   <section class="content">
 
     <!-- TAB 1 -->
-    <article id="tab-1" class="tab-panel" role="tabpanel">
+    <article id="tab-1" class="tab-panel active" role="tabpanel">
       <div class="panel-title">
         <div><h2>Sphère Omcha — 12 Archétypes</h2>
         <p class="panel-sub">9 énergies fondamentales + 3 archétypes spirale (phases 10–12) · 4 états respiratoires · 36 axes</p></div>
@@ -342,10 +381,10 @@ footer{
     </article>
 
     <!-- TAB 2 -->
-    <article id="tab-2" class="tab-panel active" role="tabpanel">
+    <article id="tab-2" class="tab-panel" role="tabpanel">
       <div class="panel-title">
-        <div><h2>Menu principal — Date de naissance &amp; J0</h2>
-        <p class="panel-sub">① Saisis ta date de naissance (ou un J0) → la lecture s'affiche directement. J0 = naissance − 288 jours (≈ 8 cycles de 36 j, naissance spirituelle).</p></div>
+        <div><h2>Lecture — Date de naissance &amp; J0</h2>
+        <p class="panel-sub">J0 = date de naissance − 288 jours · Lecture biologique fractale indépendante du calendrier civil</p></div>
         <button class="btn-fiche" id="gen-fiche">📄 Fiche</button>
       </div>
       <div class="row">
@@ -447,7 +486,7 @@ footer{
   </section>
 </main>
 
-<footer>Thème 432 · Sphère Omcha · Lecture biologique fractale · J0 = naissance − 288 jours · Tous les calculs sont locaux</footer>
-<script src="theme432.js"></script>
+<footer>ChaThème 432 · Lecture biologique fractale · J0 = naissance − 288 jours · Tous les calculs sont locaux</footer>
+<script src="chatheme432.js"></script>
 </body>
 </html>

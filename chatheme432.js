@@ -447,14 +447,6 @@ document.getElementById('btn-sample').addEventListener('click',function(){
   document.getElementById('birthdate').value=s.toISOString().slice(0,10);
   document.getElementById('btn-calc-j0').click();
 });
-/* Auto-lecture : dès qu'une date est saisie, la lecture s'affiche directement */
-document.getElementById('birthdate').addEventListener('change',function(){
-  var b=parseDate(this.value);if(!b)return;
-  var j0=addDays(b,-288);document.getElementById('j0date').value=j0.toISOString().slice(0,10);applyJ0(j0);
-});
-document.getElementById('j0date').addEventListener('change',function(){
-  var j=parseDate(this.value);if(j)applyJ0(j);
-});
 document.getElementById('gen-fiche').addEventListener('click',function(){
   if(!currentJ0||!lastComp){alert('Applique d\'abord un J0 (onglet Lecture).');return;}
   var comp=lastComp,arch=ARCHETYPES[comp.displayArch-1],analysis=generateAnalysis(currentJ0,comp);
