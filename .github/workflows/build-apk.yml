@@ -48,6 +48,8 @@ jobs:
           rm -f www/0mcha396_v2.html
           # Fond cosmique rotatif + bus audio + 9:16 images
           cp ../bg-rotator.css ../bg-rotator.js ../audio-bus.js ../sample-studio.js www/
+          # JS externe des modules (script sorti de la page — anti « code visible »)
+          cp ../theme432.js www/ 2>/dev/null || true
           mkdir -p www/img
           cp ../img/*.jpg www/img/
           # Module multi-fichiers FBF 432 (1ʳᵉ version) : dossier complet
