@@ -6,16 +6,27 @@
 const RAND_OPTS={freqMin:36,freqMax:648,ratioMode:'random',useFX:false,rangeOn:false,customRi:4,beatMin:0.5,beatMax:8};
 function setCustomRatio(ri){RAND_OPTS.customRi=parseInt(ri);}
 function setBeatRange(mn,mx){if(mn!=null)RAND_OPTS.beatMin=parseFloat(mn);if(mx!=null)RAND_OPTS.beatMax=parseFloat(mx);}
-function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
+// Re-accorde TOUS les oscillateurs en direct (plage active appliquée live).
+function _retuneAll(){
+  if(typeof flowing==='undefined'||!flowing)return;
+  for(let i=0;i<PAIRS.length;i++){
+    tuneOsc(PAIRS[i].pingala.id,calcPFreq(i));
+    tuneOsc(PAIRS[i].ida.id,calcIFreq(i));
+    if(typeof updatePairUI==='function')updatePairUI(i);
+  }
+}
+function setRandRange(v){RAND_OPTS.rangeOn=!!v;_retuneAll();}
 function setRandFreqMin(v){
   RAND_OPTS.freqMin=Math.max(36,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
   const el=document.getElementById('rv-fmin');if(el)el.textContent=RAND_OPTS.freqMin;
   const sl=document.getElementById('sl-fmin');if(sl)sl.value=RAND_OPTS.freqMin;
+  if(RAND_OPTS.rangeOn)_retuneAll();
 }
 function setRandFreqMax(v){
   RAND_OPTS.freqMax=Math.min(648,Math.max(RAND_OPTS.freqMin+1,parseInt(v)));
   const el=document.getElementById('rv-fmax');if(el)el.textContent=RAND_OPTS.freqMax;
   const sl=document.getElementById('sl-fmax');if(sl)sl.value=RAND_OPTS.freqMax;
+  if(RAND_OPTS.rangeOn)_retuneAll();
 }
 function setRandRatioMode(m,btn){
   RAND_OPTS.ratioMode=m;

@@ -33,7 +33,14 @@ let _fxRefs = {};
 let _busLP = null;
 let _filtLFO = null, _filtLFODepth = null;
 let _fxLFO = null, _fxLFODepth = null;
-const LFO_STATE = {on:false, rate:.25, depth:.08};
+const LFO_STATE = {on:false, rate:.25, depth:.30};
+// Anti-crack (∝ 1/√voix actives) : empêche la sommation des oscillateurs de
+// saturer le limiteur → 0 craquement + dynamique préservée (recette Omcha396).
+let _antiCrackTarget = 1;
+function _applyAntiCrack() {
+  const active = Object.keys(nodes).length || 1;
+  _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+}
 let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
 let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
 let _fadeDur = 2;
@@ -41,7 +48,7 @@ let metaAngle = 0, masterRAF = null;
 let _waveBuf = null;
 
 // Constantes LFO filtre/FX (équivalent natif des Tone.LFO d'origine)
-const _FILT_LFO_MIN = 500,  _FILT_LFO_MAX = 16000;   // coupure du _busLP
+const _FILT_LFO_MIN = 120,  _FILT_LFO_MAX = 1800;    // coupure du _busLP (basse → audible sur sinus ≤648 Hz)
 const _FILT_LFO_OPEN = 18000;                         // coupure repos (filtre ouvert)
 const _FX_LFO_MIN = 0,      _FX_LFO_MAX = 0.5;        // wet du delay
 
@@ -112,6 +119,7 @@ function swapPingala(i) {
     nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
+  _applyAntiCrack();
   updatePairUI(i);
 }
 function swapIda(i) {
@@ -122,6 +130,7 @@ function swapIda(i) {
   } else {
     nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
   }
+  _applyAntiCrack();
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
@@ -441,6 +450,8 @@ function masterTick() {
   drawMetatron();
   // LFO géré nativement (Web Audio) — aucun traitement JS ici
   if (!flowing || !analyser || document.visibilityState === 'hidden') return;
+  // Gain global réel = anti-crack (porteur) + modulation LFO volume (a-rate, par-dessus).
+  if (_lfoGain) _lfoGain.gain.setTargetAtTime(_antiCrackTarget, aNow(), 0.2);
   // Throttle des écritures boxShadow (style-recalc) : 1 frame sur 2.
   // Soulage le thread principal → moins d'underruns audio sur mobile/BT.
   if ((_glowFrame++ & 1) === 0) { drawSpectroid(); return; }

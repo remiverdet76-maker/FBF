@@ -290,8 +290,8 @@ function buildMasterFXHTML() {
         </div>
         <div class="fx-control-group">
           <span class="fx-label">Profond.</span>
-          <input type="range" class="fx-slider" id="lfo-depth" min="0.01" max="0.5" step="0.01" value="0.08" oninput="lfoSet('depth',this.value)">
-          <span class="fx-val-disp" id="sv-lfo-depth">0.08</span>
+          <input type="range" class="fx-slider" id="lfo-depth" min="0.01" max="0.7" step="0.01" value="0.30" oninput="lfoSet('depth',this.value)">
+          <span class="fx-val-disp" id="sv-lfo-depth">0.30</span>
         </div>
       </div>
     </div>

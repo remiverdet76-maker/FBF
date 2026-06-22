@@ -62,27 +62,40 @@ function waveState(hz) {
 // Indices des ratios triés par valeur (mode Harmonique)
 const RATIO_SORTED = RATIO_OPTS.map((o,i)=>i).sort((a,b)=>RATIO_OPTS[a].r-RATIO_OPTS[b].r);
 
-// Repliement d'octave : ramène f dans [lo,hi] sans écrêter (préserve la variété)
+// Repliement d'octave : ramène f dans [lo,hi] sans écrêter (préserve la variété).
+// Garde-fou : si la bande fait < 1 octave (impossible à atteindre par octaves),
+// on clampe au lieu de boucler à l'infini.
 function foldFreq(f, lo, hi) {
   lo = lo || 36; hi = hi || 648;
   if (!(f > 0)) return lo;
-  while (f > hi) f /= 2;
-  while (f < lo) f *= 2;
-  return f;
+  if (hi <= lo) return lo;
+  let guard = 0;
+  while (f > hi && guard++ < 64) f /= 2;
+  while (f < lo && guard++ < 64) f *= 2;
+  return Math.max(lo, Math.min(hi, f));
+}
+// Bande active : pleine (36–648) ou la plage utilisateur si « Plage fréquence » est ON.
+function _activeBand() {
+  if (typeof RAND_OPTS !== 'undefined' && RAND_OPTS && RAND_OPTS.rangeOn) {
+    return { lo: RAND_OPTS.freqMin, hi: RAND_OPTS.freqMax };
+  }
+  return { lo: 36, hi: 648 };
 }
 function calcPFreq(i) {
   const p = PAIRS[i].pingala;
-  if (i === MASTER_IDX) return Math.max(36, Math.min(648, masterFreq));
-  return foldFreq(masterFreq * RATIO_OPTS[p.ri].r * p.n);
+  const { lo, hi } = _activeBand();
+  if (i === MASTER_IDX) return Math.max(lo, Math.min(hi, masterFreq));
+  return foldFreq(masterFreq * RATIO_OPTS[p.ri].r * p.n, lo, hi);
 }
 // Binaural garanti : Ida = Pingala ± beat (calculé APRÈS repliement). Si hors
 // bande, on inverse le signe → le battement est conservé, jamais Pingala=Ida.
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
+  const { lo, hi } = _activeBand();
   const pf = calcPFreq(i);
   let f = pf + ida.polarity * ida.delta;
-  if (f > 648 || f < 36) f = pf - ida.polarity * ida.delta;
-  return Math.max(36, Math.min(648, f));
+  if (f > hi || f < lo) f = pf - ida.polarity * ida.delta;
+  return Math.max(lo, Math.min(hi, f));
 }
 function safeF(f)    { return Math.max(36, Math.min(648, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
