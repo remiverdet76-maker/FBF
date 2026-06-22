@@ -160,8 +160,9 @@ const Bowl = (() => {
   };
 
   function _ctx() {
-    // réutilise le contexte natif partagé (window.AC, créé par 02-audio.js)
-    return window.AC || (ctx ||= new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' }));
+    // contexte natif partagé unique (window.AC) — même horloge que 02-audio & SampleStudio
+    if (typeof audioCtx === 'function') return audioCtx();
+    return window.AC || (window.AC = (ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' })));
   }
 
   async function init() {
@@ -186,11 +187,11 @@ const Bowl = (() => {
     return initing;
   }
 
-  // Branche la sortie bol dans la chaîne FX partagée si dispo, sinon destination.
+  // Branche la sortie bol dans la voie Sample Studio (pré-mastering + bus DB4)
+  // si dispo, sinon directement la chaîne FX, sinon la destination.
   function _route() {
-    try {
-      if (typeof eqLow !== 'undefined' && eqLow) { outGain.connect(eqLow); return; }
-    } catch (e) {}
+    try { if (window.SampleStudio) { outGain.connect(SampleStudio.inputNode()); return; } } catch (e) {}
+    try { if (typeof eqLow !== 'undefined' && eqLow) { outGain.connect(eqLow); return; } } catch (e) {}
     outGain.connect(ctx.destination);
   }
 
@@ -212,7 +213,9 @@ const Bowl = (() => {
   function strike(opts = {}) {
     if (!ready) { init().then(() => strike(opts)); return; }
     const scale = SCALES[params.scale] || SCALES.base432;
-    const freq = opts.freq ?? scale[(Math.random() * scale.length) | 0] * (opts.octave ?? 1);
+    // Auto-sync : si une fréquence maître est imposée, elle devient le fondamental.
+    const base = (params.syncFreq && params.syncFreq > 0) ? params.syncFreq : scale[(Math.random() * scale.length) | 0];
+    const freq = opts.freq ?? base * (opts.octave ?? 1);
     const useSample = params.sampleIds.length && !opts.forceSynth;
     node.port.postMessage({
       type: 'trigger',

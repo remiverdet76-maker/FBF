@@ -77,6 +77,7 @@
     <button class="tnav-btn tnav-geo"     id="tGeo"    onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
     <button class="tnav-btn tnav-random"  id="tRand"   onclick="tPanel('panRand','tRand')">⚄ Aléatoire</button>
     <button class="tnav-btn"              id="tOsc"    onclick="tPanel('panOsc','tOsc');buildOscPanel()">◉ Oscillateurs</button>
+    <button class="tnav-btn"              id="tStudio" onclick="tPanel('panStudio','tStudio');SampleStudio.buildUI('studio-body')">◈ Studio</button>
     <button class="tnav-btn tnav-horloge" id="tUT"     onclick="tPanel('panUT','tUT')">⊙ UT432</button>
     <button class="tnav-btn tnav-fx"      id="tFX"     onclick="tPanel('panFX','tFX')">✦ FX</button>
     <button class="tnav-btn tnav-notice"  id="tNotice" onclick="tPanel('panNotice','tNotice')">≡ Notice</button>
@@ -194,6 +195,12 @@
   <div id="osc-list"></div>
 </div>
 
+<!-- Panel : Studio (sample + entrée + record) — droite -->
+<div class="pan-right" id="panStudio">
+  <div class="pct">Studio — Sample &amp; Enregistrement</div>
+  <div id="studio-body"></div>
+</div>
+
 <!-- Panel : Horloge UT432 — droite -->
 <div class="pan-right" id="panUT">
   <div id="panel-horloge-body"></div>
@@ -258,6 +265,7 @@
 <script src="js/06-ui-builders.js"></script>
 <script src="js/07-app.js"></script>
 <script src="js/08-bowl-engine.js"></script>
+<script src="../sample-studio.js"></script>
 <script>
 /* ── Point 1 : bouton « FBF options » ouvre/ferme les menus ── */
 function toggleFbfOpts(){
