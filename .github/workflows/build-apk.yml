@@ -7,6 +7,12 @@ on:
       - 'claude/**'
   workflow_dispatch:
 
+# Anti-gaspillage : un nouveau push sur la même branche annule le build en cours.
+# → même si je pousse 4 fois, seul le DERNIER build va au bout.
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
