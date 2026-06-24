@@ -499,6 +499,90 @@ body{
 .mmp-btn:active{background:rgba(255,255,255,.18);}
 .mmp-btn.stop{border-color:rgba(255,120,120,.4);color:#ff9999;}
 
+/* ══ ChaVibe Panel ══════════════════════════════════════════════ */
+#chavibe-panel{
+  position:fixed;bottom:-100%;left:0;right:0;z-index:200;
+  background:rgba(6,2,20,.97);
+  border-top:1.5px solid rgba(180,80,255,.35);
+  border-radius:22px 22px 0 0;
+  padding:0 0 env(safe-area-inset-bottom,0);
+  backdrop-filter:blur(22px);
+  box-shadow:0 -8px 40px rgba(140,60,255,.22);
+  transition:bottom .38s cubic-bezier(.4,0,.2,1);
+  max-height:78vh;overflow-y:auto;scrollbar-width:none;
+}
+#chavibe-panel.open{bottom:62px;}
+#chavibe-panel::-webkit-scrollbar{display:none;}
+#cv-handle{width:40px;height:4px;border-radius:2px;background:rgba(200,120,255,.35);margin:10px auto 0;}
+#cv-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.8rem 1.2rem .5rem;
+  border-bottom:1px solid rgba(180,80,255,.15);
+}
+#cv-title{
+  font-family:'Cinzel Decorative',serif;font-size:.88rem;letter-spacing:.14em;
+  background:linear-gradient(90deg,#C880FF,#86FFC0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#cv-close{background:none;border:none;color:rgba(220,200,255,.5);font-size:1rem;cursor:pointer;padding:4px 8px;}
+#cv-body{padding:.8rem 1.1rem 1rem;display:flex;flex-direction:column;gap:1rem;}
+
+/* Thèmes */
+#cv-themes{display:flex;flex-wrap:wrap;gap:.45rem;}
+.cv-theme-btn{
+  display:flex;align-items:center;gap:.35rem;
+  padding:.32rem .7rem;border-radius:20px;cursor:pointer;
+  border:1.5px solid rgba(160,80,255,.28);
+  background:rgba(255,255,255,.04);
+  color:rgba(200,170,255,.72);font-size:.72rem;font-family:inherit;
+  transition:all .18s;-webkit-tap-highlight-color:transparent;
+}
+.cv-theme-btn.active{
+  border-color:rgba(180,90,255,.75);background:rgba(140,60,255,.18);
+  color:rgba(230,210,255,.95);box-shadow:0 0 10px rgba(140,60,255,.22);
+}
+.cv-theme-ico{font-size:.95rem;}
+
+/* Intensité */
+.cv-row{display:flex;align-items:center;gap:.7rem;min-height:28px;}
+.cv-lbl{font-size:.68rem;letter-spacing:.08em;color:rgba(180,140,255,.65);white-space:nowrap;min-width:60px;}
+.cv-val{font-size:.72rem;color:#C880FF;min-width:28px;text-align:right;font-variant-numeric:tabular-nums;}
+input[type=range].cv-range{
+  flex:1;-webkit-appearance:none;height:3px;
+  background:linear-gradient(90deg,#8840FF,rgba(255,255,255,.08));
+  border-radius:3px;outline:none;cursor:pointer;
+}
+input[type=range].cv-range::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle,#C880FF,#8840FF);
+  box-shadow:0 0 8px rgba(140,60,255,.55);
+}
+
+/* Boutons action */
+.cv-btns{display:flex;gap:.55rem;flex-wrap:wrap;}
+.cv-btn{
+  flex:1;min-width:80px;padding:.42rem .6rem;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(160,80,255,.35);background:rgba(255,255,255,.05);
+  color:rgba(220,200,255,.82);font-size:.72rem;font-family:inherit;
+  transition:all .18s;-webkit-tap-highlight-color:transparent;
+}
+.cv-btn:active{background:rgba(140,60,255,.2);}
+.cv-btn.cv-play{border-color:rgba(134,255,192,.45);color:#86FFC0;}
+.cv-btn.cv-play.live{background:rgba(60,200,120,.12);border-color:#86FFC0;box-shadow:0 0 10px rgba(86,255,176,.2);}
+
+/* Indicateur de voix actives */
+#cv-field{
+  height:28px;border-radius:8px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(160,80,255,.14);
+  position:relative;overflow:hidden;
+}
+#cv-field-bar{position:absolute;top:0;left:0;bottom:0;width:0%;
+  background:linear-gradient(90deg,rgba(140,60,255,.18),rgba(86,255,176,.12));
+  transition:width 1.2s ease;}
+.cv-note{font-size:.6rem;color:rgba(180,140,255,.45);padding:.2rem .5rem;position:relative;}
+
+/* ════════════════════════════════════════════════════════════════ */
+
 /* ── Onglet 3D ── */
 .pan3d-head{display:flex;justify-content:space-between;align-items:center;font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.1em;color:#E0C8FF;margin-bottom:10px;}
 .pan3d-sec{font-size:.5rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(200,170,255,.45);margin:12px 0 6px;border-bottom:1px solid rgba(200,100,255,.12);padding-bottom:3px;}
@@ -1319,6 +1403,9 @@ input.param-input{
 </nav>
 
 <div id="drop-menu">
+  <button class="dmenu-item" onclick="cvOpen();closeMenu()">
+    <span class="dmenu-ico">✦</span>ChaVibe — Jeu évolutif
+  </button>
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
   </button>
@@ -1342,6 +1429,70 @@ input.param-input{
     <button id="screen-overlay-close" onclick="closeScreen()" aria-label="Fermer">✕</button>
   </div>
   <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
+</div>
+
+<!-- ══ ChaVibe — Panel slide-up ══════════════════════════════════════ -->
+<div id="chavibe-panel" role="dialog" aria-label="ChaVibe">
+  <div id="cv-handle"></div>
+  <div id="cv-head">
+    <span id="cv-title">✦ ChaVibe</span>
+    <button id="cv-close" onclick="cvClose()" aria-label="Fermer">✕</button>
+  </div>
+  <div id="cv-body">
+
+    <!-- Thèmes -->
+    <div>
+      <div class="pct" style="margin-bottom:.55rem">Thèmes actifs</div>
+      <div id="cv-themes">
+        <button class="cv-theme-btn active" data-th="nature"    onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🌿</span>Nature</button>
+        <button class="cv-theme-btn active" data-th="voix"      onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🎤</span>Voix</button>
+        <button class="cv-theme-btn"        data-th="chamanique"onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🥁</span>Chamanique</button>
+        <button class="cv-theme-btn"        data-th="meditation"onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🔔</span>Méditation</button>
+        <button class="cv-theme-btn"        data-th="user"      onclick="cvToggleTheme(this)"><span class="cv-theme-ico">⬆</span>Mes samples</button>
+      </div>
+    </div>
+
+    <!-- Intensité -->
+    <div>
+      <div class="pct" style="margin-bottom:.55rem">Intensité · spatialisation</div>
+      <div class="cv-row">
+        <span class="cv-lbl">Intensité</span>
+        <input type="range" class="cv-range" id="cv-intensity" min="0" max="9.9" step="0.1" value="5.0"
+          oninput="cvSetIntensity(this.value)">
+        <span class="cv-val" id="cv-ival">5.0</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl">Volume</span>
+        <input type="range" class="cv-range" id="cv-vol" min="0" max="1" step="0.01" value="0.52"
+          oninput="cvSetVol(this.value)">
+        <span class="cv-val" id="cv-vval">52%</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl">Reverb</span>
+        <input type="range" class="cv-range" id="cv-rvb" min="0" max="1" step="0.01" value="0.55"
+          oninput="cvSetReverb(this.value)">
+        <span class="cv-val" id="cv-rval">55%</span>
+      </div>
+    </div>
+
+    <!-- Champ stéréo (indicateur visuel) -->
+    <div>
+      <div class="pct" style="margin-bottom:.35rem">Champ stéréo actif</div>
+      <div id="cv-field"><div id="cv-field-bar"></div><span class="cv-note" id="cv-note">— en attente du play —</span></div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="cv-btns">
+      <button class="cv-btn cv-play" id="cv-playbtn" onclick="cvTogglePlay()">▶ Lancer</button>
+      <button class="cv-btn" onclick="cvRandomTheme()">⟳ Thème aléatoire</button>
+    </div>
+
+    <div style="font-size:.6rem;color:rgba(180,140,255,.35);text-align:center;line-height:1.4">
+      Ajouter vos samples : <code style="color:rgba(200,160,255,.5)">samples/&lt;thème&gt;/fichier.ogg</code><br>
+      puis l'entrée correspondante dans <code style="color:rgba(200,160,255,.5)">samples/manifest.json</code>
+    </div>
+
+  </div>
 </div>
 
 <!-- Mini-player : module actif en fond (audio continue après fermeture overlay) -->
@@ -1941,6 +2092,11 @@ async function startFlow() {
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
+    // ChaVibe démarre en synchrone avec le flow si actif
+    if (typeof ChaVibe !== 'undefined' && ChaVibe.enabled) {
+      ChaVibe.start().catch(() => {});
+      _cvSyncUI(true);
+    }
   } catch(err) {
     flowing = false; nodes = {};
     ui('idle', 'Erreur audio — relancer');
@@ -1964,6 +2120,7 @@ async function stopFlow() {
   const nodesCopy = {...nodes};
   nodes = {};
   flowing = false;
+  if (typeof ChaVibe !== 'undefined') { ChaVibe.stop(); _cvSyncUI(false); }
   Object.values(nodesCopy).forEach(n => {
     if (!n) return;
     try {
@@ -4862,6 +5019,94 @@ const Bowl = (() => {
 if (typeof window !== 'undefined') window.Bowl = Bowl;
 
 
+</script>
+<script src="chavibe/engine.js"></script>
+<script>
+/* ══ ChaVibe UI ════════════════════════════════════════════════════ */
+(function () {
+  // Initialisation : charge le manifest au premier ouverture du panel
+  let _cvInited = false;
+  async function _cvEnsure() {
+    if (_cvInited) return;
+    _cvInited = true;
+    await ChaVibe.init();
+    await ChaVibe.loadManifest();
+  }
+
+  // Panel open / close
+  window.cvOpen = function () {
+    document.getElementById('chavibe-panel').classList.add('open');
+    _cvEnsure();
+  };
+  window.cvClose = function () {
+    document.getElementById('chavibe-panel').classList.remove('open');
+  };
+
+  // Synchro UI bouton play
+  window._cvSyncUI = function (live) {
+    const btn = document.getElementById('cv-playbtn');
+    if (!btn) return;
+    btn.textContent = live ? '■ Stop' : '▶ Lancer';
+    btn.classList.toggle('live', live);
+    const note = document.getElementById('cv-note');
+    if (note) note.textContent = live ? '▸ jeu actif — spirale 72 s' : '— en attente du play —';
+    const bar = document.getElementById('cv-field-bar');
+    if (bar) bar.style.width = live ? (30 + ChaVibe.intensity * 7).toFixed(0) + '%' : '0%';
+  };
+
+  // Bouton play (indépendant du flow Omcha)
+  window.cvTogglePlay = async function () {
+    await _cvEnsure();
+    if (ChaVibe.playing) {
+      ChaVibe.stop(); _cvSyncUI(false);
+    } else {
+      await ChaVibe.start(); _cvSyncUI(true);
+    }
+  };
+
+  // Intensité
+  window.cvSetIntensity = function (v) {
+    ChaVibe.setIntensity(v);
+    const el = document.getElementById('cv-ival');
+    if (el) el.textContent = parseFloat(v).toFixed(1);
+    const bar = document.getElementById('cv-field-bar');
+    if (bar && ChaVibe.playing) bar.style.width = (30 + ChaVibe.intensity * 7).toFixed(0) + '%';
+  };
+
+  // Volume
+  window.cvSetVol = function (v) {
+    ChaVibe.setOutputVol(v);
+    const el = document.getElementById('cv-vval');
+    if (el) el.textContent = Math.round(v * 100) + '%';
+  };
+
+  // Reverb
+  window.cvSetReverb = function (v) {
+    ChaVibe.setReverbMix(v);
+    const el = document.getElementById('cv-rval');
+    if (el) el.textContent = Math.round(v * 100) + '%';
+  };
+
+  // Toggle thème
+  window.cvToggleTheme = function (btn) {
+    btn.classList.toggle('active');
+    const active = Array.from(document.querySelectorAll('.cv-theme-btn.active')).map(b => b.dataset.th);
+    ChaVibe.setThemes(active);
+  };
+
+  // Thème aléatoire
+  window.cvRandomTheme = function () {
+    const all  = Array.from(document.querySelectorAll('.cv-theme-btn'));
+    const keys = all.map(b => b.dataset.th);
+    // Sélectionne 1 à 3 thèmes au hasard
+    const count  = 1 + Math.floor(Math.random() * 2);
+    const chosen = keys.sort(() => Math.random() - 0.5).slice(0, count);
+    all.forEach(b => {
+      b.classList.toggle('active', chosen.includes(b.dataset.th));
+    });
+    ChaVibe.setThemes(chosen);
+  };
+})();
 </script>
 <script>
 window.FBF_MODULES = window.FBF_MODULES || [

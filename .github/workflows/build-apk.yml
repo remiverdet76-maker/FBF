@@ -52,7 +52,20 @@ jobs:
           cp ../img/*.jpg www/img/
           # Module FBF 432 1re version (natif Web Audio, sans Tone.js)
           cp -r ../fbf432 www/fbf432
-          echo "www/ contents:"; ls -lh www/; echo "www/img:"; ls -lh www/img/
+          # ChaVibe engine
+          mkdir -p www/chavibe
+          cp -r ../chavibe/. www/chavibe/
+          # Samples (manifest + fichiers audio — vides = synthèse fallback)
+          mkdir -p www/samples
+          cp ../samples/manifest.json www/samples/
+          for d in nature voix chamanique meditation user; do
+            mkdir -p www/samples/$d
+            if [ -d "../samples/$d" ]; then
+              find "../samples/$d" \( -name "*.ogg" -o -name "*.mp3" -o -name "*.wav" \) \
+                -exec cp {} "www/samples/$d/" \; 2>/dev/null || true
+            fi
+          done
+          echo "www/ contents:"; ls -lh www/; echo "www/samples:"; ls -lh www/samples/
 
       - name: Remove Google Fonts (offline fallback)
         working-directory: apk/www
