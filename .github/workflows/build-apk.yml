@@ -87,22 +87,18 @@ jobs:
             grep -q 'audio-bus.js' "$f" || \
               sed -i 's#</body>#<script src="audio-bus.js"></script>\n</body>#I' "$f"
           done
-          # 2) Génère modules.js : liste {file,title} de tous les modules (hors accueil)
+          # 2) Génère modules.js : FBF 432 EN PREMIER (priorité binaural APK)
           {
             echo "window.FBF_MODULES = ["
-            first=1
+            printf "  {file:'fbf432/index.html', title:'FBF 432 \\u2014 Binaural', ico:'\\u25c9'}"
             for f in *.html; do
               [ "$f" = "index.html" ] && continue
               t=$(grep -o '<title>[^<]*</title>' "$f" | head -1 | sed 's/<[^>]*>//g')
               [ -z "$t" ] && t="$f"
               t=$(printf '%s' "$t" | sed "s/'/\\\\'/g")
-              [ $first -eq 0 ] && echo ","
-              printf "  {file:'%s', title:'%s', ico:'\\u25c9'}" "$f" "$t"
-              first=0
+              echo ","
+              printf "  {file:'%s', title:'%s', ico:'\\u25cd'}" "$f" "$t"
             done
-            # Module split-file FBF 432 (dans son sous-dossier)
-            [ $first -eq 0 ] && echo ","
-            printf "  {file:'fbf432/index.html', title:'FBF 432', ico:'\\u25c9'}"
             echo ""
             echo "];"
           } > modules.js
