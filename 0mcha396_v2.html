@@ -484,6 +484,20 @@ body{
 #screen-overlay-close{flex-shrink:0;width:38px;height:38px;border-radius:12px;background:rgba(255,80,80,.12);border:1px solid rgba(255,120,120,.35);color:#ff9999;font-size:1.1rem;line-height:1;cursor:pointer;}
 #screen-overlay-close:active{background:rgba(255,80,80,.28);}
 #screen-frame{flex:1 1 auto;width:100%;height:100%;border:none;background:#02010D;}
+/* Mini-player : module actif en arrière-plan */
+#module-mini-player{display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:350;
+  background:rgba(8,4,28,.94);border:1px solid rgba(200,100,255,.5);border-radius:28px;
+  padding:7px 14px 7px 12px;backdrop-filter:blur(14px);align-items:center;gap:8px;
+  font-size:.7rem;letter-spacing:.08em;color:rgba(220,200,255,.88);white-space:nowrap;box-shadow:0 4px 24px rgba(150,80,255,.22);}
+#module-mini-player.visible{display:flex;}
+#module-mini-player .mmp-icon{font-size:1rem;opacity:.9;}
+#module-mini-player .mmp-label{font-family:'Cinzel Decorative',serif;font-size:.68rem;letter-spacing:.12em;}
+#module-mini-player .mmp-pulse{width:7px;height:7px;border-radius:50%;background:#86FFC0;box-shadow:0 0 6px #86FFC0;animation:mmpPulse 1.4s ease-in-out infinite;}
+@keyframes mmpPulse{0%,100%{opacity:.5;transform:scale(.85);}50%{opacity:1;transform:scale(1.2);}}
+.mmp-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(220,200,255,.8);
+  font-size:.75rem;padding:3px 8px;cursor:pointer;font-family:inherit;transition:background .15s;}
+.mmp-btn:active{background:rgba(255,255,255,.18);}
+.mmp-btn.stop{border-color:rgba(255,120,120,.4);color:#ff9999;}
 
 /* ── Onglet 3D ── */
 .pan3d-head{display:flex;justify-content:space-between;align-items:center;font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.1em;color:#E0C8FF;margin-bottom:10px;}
@@ -1330,6 +1344,15 @@ input.param-input{
   <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
 </div>
 
+<!-- Mini-player : module actif en fond (audio continue après fermeture overlay) -->
+<div id="module-mini-player">
+  <span class="mmp-pulse"></span>
+  <span class="mmp-icon">♪</span>
+  <span class="mmp-label" id="mmp-title">Module</span>
+  <button class="mmp-btn" onclick="reopenModule()">⬚ Rouvrir</button>
+  <button class="mmp-btn stop" onclick="stopModuleForReal()">✕ Stop</button>
+</div>
+
 <div id="osc-modal">
   <div id="osc-modal-inner">
     <div id="osc-modal-head">
@@ -1424,14 +1447,14 @@ function waveState(hz) {
 
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
-  if (i === MASTER_IDX) return Math.min(648, masterFreq);
-  return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
+  if (i === MASTER_IDX) return Math.min(486, masterFreq);
+  return Math.max(54, Math.min(486, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(36, Math.min(648, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(54, Math.min(486, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(36, Math.min(648, f)); }
+function safeF(f)    { return Math.max(54, Math.min(486, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
@@ -1671,7 +1694,7 @@ function initFXChain() {
   // ═══ RACK MASTER (calqué Allen & Heath DB4) ═══════════════════
   // Tout converge ici : un seul bus de sortie, un seul limiteur protège tout.
   // Étages : TRIM bus → EQ master 3B (54/216/432) → GLUE → FADER → LIMITEUR
-  // Borné à la bande réelle du système : 36–864 Hz. Rien au-dessus.
+  // Borné à la bande réelle du système : 54–486 Hz.
 
   // — TRIM d'entrée du bus (structure de gain propre, avant le master) —
   busTrim = c.createGain(); busTrim.gain.value = 1;
@@ -1864,12 +1887,29 @@ async function startFlow() {
   try {
     const c = audioCtx();
     if (c.state !== 'running') await c.resume();
-    // Reprendre l'audio après retour de veille (Android Doze / écran off)
+    // Reprendre l'audio après retour de veille (Android Doze / écran off / Capacitor resume)
     if (!startFlow._visBound) {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && AC && AC.state !== 'running' && !_moduleAudioActive) AC.resume();
+        if (document.visibilityState === 'visible' && AC && AC.state !== 'running') AC.resume();
+      });
+      // Event Capacitor natif — déverrouillage téléphone
+      document.addEventListener('resume', () => {
+        if (flowing && AC && AC.state !== 'running') AC.resume();
       });
       startFlow._visBound = true;
+    }
+    // Heartbeat : relance l'AC si throttlé par Android Doze (toutes les 12 s)
+    if (!startFlow._heartbeat) {
+      startFlow._heartbeat = setInterval(() => {
+        if (flowing && AC && AC.state !== 'running') AC.resume().catch(() => {});
+      }, 12000);
+    }
+    // Wake Lock API : empêche le CPU de throttler le thread audio (web + APK WebView)
+    if (!startFlow._wakeLock && 'wakeLock' in navigator) {
+      navigator.wakeLock.request('screen').then(lock => {
+        startFlow._wakeLock = lock;
+        lock.addEventListener('release', () => { startFlow._wakeLock = null; });
+      }).catch(() => {});
     }
     _startBTKeepalive();
     initFXChain();
@@ -1910,6 +1950,8 @@ async function startFlow() {
 async function stopFlow() {
   ui('idle', 'Dissolution…');
   try { window.Capacitor?.Plugins?.KeepAwake?.allowSleep?.(); } catch(e) {}
+  if (startFlow._heartbeat) { clearInterval(startFlow._heartbeat); startFlow._heartbeat = null; }
+  if (startFlow._wakeLock)  { try { startFlow._wakeLock.release(); } catch(e) {} startFlow._wakeLock = null; }
   if (typeof progRunning !== 'undefined' && progRunning) stopProgression();
   Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
   try {
@@ -2063,7 +2105,7 @@ const MASTER_HUE_SEUILS=[
   {f:360,h:80 },{f:414,h:40 },{f:432,h:270}
 ];
 function masterHue(freq){
-  const f=Math.max(36,Math.min(432,freq||432));
+  const f=Math.max(54,Math.min(486,freq||432));
   for(let i=0;i<MASTER_HUE_SEUILS.length-1;i++){
     const a=MASTER_HUE_SEUILS[i],b=MASTER_HUE_SEUILS[i+1];
     if(f>=a.f&&f<=b.f){
@@ -2885,9 +2927,9 @@ function toggleAccord(id) {
 // Band A (36–108) : oscs 0,1
 // Band B (108–256): oscs 2,3
 // Band C (256–432): oscs 4,5
-// Maître : aléatoire 36–432
+// Maître : aléatoire 54–486
 function trigger0mcha396() {
-  masterFreq = 36 + Math.floor(Math.random() * 613);
+  masterFreq = 54 + Math.floor(Math.random() * 433);
 
   PAIRS[0].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
   PAIRS[1].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
@@ -2921,11 +2963,11 @@ function trigger0mcha396() {
 
 // ── Bouton +/− sur la sphère : ±36 Hz maître + ratio aléatoire pour chaque osc ──
 function fbfStep(delta) {
-  masterFreq = Math.max(36, Math.min(648, masterFreq + delta));
+  masterFreq = Math.max(54, Math.min(486, masterFreq + delta));
 
   for (let i = 0; i < MASTER_IDX; i++) {
     const ratio = RATIO_OPTS[Math.floor(Math.random() * RATIO_OPTS.length)].r;
-    PAIRS[i].pingala.baseFreq = Math.max(36, Math.min(432,
+    PAIRS[i].pingala.baseFreq = Math.max(54, Math.min(486,
       PAIRS[i].pingala.baseFreq + delta * ratio));
     if (typeof flowing !== 'undefined' && flowing) {
       tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -2942,14 +2984,14 @@ function fbfStep(delta) {
 }
 
 // ── Options mode aléatoire (pour compatibilité panel FX) ──────────
-const RAND_OPTS = {freqMin:36, freqMax:432, ratioMode:'random', useFX:false, rangeOn:false};
+const RAND_OPTS = {freqMin:54, freqMax:486, ratioMode:'random', useFX:false, rangeOn:false};
 function setRandRange(v)    { RAND_OPTS.rangeOn = !!v; }
 function setRandFreqMin(v)  {
-  RAND_OPTS.freqMin = Math.max(36, Math.min(RAND_OPTS.freqMax-1, parseInt(v)));
+  RAND_OPTS.freqMin = Math.max(54, Math.min(RAND_OPTS.freqMax-1, parseInt(v)));
   const el=document.getElementById('rv-fmin'); if(el) el.textContent=RAND_OPTS.freqMin;
 }
 function setRandFreqMax(v)  {
-  RAND_OPTS.freqMax = Math.min(432, Math.max(RAND_OPTS.freqMin+1, parseInt(v)));
+  RAND_OPTS.freqMax = Math.min(486, Math.max(RAND_OPTS.freqMin+1, parseInt(v)));
   const el=document.getElementById('rv-fmax'); if(el) el.textContent=RAND_OPTS.freqMax;
 }
 function setRandRatioMode(m, btn) {
@@ -3060,7 +3102,7 @@ function setMasterVol(v) {
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(36, Math.min(648, f));
+  masterFreq = Math.max(54, Math.min(486, f));
   updateDisplay();
   if (typeof flowing !== 'undefined' && flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -3103,11 +3145,11 @@ function nRandom(i) {
 }
 
 function masterStep(delta) {
-  setMasterFreq(Math.max(36, Math.min(648, masterFreq + delta)));
+  setMasterFreq(Math.max(54, Math.min(486, masterFreq + delta)));
 }
 function onMasterInput(raw) {
   const v = parseInt(raw);
-  if (isNaN(v) || v < 36 || v > 432) return;
+  if (isNaN(v) || v < 54 || v > 486) return;
   masterFreq = v;
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
   document.title = '0mcha396 · ' + v;
@@ -3120,7 +3162,7 @@ function onMasterInput(raw) {
   updateSphereDisplay && updateSphereDisplay();
 }
 function onMasterChange(raw) {
-  const v = Math.max(36, Math.min(432, parseInt(raw)));
+  const v = Math.max(54, Math.min(486, parseInt(raw)));
   if (!isNaN(v)) setMasterFreq(v);
 }
 
@@ -3418,10 +3460,10 @@ function buildMasterFXHTML() {
       <div class="mfreq-label">Fréquence maître</div>
       <div class="mfreq-row">
         <button class="mfreq-btn sm" onclick="masterStep(-1)">−</button>
-        <input type="number" id="master-input" class="mfreq-input" min="36" max="648" value="432" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
+        <input type="number" id="master-input" class="mfreq-input" min="54" max="486" value="252" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
         <button class="mfreq-btn" onclick="masterStep(1)">+</button>
       </div>
-      <div class="mfreq-range">36 — 864 Hz</div>
+      <div class="mfreq-range">54 — 486 Hz</div>
     </div>
     <div class="delta-sphere-wrap" style="margin-top:.5rem;">
       <div class="delta-sphere-label">Battement Binaural Global</div>
@@ -3688,9 +3730,9 @@ function buildProgHTML() {
     </div>
     <div class="prog-range-row">
       <span class="prog-label">Min</span>
-      <input type="number" class="prog-range-input" id="prog-min" min="36" max="864" value="36">
+      <input type="number" class="prog-range-input" id="prog-min" min="54" max="486" value="54">
       <span class="prog-label" style="min-width:auto;">Max</span>
-      <input type="number" class="prog-range-input" id="prog-max" min="36" max="864" value="864">
+      <input type="number" class="prog-range-input" id="prog-max" min="54" max="486" value="486">
     </div>
     <div class="prog-range-row">
       <span class="prog-label">Durée</span>
@@ -3933,8 +3975,8 @@ let progDir     = 1;
 let progFreqCur = 252;
 
 function getProgRange() {
-  const lo = Math.max(36,   Math.min(864, parseInt(document.getElementById('prog-min')?.value)||36));
-  const hi = Math.max(lo+1, Math.min(864, parseInt(document.getElementById('prog-max')?.value)||864));
+  const lo = Math.max(54,   Math.min(486, parseInt(document.getElementById('prog-min')?.value)||54));
+  const hi = Math.max(lo+1, Math.min(486, parseInt(document.getElementById('prog-max')?.value)||486));
   return { lo, hi };
 }
 function progStep() {
@@ -3991,7 +4033,7 @@ function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(LS_KEY));
     if (!s) return;
-    if (s.masterFreq>=36&&s.masterFreq<=648) masterFreq = s.masterFreq;
+    if (s.masterFreq>=54&&s.masterFreq<=486) masterFreq = s.masterFreq;
     if (s.globalDelta>0) globalDelta = s.globalDelta;
     if (s.masterVol>=0&&s.masterVol<=1) masterVol = s.masterVol;
     if (typeof s.activeGeometry==='number') activeGeometry = s.activeGeometry;
@@ -4085,32 +4127,80 @@ function closeMenu() {
 // ── Modules en surimpression (iframe) — le binaural d'Omcha396 continue ──
 // ── Exclusivité audio : un module qui joue coupe le binaural d'accueil ──
 let _moduleAudioActive = false;
+let _moduleScreenTitle = '';
 function _resumeAudioSafe(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='suspended')AC.resume(); }catch(e){} }
 function _suspendHomeAudio(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='running')AC.suspend(); }catch(e){} }
 // Le module (iframe) signale qu'il lance un son → on coupe le son maison.
+// 'stop-ack' : le module confirme que son audio est stoppé.
 window.addEventListener('message', function(e){
   const d = e.data || {};
-  if (d.fbf === 'audio-claim'){ _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'audio-claim') { _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'stop-ack')    { _finalizeModuleDestroy(); }
 });
+
+function _showModuleMiniPlayer(title) {
+  const mp = document.getElementById('module-mini-player'); if (!mp) return;
+  const t = document.getElementById('mmp-title'); if (t) t.textContent = title || 'Module';
+  mp.classList.add('visible');
+}
+function _hideMiniPlayer() {
+  const mp = document.getElementById('module-mini-player'); if (mp) mp.classList.remove('visible');
+}
+function _finalizeModuleDestroy() {
+  const fr = document.getElementById('screen-frame');
+  setTimeout(() => { if (fr) fr.src = 'about:blank'; }, 600);
+  _moduleAudioActive = false; _resumeAudioSafe(); _hideMiniPlayer();
+}
+
 function openScreen(src, title){
   const ov=document.getElementById('screen-overlay'),
         fr=document.getElementById('screen-frame'),
         tt=document.getElementById('screen-overlay-title');
   if(!ov||!fr) return;
+  // Si un autre module tourne en fond, on l'arrête d'abord
+  if (fr.src && fr.src !== 'about:blank' && !ov.classList.contains('open')) {
+    try { fr.contentWindow.postMessage({fbf:'stop-flow'}, '*'); } catch(e) {}
+    setTimeout(() => { if (fr) fr.src = src; }, 700);
+  } else {
+    fr.src = src;
+  }
+  _moduleScreenTitle = title || '';
   if(tt) tt.textContent = title || 'Module';
-  fr.src = src; ov.classList.add('open'); _resumeAudioSafe();
+  ov.classList.add('open'); _hideMiniPlayer(); _resumeAudioSafe();
   try{ history.pushState({omchaScreen:true},''); }catch(e){}
 }
 function closeScreen(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
   if(!ov||!ov.classList.contains('open')) return;
-  ov.classList.remove('open'); if(fr) fr.src='about:blank';
-  _moduleAudioActive = false; _resumeAudioSafe();   // module fermé → le binaural revient
+  ov.classList.remove('open');
+  if (_moduleAudioActive) {
+    // Audio en cours → garder l'iframe vivante, afficher le mini-player
+    _showModuleMiniPlayer(_moduleScreenTitle);
+  } else {
+    if(fr) fr.src='about:blank';
+    _resumeAudioSafe();
+  }
   if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
 }
-window.addEventListener('popstate', function(){
+function reopenModule(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
-  if(ov&&ov.classList.contains('open')){ ov.classList.remove('open'); if(fr) fr.src='about:blank'; _moduleAudioActive=false; _resumeAudioSafe(); }
+  if(!ov||!fr||!fr.src||fr.src==='about:blank') return;
+  ov.classList.add('open'); _hideMiniPlayer();
+  try{ history.pushState({omchaScreen:true},''); }catch(e){}
+}
+function stopModuleForReal(){
+  const fr=document.getElementById('screen-frame');
+  try { fr.contentWindow.postMessage({fbf:'stop-flow'}, '*'); } catch(e) {}
+  // Fallback si le module ne répond pas (stop-ack) : détruire après 1.5 s
+  setTimeout(() => _finalizeModuleDestroy(), 1500);
+}
+window.addEventListener('popstate', function(){
+  const ov=document.getElementById('screen-overlay');
+  if(ov&&ov.classList.contains('open')){
+    ov.classList.remove('open');
+    if (_moduleAudioActive) { _showModuleMiniPlayer(_moduleScreenTitle); }
+    else { const fr=document.getElementById('screen-frame'); if(fr) fr.src='about:blank'; _resumeAudioSafe(); }
+  }
 });
 window.addEventListener('keydown', function(e){ if(e.key==='Escape') closeScreen(); });
 
@@ -4359,10 +4449,10 @@ function cosmicUT432(){
   const m=(fd.getUTCHours()-off)*60+fd.getUTCMinutes()+fd.getUTCSeconds()/60;
   return((m+2.35/15*60+_eqTCosmo(fd))/1440*432+432)%432;
 }
-// Fréquence maître initiale = densité cosmique bornée à la plage [36,432]
+// Fréquence maître initiale = densité cosmique bornée à la plage [54,486]
 function cosmicMasterFreq(){
   const ut=cosmicUT432();
-  return Math.max(36,Math.min(432,Math.round(ut)));
+  return Math.max(54,Math.min(486,Math.round(ut)));
 }
 
 function init() {

@@ -59,14 +59,14 @@ function waveState(hz) {
 
 function calcPFreq(i) {
   const p = PAIRS[i].pingala;
-  if (i === MASTER_IDX) return masterFreq;
-  return Math.max(36, Math.min(864, masterFreq * RATIO_OPTS[p.ri].r * p.n));
+  if (i === MASTER_IDX) return Math.min(486, masterFreq);
+  return Math.max(54, Math.min(486, masterFreq * RATIO_OPTS[p.ri].r * p.n));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(36, Math.min(864, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(54, Math.min(486, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(36, Math.min(864, f)); }
+function safeF(f)    { return Math.max(54, Math.min(486, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 

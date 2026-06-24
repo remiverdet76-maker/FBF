@@ -552,3 +552,12 @@ document.addEventListener('keydown', e => {
   if (e.code==='Space')  { e.preventDefault(); fbfToggle(); }
   if (e.code==='Escape') { closeOscModal(); closePanel(); }
 });
+
+// Message parent (Omcha396) → arrêt propre du flux + accusé de réception
+window.addEventListener('message', async function(e) {
+  const d = e.data || {};
+  if (d.fbf === 'stop-flow') {
+    if (typeof flowing !== 'undefined' && flowing) await stopFlow();
+    try { window.parent.postMessage({fbf:'stop-ack'}, '*'); } catch(ex) {}
+  }
+});

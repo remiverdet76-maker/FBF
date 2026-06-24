@@ -387,7 +387,21 @@ async function startFlow() {
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && AC && AC.state !== 'running') AC.resume();
       });
+      document.addEventListener('resume', () => {
+        if (flowing && AC && AC.state !== 'running') AC.resume();
+      });
       startFlow._visBound = true;
+    }
+    if (!startFlow._heartbeat) {
+      startFlow._heartbeat = setInterval(() => {
+        if (flowing && AC && AC.state !== 'running') AC.resume().catch(() => {});
+      }, 12000);
+    }
+    if (!startFlow._wakeLock && 'wakeLock' in navigator) {
+      navigator.wakeLock.request('screen').then(lock => {
+        startFlow._wakeLock = lock;
+        lock.addEventListener('release', () => { startFlow._wakeLock = null; });
+      }).catch(() => {});
     }
     _startBTKeepalive();
     initFXChain();
@@ -436,6 +450,8 @@ async function startFlow() {
 
 async function stopFlow() {
   ui('idle', 'Dissolution…');
+  if (startFlow._heartbeat) { clearInterval(startFlow._heartbeat); startFlow._heartbeat = null; }
+  if (startFlow._wakeLock)  { try { startFlow._wakeLock.release(); } catch(e) {} startFlow._wakeLock = null; }
   try { window.Capacitor?.Plugins?.KeepAwake?.allowSleep?.(); } catch(e) {}
   if (typeof progRunning !== 'undefined' && progRunning) stopProgression();
   Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
