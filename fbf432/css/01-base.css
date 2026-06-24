@@ -1,0 +1,187 @@
+/* ═══════════════════════════════════════════
+   01-base.css — Layout plein écran, fond flux cosmique
+   ═══════════════════════════════════════════ */
+
+*{box-sizing:border-box;margin:0;padding:0;}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;}
+
+body{
+  width:100vw;height:100vh;overflow:hidden;
+  font-family:'IM Fell English',Georgia,serif;
+  color:#f0ead8;
+  background:#02010D;
+}
+
+/* Image cosmique de fond */
+#cosmic-bg{
+  position:fixed;inset:0;z-index:-1;
+  width:100%;height:100%;object-fit:cover;
+  opacity:0.42;
+}
+
+/* Canvas 3D — transparent pour laisser passer l'image de fond */
+#meta-canvas{
+  position:fixed;inset:0;width:100%;height:100%;
+  display:block;z-index:0;
+  background:transparent;
+}
+
+/* Couche sphères */
+#sphere-layer{
+  position:fixed;inset:0;z-index:10;
+  pointer-events:none;
+}
+#sphere-layer .vp-wrap,
+#sphere-layer .vp-center-wrap{
+  pointer-events:all;
+}
+
+/* Dock droit — Flux (haut) + Nav (bas), centrés verticalement */
+#right-dock{
+  position:fixed;
+  right:.8rem;
+  top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;
+  gap:.55rem;
+  z-index:100;
+}
+#flux-side{ position:static; }
+
+/* FBF Hub — bas centre, bouton seul */
+#fbf-hub{
+  position:fixed;
+  bottom:5.5rem;left:50%;transform:translateX(-50%);
+  z-index:20;
+  display:flex;align-items:center;
+}
+
+/* Visualiseur spectral — bas centre, cellule argentée */
+#spectroid-bar{
+  position:fixed;
+  bottom:0;left:50%;transform:translateX(-50%);
+  width:min(680px,88vw);height:80px;
+  z-index:22;
+  background:linear-gradient(135deg,rgba(180,180,200,.12),rgba(220,220,240,.06),rgba(150,160,180,.10));
+  border:1.5px solid rgba(200,210,240,.28);
+  border-bottom:none;
+  border-radius:14px 14px 0 0;
+  backdrop-filter:blur(14px);
+  overflow:hidden;
+  box-shadow:0 -4px 30px rgba(100,120,200,.18),inset 0 1px 0 rgba(255,255,255,.12);
+}
+#spectroid-canvas{width:100%;height:100%;display:block;}
+
+/* Tableau fréquences — bas gauche */
+#freq-mini{
+  position:fixed;
+  bottom:5rem;left:1.2rem;
+  z-index:20;
+  min-width:210px;max-width:240px;
+  background:rgba(8,0,26,.72);
+  border:1px solid rgba(200,100,255,.22);
+  border-radius:12px;
+  padding:.5rem .7rem;
+  backdrop-filter:blur(10px);
+}
+
+/* Navigation — dans #right-dock, colonne verticale */
+#tab-nav{
+  position:static;
+  display:flex;flex-direction:column;
+  gap:.32rem;align-items:stretch;
+}
+
+/* ─── Panels latéraux ────────────────────── */
+.side-panel{
+  position:fixed;top:0;right:-460px;
+  width:440px;height:100vh;
+  z-index:40;
+  background:rgba(8,0,26,.93);
+  border-left:1.5px solid rgba(200,100,255,.3);
+  backdrop-filter:blur(18px);
+  transition:right .35s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.side-panel.open{right:0;}
+
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 1.4rem;
+  border-bottom:1px solid rgba(200,100,255,.2);
+  flex-shrink:0;
+}
+.panel-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.15rem;letter-spacing:.18em;
+  background:linear-gradient(90deg,#FF8EFF,#63E6FF,#86FFC0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.panel-close{
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,255,255,.22);
+  color:rgba(245,240,225,.8);font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.panel-close:hover{background:rgba(255,80,80,.18);border-color:rgba(255,120,120,.6);color:#ff9999;}
+
+.panel-body{
+  flex:1;overflow-y:auto;
+  padding:1.2rem 1.4rem;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(200,100,255,.3) transparent;
+}
+.panel-body::-webkit-scrollbar{width:4px;}
+.panel-body::-webkit-scrollbar-thumb{background:rgba(200,100,255,.3);border-radius:4px;}
+
+/* ─── Modal oscillateur ────────────────────── */
+#osc-modal{
+  position:fixed;inset:0;z-index:50;
+  display:none;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+#osc-modal.open{display:flex;pointer-events:all;}
+#osc-modal-inner{
+  background:rgba(8,0,26,.96);
+  border:1.5px solid rgba(200,100,255,.48);
+  border-radius:24px;
+  width:min(560px,92vw);max-height:88vh;
+  display:flex;flex-direction:column;
+  backdrop-filter:blur(22px);
+  box-shadow:0 0 70px rgba(120,0,255,.4),0 0 120px rgba(0,100,255,.2);
+  overflow:hidden;
+}
+#osc-modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.4rem;
+  border-bottom:1px solid rgba(200,100,255,.2);
+  flex-shrink:0;
+}
+#osc-modal-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.1rem;letter-spacing:.15em;
+  background:linear-gradient(90deg,#FF8EFF,#63E6FF);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#osc-modal-body{
+  flex:1;overflow-y:auto;padding:1.2rem 1.4rem;
+  scrollbar-width:thin;scrollbar-color:rgba(200,100,255,.3) transparent;
+}
+
+/* Backdrop */
+#backdrop{
+  position:fixed;inset:0;z-index:45;
+  background:rgba(0,0,0,.6);display:none;
+  backdrop-filter:blur(4px);
+}
+#backdrop.open{display:block;}
+
+/* Keyframes */
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes prog-pulse{0%,100%{box-shadow:0 0 8px rgba(255,140,40,.3);}50%{box-shadow:0 0 22px rgba(255,140,40,.7);}}
+@keyframes fbfPulse{0%,100%{box-shadow:0 0 30px rgba(200,100,255,.6),inset 0 0 15px rgba(255,255,255,.3);}50%{box-shadow:0 0 60px rgba(99,230,255,.9),inset 0 0 25px rgba(255,255,255,.5);}}
+@keyframes magicRotate{0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
+@keyframes fluxPulse{0%,100%{box-shadow:0 0 20px rgba(99,230,255,.4);}50%{box-shadow:0 0 45px rgba(99,230,255,.9),0 0 70px rgba(200,100,255,.4);}}
+@keyframes ut432Glow{0%,100%{text-shadow:0 0 20px currentColor;}50%{text-shadow:0 0 50px currentColor,0 0 80px currentColor;}}

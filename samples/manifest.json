@@ -1,0 +1,242 @@
+{
+  "version": 2,
+  "_doc": "Ajouter un sample : copier le fichier dans samples/<theme>/ puis ajouter une entrée ici.",
+  "_fields": {
+    "id":          "identifiant unique (snake_case)",
+    "file":        "chemin relatif depuis samples/ — null = synthèse uniquement",
+    "synthType":   "throat | angelic | tibetan | harmonic | whisper | drone (fallback si file absent)",
+    "label":       "nom affiché dans l'UI",
+    "dominantHz":  "fréquence principale du sample (optionnel — auto-analysé si absent)",
+    "rmsNorm":     "gain de normalisation manuel (optionnel — auto-calculé si absent)",
+    "stereoZone":  "center | left | right | wide | spread | auto",
+    "loop":        "true si le sample doit boucler (ambiance continue)",
+    "tags":        "mots-clés libres pour filtre futur"
+  },
+  "themes": {
+    "nature": {
+      "label": "Nature",
+      "icon": "🌿",
+      "samples": [
+        {
+          "id": "nat_foret_01",
+          "file": "nature/foret_01.ogg",
+          "synthType": "drone",
+          "label": "Forêt — ambiance",
+          "dominantHz": 180,
+          "stereoZone": "spread",
+          "loop": true,
+          "tags": ["forest", "ambient", "continuous"]
+        },
+        {
+          "id": "nat_riviere_01",
+          "file": "nature/riviere_01.ogg",
+          "synthType": "drone",
+          "label": "Rivière douce",
+          "dominantHz": 320,
+          "stereoZone": "wide",
+          "loop": true,
+          "tags": ["water", "river", "continuous"]
+        },
+        {
+          "id": "nat_oiseau_rossignol",
+          "file": "nature/rossignol_01.ogg",
+          "synthType": "harmonic",
+          "label": "Rossignol",
+          "dominantHz": 2800,
+          "stereoZone": "right",
+          "loop": false,
+          "tags": ["bird", "nightingale", "high"]
+        },
+        {
+          "id": "nat_oiseau_merle",
+          "file": "nature/merle_01.ogg",
+          "synthType": "harmonic",
+          "label": "Merle",
+          "dominantHz": 2200,
+          "stereoZone": "left",
+          "loop": false,
+          "tags": ["bird", "blackbird", "high"]
+        },
+        {
+          "id": "nat_grillons",
+          "file": "nature/grillons_01.ogg",
+          "synthType": "harmonic",
+          "label": "Grillons",
+          "dominantHz": 4500,
+          "stereoZone": "wide",
+          "loop": true,
+          "tags": ["cricket", "insect", "continuous"]
+        },
+        {
+          "id": "nat_vent",
+          "file": "nature/vent_01.ogg",
+          "synthType": "whisper",
+          "label": "Vent dans les arbres",
+          "dominantHz": 600,
+          "stereoZone": "spread",
+          "loop": true,
+          "tags": ["wind", "ambient", "continuous"]
+        }
+      ]
+    },
+    "voix": {
+      "label": "Voix",
+      "icon": "🎤",
+      "samples": [
+        {
+          "id": "voix_gorge_m",
+          "file": null,
+          "synthType": "throat",
+          "label": "Chant de gorge (khoomei)",
+          "dominantHz": 108,
+          "stereoZone": "left",
+          "tags": ["throat", "male", "deep", "overtone"]
+        },
+        {
+          "id": "voix_gorge_f",
+          "file": null,
+          "synthType": "throat",
+          "label": "Chant de gorge féminin",
+          "dominantHz": 144,
+          "stereoZone": "right",
+          "tags": ["throat", "female", "overtone"]
+        },
+        {
+          "id": "voix_angelique",
+          "file": null,
+          "synthType": "angelic",
+          "label": "Voix angélique",
+          "dominantHz": 324,
+          "stereoZone": "wide",
+          "tags": ["angelic", "female", "high", "ethereal"]
+        },
+        {
+          "id": "voix_tibetain_drone",
+          "file": null,
+          "synthType": "tibetan",
+          "label": "Drone tibétain",
+          "dominantHz": 72,
+          "stereoZone": "center",
+          "tags": ["tibetan", "drone", "low", "male"]
+        },
+        {
+          "id": "voix_harmonic_choir",
+          "file": null,
+          "synthType": "harmonic",
+          "label": "Chorale harmonique",
+          "dominantHz": 216,
+          "stereoZone": "spread",
+          "tags": ["choir", "harmonic", "mid"]
+        },
+        {
+          "id": "voix_whisper",
+          "file": null,
+          "synthType": "whisper",
+          "label": "Chuchotement sacré",
+          "dominantHz": 800,
+          "stereoZone": "wide",
+          "tags": ["whisper", "breath", "air"]
+        }
+      ]
+    },
+    "chamanique": {
+      "label": "Chamanique",
+      "icon": "🥁",
+      "samples": [
+        {
+          "id": "chama_tambour_01",
+          "file": "chamanique/tambour_01.ogg",
+          "synthType": "drone",
+          "label": "Grand tambour",
+          "dominantHz": 80,
+          "stereoZone": "center",
+          "loop": false,
+          "tags": ["drum", "tribal", "low", "percussion"]
+        },
+        {
+          "id": "chama_tambour_rapide",
+          "file": "chamanique/tambour_rapide_01.ogg",
+          "synthType": "drone",
+          "label": "Tambour rituel rapide",
+          "dominantHz": 100,
+          "stereoZone": "spread",
+          "loop": false,
+          "tags": ["drum", "tribal", "fast", "ritual"]
+        },
+        {
+          "id": "chama_voix_m",
+          "file": "chamanique/voix_homme_01.ogg",
+          "synthType": "throat",
+          "label": "Voix chamane homme",
+          "dominantHz": 120,
+          "rmsNorm": 0.85,
+          "stereoZone": "left",
+          "loop": false,
+          "tags": ["voice", "shaman", "male", "chant"]
+        },
+        {
+          "id": "chama_voix_f",
+          "file": "chamanique/voix_femme_01.ogg",
+          "synthType": "angelic",
+          "label": "Voix chamane femme",
+          "dominantHz": 200,
+          "rmsNorm": 0.80,
+          "stereoZone": "right",
+          "loop": false,
+          "tags": ["voice", "shaman", "female", "chant"]
+        }
+      ]
+    },
+    "meditation": {
+      "label": "Méditation",
+      "icon": "🔔",
+      "samples": [
+        {
+          "id": "med_bol_01",
+          "file": "meditation/bol_01.ogg",
+          "synthType": "tibetan",
+          "label": "Bol tibétain",
+          "dominantHz": 216,
+          "stereoZone": "spread",
+          "loop": false,
+          "tags": ["bowl", "tibetan", "strike", "resonance"]
+        },
+        {
+          "id": "med_bol_02",
+          "file": "meditation/bol_02.ogg",
+          "synthType": "tibetan",
+          "label": "Bol tibétain grave",
+          "dominantHz": 108,
+          "stereoZone": "center",
+          "loop": false,
+          "tags": ["bowl", "tibetan", "low", "resonance"]
+        },
+        {
+          "id": "med_handpan_01",
+          "file": "meditation/handpan_01.ogg",
+          "synthType": "harmonic",
+          "label": "Handpan",
+          "dominantHz": 162,
+          "stereoZone": "spread",
+          "loop": false,
+          "tags": ["handpan", "melodic", "steel", "mid"]
+        },
+        {
+          "id": "med_minibrut_01",
+          "file": "meditation/minibrut_01.ogg",
+          "synthType": "drone",
+          "label": "Arturia Minibrut",
+          "dominantHz": 243,
+          "stereoZone": "wide",
+          "loop": false,
+          "tags": ["synth", "minibrut", "melodic", "arturia"]
+        }
+      ]
+    },
+    "user": {
+      "label": "Mes samples",
+      "icon": "⬆",
+      "samples": []
+    }
+  }
+}

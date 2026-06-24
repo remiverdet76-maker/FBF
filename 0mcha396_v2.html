@@ -484,6 +484,104 @@ body{
 #screen-overlay-close{flex-shrink:0;width:38px;height:38px;border-radius:12px;background:rgba(255,80,80,.12);border:1px solid rgba(255,120,120,.35);color:#ff9999;font-size:1.1rem;line-height:1;cursor:pointer;}
 #screen-overlay-close:active{background:rgba(255,80,80,.28);}
 #screen-frame{flex:1 1 auto;width:100%;height:100%;border:none;background:#02010D;}
+/* Mini-player : module actif en arrière-plan */
+#module-mini-player{display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:350;
+  background:rgba(8,4,28,.94);border:1px solid rgba(200,100,255,.5);border-radius:28px;
+  padding:7px 14px 7px 12px;backdrop-filter:blur(14px);align-items:center;gap:8px;
+  font-size:.7rem;letter-spacing:.08em;color:rgba(220,200,255,.88);white-space:nowrap;box-shadow:0 4px 24px rgba(150,80,255,.22);}
+#module-mini-player.visible{display:flex;}
+#module-mini-player .mmp-icon{font-size:1rem;opacity:.9;}
+#module-mini-player .mmp-label{font-family:'Cinzel Decorative',serif;font-size:.68rem;letter-spacing:.12em;}
+#module-mini-player .mmp-pulse{width:7px;height:7px;border-radius:50%;background:#86FFC0;box-shadow:0 0 6px #86FFC0;animation:mmpPulse 1.4s ease-in-out infinite;}
+@keyframes mmpPulse{0%,100%{opacity:.5;transform:scale(.85);}50%{opacity:1;transform:scale(1.2);}}
+.mmp-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(220,200,255,.8);
+  font-size:.75rem;padding:3px 8px;cursor:pointer;font-family:inherit;transition:background .15s;}
+.mmp-btn:active{background:rgba(255,255,255,.18);}
+.mmp-btn.stop{border-color:rgba(255,120,120,.4);color:#ff9999;}
+
+/* ══ ChaVibe Panel ══════════════════════════════════════════════ */
+#chavibe-panel{
+  position:fixed;bottom:-100%;left:0;right:0;z-index:200;
+  background:rgba(6,2,20,.97);
+  border-top:1.5px solid rgba(180,80,255,.35);
+  border-radius:22px 22px 0 0;
+  padding:0 0 env(safe-area-inset-bottom,0);
+  backdrop-filter:blur(22px);
+  box-shadow:0 -8px 40px rgba(140,60,255,.22);
+  transition:bottom .38s cubic-bezier(.4,0,.2,1);
+  max-height:78vh;overflow-y:auto;scrollbar-width:none;
+}
+#chavibe-panel.open{bottom:62px;}
+#chavibe-panel::-webkit-scrollbar{display:none;}
+#cv-handle{width:40px;height:4px;border-radius:2px;background:rgba(200,120,255,.35);margin:10px auto 0;}
+#cv-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.8rem 1.2rem .5rem;
+  border-bottom:1px solid rgba(180,80,255,.15);
+}
+#cv-title{
+  font-family:'Cinzel Decorative',serif;font-size:.88rem;letter-spacing:.14em;
+  background:linear-gradient(90deg,#C880FF,#86FFC0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#cv-close{background:none;border:none;color:rgba(220,200,255,.5);font-size:1rem;cursor:pointer;padding:4px 8px;}
+#cv-body{padding:.8rem 1.1rem 1rem;display:flex;flex-direction:column;gap:1rem;}
+
+/* Thèmes */
+#cv-themes{display:flex;flex-wrap:wrap;gap:.45rem;}
+.cv-theme-btn{
+  display:flex;align-items:center;gap:.35rem;
+  padding:.32rem .7rem;border-radius:20px;cursor:pointer;
+  border:1.5px solid rgba(160,80,255,.28);
+  background:rgba(255,255,255,.04);
+  color:rgba(200,170,255,.72);font-size:.72rem;font-family:inherit;
+  transition:all .18s;-webkit-tap-highlight-color:transparent;
+}
+.cv-theme-btn.active{
+  border-color:rgba(180,90,255,.75);background:rgba(140,60,255,.18);
+  color:rgba(230,210,255,.95);box-shadow:0 0 10px rgba(140,60,255,.22);
+}
+.cv-theme-ico{font-size:.95rem;}
+
+/* Intensité */
+.cv-row{display:flex;align-items:center;gap:.7rem;min-height:28px;}
+.cv-lbl{font-size:.68rem;letter-spacing:.08em;color:rgba(180,140,255,.65);white-space:nowrap;min-width:60px;}
+.cv-val{font-size:.72rem;color:#C880FF;min-width:28px;text-align:right;font-variant-numeric:tabular-nums;}
+input[type=range].cv-range{
+  flex:1;-webkit-appearance:none;height:3px;
+  background:linear-gradient(90deg,#8840FF,rgba(255,255,255,.08));
+  border-radius:3px;outline:none;cursor:pointer;
+}
+input[type=range].cv-range::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle,#C880FF,#8840FF);
+  box-shadow:0 0 8px rgba(140,60,255,.55);
+}
+
+/* Boutons action */
+.cv-btns{display:flex;gap:.55rem;flex-wrap:wrap;}
+.cv-btn{
+  flex:1;min-width:80px;padding:.42rem .6rem;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(160,80,255,.35);background:rgba(255,255,255,.05);
+  color:rgba(220,200,255,.82);font-size:.72rem;font-family:inherit;
+  transition:all .18s;-webkit-tap-highlight-color:transparent;
+}
+.cv-btn:active{background:rgba(140,60,255,.2);}
+.cv-btn.cv-play{border-color:rgba(134,255,192,.45);color:#86FFC0;}
+.cv-btn.cv-play.live{background:rgba(60,200,120,.12);border-color:#86FFC0;box-shadow:0 0 10px rgba(86,255,176,.2);}
+
+/* Indicateur de voix actives */
+#cv-field{
+  height:28px;border-radius:8px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(160,80,255,.14);
+  position:relative;overflow:hidden;
+}
+#cv-field-bar{position:absolute;top:0;left:0;bottom:0;width:0%;
+  background:linear-gradient(90deg,rgba(140,60,255,.18),rgba(86,255,176,.12));
+  transition:width 1.2s ease;}
+.cv-note{font-size:.6rem;color:rgba(180,140,255,.45);padding:.2rem .5rem;position:relative;}
+
+/* ════════════════════════════════════════════════════════════════ */
 
 /* ── Onglet 3D ── */
 .pan3d-head{display:flex;justify-content:space-between;align-items:center;font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.1em;color:#E0C8FF;margin-bottom:10px;}
@@ -1305,6 +1403,9 @@ input.param-input{
 </nav>
 
 <div id="drop-menu">
+  <button class="dmenu-item" onclick="cvOpen();closeMenu()">
+    <span class="dmenu-ico">✦</span>ChaVibe — Jeu évolutif
+  </button>
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
   </button>
@@ -1328,6 +1429,79 @@ input.param-input{
     <button id="screen-overlay-close" onclick="closeScreen()" aria-label="Fermer">✕</button>
   </div>
   <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
+</div>
+
+<!-- ══ ChaVibe — Panel slide-up ══════════════════════════════════════ -->
+<div id="chavibe-panel" role="dialog" aria-label="ChaVibe">
+  <div id="cv-handle"></div>
+  <div id="cv-head">
+    <span id="cv-title">✦ ChaVibe</span>
+    <button id="cv-close" onclick="cvClose()" aria-label="Fermer">✕</button>
+  </div>
+  <div id="cv-body">
+
+    <!-- Thèmes -->
+    <div>
+      <div class="pct" style="margin-bottom:.55rem">Thèmes actifs</div>
+      <div id="cv-themes">
+        <button class="cv-theme-btn active" data-th="nature"    onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🌿</span>Nature</button>
+        <button class="cv-theme-btn active" data-th="voix"      onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🎤</span>Voix</button>
+        <button class="cv-theme-btn"        data-th="chamanique"onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🥁</span>Chamanique</button>
+        <button class="cv-theme-btn"        data-th="meditation"onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🔔</span>Méditation</button>
+        <button class="cv-theme-btn"        data-th="user"      onclick="cvToggleTheme(this)"><span class="cv-theme-ico">⬆</span>Mes samples</button>
+      </div>
+    </div>
+
+    <!-- Intensité -->
+    <div>
+      <div class="pct" style="margin-bottom:.55rem">Intensité · spatialisation</div>
+      <div class="cv-row">
+        <span class="cv-lbl">Intensité</span>
+        <input type="range" class="cv-range" id="cv-intensity" min="0" max="9.9" step="0.1" value="5.0"
+          oninput="cvSetIntensity(this.value)">
+        <span class="cv-val" id="cv-ival">5.0</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl">Volume</span>
+        <input type="range" class="cv-range" id="cv-vol" min="0" max="1" step="0.01" value="0.52"
+          oninput="cvSetVol(this.value)">
+        <span class="cv-val" id="cv-vval">52%</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl">Reverb</span>
+        <input type="range" class="cv-range" id="cv-rvb" min="0" max="1" step="0.01" value="0.55"
+          oninput="cvSetReverb(this.value)">
+        <span class="cv-val" id="cv-rval">55%</span>
+      </div>
+    </div>
+
+    <!-- Champ stéréo (indicateur visuel) -->
+    <div>
+      <div class="pct" style="margin-bottom:.35rem">Champ stéréo actif</div>
+      <div id="cv-field"><div id="cv-field-bar"></div><span class="cv-note" id="cv-note">— en attente du play —</span></div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="cv-btns">
+      <button class="cv-btn cv-play" id="cv-playbtn" onclick="cvTogglePlay()">▶ Lancer</button>
+      <button class="cv-btn" onclick="cvRandomTheme()">⟳ Thème aléatoire</button>
+    </div>
+
+    <div style="font-size:.6rem;color:rgba(180,140,255,.35);text-align:center;line-height:1.4">
+      Ajouter vos samples : <code style="color:rgba(200,160,255,.5)">samples/&lt;thème&gt;/fichier.ogg</code><br>
+      puis l'entrée correspondante dans <code style="color:rgba(200,160,255,.5)">samples/manifest.json</code>
+    </div>
+
+  </div>
+</div>
+
+<!-- Mini-player : module actif en fond (audio continue après fermeture overlay) -->
+<div id="module-mini-player">
+  <span class="mmp-pulse"></span>
+  <span class="mmp-icon">♪</span>
+  <span class="mmp-label" id="mmp-title">Module</span>
+  <button class="mmp-btn" onclick="reopenModule()">⬚ Rouvrir</button>
+  <button class="mmp-btn stop" onclick="stopModuleForReal()">✕ Stop</button>
 </div>
 
 <div id="osc-modal">
@@ -1424,14 +1598,14 @@ function waveState(hz) {
 
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
-  if (i === MASTER_IDX) return Math.min(648, masterFreq);
-  return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
+  if (i === MASTER_IDX) return Math.min(486, masterFreq);
+  return Math.max(54, Math.min(486, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(36, Math.min(648, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(54, Math.min(486, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(36, Math.min(648, f)); }
+function safeF(f)    { return Math.max(54, Math.min(486, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
@@ -1671,7 +1845,7 @@ function initFXChain() {
   // ═══ RACK MASTER (calqué Allen & Heath DB4) ═══════════════════
   // Tout converge ici : un seul bus de sortie, un seul limiteur protège tout.
   // Étages : TRIM bus → EQ master 3B (54/216/432) → GLUE → FADER → LIMITEUR
-  // Borné à la bande réelle du système : 36–864 Hz. Rien au-dessus.
+  // Borné à la bande réelle du système : 54–486 Hz.
 
   // — TRIM d'entrée du bus (structure de gain propre, avant le master) —
   busTrim = c.createGain(); busTrim.gain.value = 1;
@@ -1864,12 +2038,29 @@ async function startFlow() {
   try {
     const c = audioCtx();
     if (c.state !== 'running') await c.resume();
-    // Reprendre l'audio après retour de veille (Android Doze / écran off)
+    // Reprendre l'audio après retour de veille (Android Doze / écran off / Capacitor resume)
     if (!startFlow._visBound) {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && AC && AC.state !== 'running' && !_moduleAudioActive) AC.resume();
+        if (document.visibilityState === 'visible' && AC && AC.state !== 'running') AC.resume();
+      });
+      // Event Capacitor natif — déverrouillage téléphone
+      document.addEventListener('resume', () => {
+        if (flowing && AC && AC.state !== 'running') AC.resume();
       });
       startFlow._visBound = true;
+    }
+    // Heartbeat : relance l'AC si throttlé par Android Doze (toutes les 12 s)
+    if (!startFlow._heartbeat) {
+      startFlow._heartbeat = setInterval(() => {
+        if (flowing && AC && AC.state !== 'running') AC.resume().catch(() => {});
+      }, 12000);
+    }
+    // Wake Lock API : empêche le CPU de throttler le thread audio (web + APK WebView)
+    if (!startFlow._wakeLock && 'wakeLock' in navigator) {
+      navigator.wakeLock.request('screen').then(lock => {
+        startFlow._wakeLock = lock;
+        lock.addEventListener('release', () => { startFlow._wakeLock = null; });
+      }).catch(() => {});
     }
     _startBTKeepalive();
     initFXChain();
@@ -1901,6 +2092,11 @@ async function startFlow() {
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
+    // ChaVibe démarre en synchrone avec le flow si actif
+    if (typeof ChaVibe !== 'undefined' && ChaVibe.enabled) {
+      ChaVibe.start().catch(() => {});
+      _cvSyncUI(true);
+    }
   } catch(err) {
     flowing = false; nodes = {};
     ui('idle', 'Erreur audio — relancer');
@@ -1910,6 +2106,8 @@ async function startFlow() {
 async function stopFlow() {
   ui('idle', 'Dissolution…');
   try { window.Capacitor?.Plugins?.KeepAwake?.allowSleep?.(); } catch(e) {}
+  if (startFlow._heartbeat) { clearInterval(startFlow._heartbeat); startFlow._heartbeat = null; }
+  if (startFlow._wakeLock)  { try { startFlow._wakeLock.release(); } catch(e) {} startFlow._wakeLock = null; }
   if (typeof progRunning !== 'undefined' && progRunning) stopProgression();
   Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
   try {
@@ -1922,6 +2120,7 @@ async function stopFlow() {
   const nodesCopy = {...nodes};
   nodes = {};
   flowing = false;
+  if (typeof ChaVibe !== 'undefined') { ChaVibe.stop(); _cvSyncUI(false); }
   Object.values(nodesCopy).forEach(n => {
     if (!n) return;
     try {
@@ -2063,7 +2262,7 @@ const MASTER_HUE_SEUILS=[
   {f:360,h:80 },{f:414,h:40 },{f:432,h:270}
 ];
 function masterHue(freq){
-  const f=Math.max(36,Math.min(432,freq||432));
+  const f=Math.max(54,Math.min(486,freq||432));
   for(let i=0;i<MASTER_HUE_SEUILS.length-1;i++){
     const a=MASTER_HUE_SEUILS[i],b=MASTER_HUE_SEUILS[i+1];
     if(f>=a.f&&f<=b.f){
@@ -2885,9 +3084,9 @@ function toggleAccord(id) {
 // Band A (36–108) : oscs 0,1
 // Band B (108–256): oscs 2,3
 // Band C (256–432): oscs 4,5
-// Maître : aléatoire 36–432
+// Maître : aléatoire 54–486
 function trigger0mcha396() {
-  masterFreq = 36 + Math.floor(Math.random() * 613);
+  masterFreq = 54 + Math.floor(Math.random() * 433);
 
   PAIRS[0].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
   PAIRS[1].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
@@ -2921,11 +3120,11 @@ function trigger0mcha396() {
 
 // ── Bouton +/− sur la sphère : ±36 Hz maître + ratio aléatoire pour chaque osc ──
 function fbfStep(delta) {
-  masterFreq = Math.max(36, Math.min(648, masterFreq + delta));
+  masterFreq = Math.max(54, Math.min(486, masterFreq + delta));
 
   for (let i = 0; i < MASTER_IDX; i++) {
     const ratio = RATIO_OPTS[Math.floor(Math.random() * RATIO_OPTS.length)].r;
-    PAIRS[i].pingala.baseFreq = Math.max(36, Math.min(432,
+    PAIRS[i].pingala.baseFreq = Math.max(54, Math.min(486,
       PAIRS[i].pingala.baseFreq + delta * ratio));
     if (typeof flowing !== 'undefined' && flowing) {
       tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -2942,14 +3141,14 @@ function fbfStep(delta) {
 }
 
 // ── Options mode aléatoire (pour compatibilité panel FX) ──────────
-const RAND_OPTS = {freqMin:36, freqMax:432, ratioMode:'random', useFX:false, rangeOn:false};
+const RAND_OPTS = {freqMin:54, freqMax:486, ratioMode:'random', useFX:false, rangeOn:false};
 function setRandRange(v)    { RAND_OPTS.rangeOn = !!v; }
 function setRandFreqMin(v)  {
-  RAND_OPTS.freqMin = Math.max(36, Math.min(RAND_OPTS.freqMax-1, parseInt(v)));
+  RAND_OPTS.freqMin = Math.max(54, Math.min(RAND_OPTS.freqMax-1, parseInt(v)));
   const el=document.getElementById('rv-fmin'); if(el) el.textContent=RAND_OPTS.freqMin;
 }
 function setRandFreqMax(v)  {
-  RAND_OPTS.freqMax = Math.min(432, Math.max(RAND_OPTS.freqMin+1, parseInt(v)));
+  RAND_OPTS.freqMax = Math.min(486, Math.max(RAND_OPTS.freqMin+1, parseInt(v)));
   const el=document.getElementById('rv-fmax'); if(el) el.textContent=RAND_OPTS.freqMax;
 }
 function setRandRatioMode(m, btn) {
@@ -3060,7 +3259,7 @@ function setMasterVol(v) {
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(36, Math.min(648, f));
+  masterFreq = Math.max(54, Math.min(486, f));
   updateDisplay();
   if (typeof flowing !== 'undefined' && flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -3103,11 +3302,11 @@ function nRandom(i) {
 }
 
 function masterStep(delta) {
-  setMasterFreq(Math.max(36, Math.min(648, masterFreq + delta)));
+  setMasterFreq(Math.max(54, Math.min(486, masterFreq + delta)));
 }
 function onMasterInput(raw) {
   const v = parseInt(raw);
-  if (isNaN(v) || v < 36 || v > 432) return;
+  if (isNaN(v) || v < 54 || v > 486) return;
   masterFreq = v;
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
   document.title = '0mcha396 · ' + v;
@@ -3120,7 +3319,7 @@ function onMasterInput(raw) {
   updateSphereDisplay && updateSphereDisplay();
 }
 function onMasterChange(raw) {
-  const v = Math.max(36, Math.min(432, parseInt(raw)));
+  const v = Math.max(54, Math.min(486, parseInt(raw)));
   if (!isNaN(v)) setMasterFreq(v);
 }
 
@@ -3418,10 +3617,10 @@ function buildMasterFXHTML() {
       <div class="mfreq-label">Fréquence maître</div>
       <div class="mfreq-row">
         <button class="mfreq-btn sm" onclick="masterStep(-1)">−</button>
-        <input type="number" id="master-input" class="mfreq-input" min="36" max="648" value="432" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
+        <input type="number" id="master-input" class="mfreq-input" min="54" max="486" value="252" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
         <button class="mfreq-btn" onclick="masterStep(1)">+</button>
       </div>
-      <div class="mfreq-range">36 — 864 Hz</div>
+      <div class="mfreq-range">54 — 486 Hz</div>
     </div>
     <div class="delta-sphere-wrap" style="margin-top:.5rem;">
       <div class="delta-sphere-label">Battement Binaural Global</div>
@@ -3688,9 +3887,9 @@ function buildProgHTML() {
     </div>
     <div class="prog-range-row">
       <span class="prog-label">Min</span>
-      <input type="number" class="prog-range-input" id="prog-min" min="36" max="864" value="36">
+      <input type="number" class="prog-range-input" id="prog-min" min="54" max="486" value="54">
       <span class="prog-label" style="min-width:auto;">Max</span>
-      <input type="number" class="prog-range-input" id="prog-max" min="36" max="864" value="864">
+      <input type="number" class="prog-range-input" id="prog-max" min="54" max="486" value="486">
     </div>
     <div class="prog-range-row">
       <span class="prog-label">Durée</span>
@@ -3933,8 +4132,8 @@ let progDir     = 1;
 let progFreqCur = 252;
 
 function getProgRange() {
-  const lo = Math.max(36,   Math.min(864, parseInt(document.getElementById('prog-min')?.value)||36));
-  const hi = Math.max(lo+1, Math.min(864, parseInt(document.getElementById('prog-max')?.value)||864));
+  const lo = Math.max(54,   Math.min(486, parseInt(document.getElementById('prog-min')?.value)||54));
+  const hi = Math.max(lo+1, Math.min(486, parseInt(document.getElementById('prog-max')?.value)||486));
   return { lo, hi };
 }
 function progStep() {
@@ -3991,7 +4190,7 @@ function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(LS_KEY));
     if (!s) return;
-    if (s.masterFreq>=36&&s.masterFreq<=648) masterFreq = s.masterFreq;
+    if (s.masterFreq>=54&&s.masterFreq<=486) masterFreq = s.masterFreq;
     if (s.globalDelta>0) globalDelta = s.globalDelta;
     if (s.masterVol>=0&&s.masterVol<=1) masterVol = s.masterVol;
     if (typeof s.activeGeometry==='number') activeGeometry = s.activeGeometry;
@@ -4085,32 +4284,80 @@ function closeMenu() {
 // ── Modules en surimpression (iframe) — le binaural d'Omcha396 continue ──
 // ── Exclusivité audio : un module qui joue coupe le binaural d'accueil ──
 let _moduleAudioActive = false;
+let _moduleScreenTitle = '';
 function _resumeAudioSafe(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='suspended')AC.resume(); }catch(e){} }
 function _suspendHomeAudio(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='running')AC.suspend(); }catch(e){} }
 // Le module (iframe) signale qu'il lance un son → on coupe le son maison.
+// 'stop-ack' : le module confirme que son audio est stoppé.
 window.addEventListener('message', function(e){
   const d = e.data || {};
-  if (d.fbf === 'audio-claim'){ _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'audio-claim') { _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'stop-ack')    { _finalizeModuleDestroy(); }
 });
+
+function _showModuleMiniPlayer(title) {
+  const mp = document.getElementById('module-mini-player'); if (!mp) return;
+  const t = document.getElementById('mmp-title'); if (t) t.textContent = title || 'Module';
+  mp.classList.add('visible');
+}
+function _hideMiniPlayer() {
+  const mp = document.getElementById('module-mini-player'); if (mp) mp.classList.remove('visible');
+}
+function _finalizeModuleDestroy() {
+  const fr = document.getElementById('screen-frame');
+  setTimeout(() => { if (fr) fr.src = 'about:blank'; }, 600);
+  _moduleAudioActive = false; _resumeAudioSafe(); _hideMiniPlayer();
+}
+
 function openScreen(src, title){
   const ov=document.getElementById('screen-overlay'),
         fr=document.getElementById('screen-frame'),
         tt=document.getElementById('screen-overlay-title');
   if(!ov||!fr) return;
+  // Si un autre module tourne en fond, on l'arrête d'abord
+  if (fr.src && fr.src !== 'about:blank' && !ov.classList.contains('open')) {
+    try { fr.contentWindow.postMessage({fbf:'stop-flow'}, '*'); } catch(e) {}
+    setTimeout(() => { if (fr) fr.src = src; }, 700);
+  } else {
+    fr.src = src;
+  }
+  _moduleScreenTitle = title || '';
   if(tt) tt.textContent = title || 'Module';
-  fr.src = src; ov.classList.add('open'); _resumeAudioSafe();
+  ov.classList.add('open'); _hideMiniPlayer(); _resumeAudioSafe();
   try{ history.pushState({omchaScreen:true},''); }catch(e){}
 }
 function closeScreen(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
   if(!ov||!ov.classList.contains('open')) return;
-  ov.classList.remove('open'); if(fr) fr.src='about:blank';
-  _moduleAudioActive = false; _resumeAudioSafe();   // module fermé → le binaural revient
+  ov.classList.remove('open');
+  if (_moduleAudioActive) {
+    // Audio en cours → garder l'iframe vivante, afficher le mini-player
+    _showModuleMiniPlayer(_moduleScreenTitle);
+  } else {
+    if(fr) fr.src='about:blank';
+    _resumeAudioSafe();
+  }
   if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
 }
-window.addEventListener('popstate', function(){
+function reopenModule(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
-  if(ov&&ov.classList.contains('open')){ ov.classList.remove('open'); if(fr) fr.src='about:blank'; _moduleAudioActive=false; _resumeAudioSafe(); }
+  if(!ov||!fr||!fr.src||fr.src==='about:blank') return;
+  ov.classList.add('open'); _hideMiniPlayer();
+  try{ history.pushState({omchaScreen:true},''); }catch(e){}
+}
+function stopModuleForReal(){
+  const fr=document.getElementById('screen-frame');
+  try { fr.contentWindow.postMessage({fbf:'stop-flow'}, '*'); } catch(e) {}
+  // Fallback si le module ne répond pas (stop-ack) : détruire après 1.5 s
+  setTimeout(() => _finalizeModuleDestroy(), 1500);
+}
+window.addEventListener('popstate', function(){
+  const ov=document.getElementById('screen-overlay');
+  if(ov&&ov.classList.contains('open')){
+    ov.classList.remove('open');
+    if (_moduleAudioActive) { _showModuleMiniPlayer(_moduleScreenTitle); }
+    else { const fr=document.getElementById('screen-frame'); if(fr) fr.src='about:blank'; _resumeAudioSafe(); }
+  }
 });
 window.addEventListener('keydown', function(e){ if(e.key==='Escape') closeScreen(); });
 
@@ -4359,10 +4606,10 @@ function cosmicUT432(){
   const m=(fd.getUTCHours()-off)*60+fd.getUTCMinutes()+fd.getUTCSeconds()/60;
   return((m+2.35/15*60+_eqTCosmo(fd))/1440*432+432)%432;
 }
-// Fréquence maître initiale = densité cosmique bornée à la plage [36,432]
+// Fréquence maître initiale = densité cosmique bornée à la plage [54,486]
 function cosmicMasterFreq(){
   const ut=cosmicUT432();
-  return Math.max(36,Math.min(432,Math.round(ut)));
+  return Math.max(54,Math.min(486,Math.round(ut)));
 }
 
 function init() {
@@ -4772,6 +5019,94 @@ const Bowl = (() => {
 if (typeof window !== 'undefined') window.Bowl = Bowl;
 
 
+</script>
+<script src="chavibe/engine.js"></script>
+<script>
+/* ══ ChaVibe UI ════════════════════════════════════════════════════ */
+(function () {
+  // Initialisation : charge le manifest au premier ouverture du panel
+  let _cvInited = false;
+  async function _cvEnsure() {
+    if (_cvInited) return;
+    _cvInited = true;
+    await ChaVibe.init();
+    await ChaVibe.loadManifest();
+  }
+
+  // Panel open / close
+  window.cvOpen = function () {
+    document.getElementById('chavibe-panel').classList.add('open');
+    _cvEnsure();
+  };
+  window.cvClose = function () {
+    document.getElementById('chavibe-panel').classList.remove('open');
+  };
+
+  // Synchro UI bouton play
+  window._cvSyncUI = function (live) {
+    const btn = document.getElementById('cv-playbtn');
+    if (!btn) return;
+    btn.textContent = live ? '■ Stop' : '▶ Lancer';
+    btn.classList.toggle('live', live);
+    const note = document.getElementById('cv-note');
+    if (note) note.textContent = live ? '▸ jeu actif — spirale 72 s' : '— en attente du play —';
+    const bar = document.getElementById('cv-field-bar');
+    if (bar) bar.style.width = live ? (30 + ChaVibe.intensity * 7).toFixed(0) + '%' : '0%';
+  };
+
+  // Bouton play (indépendant du flow Omcha)
+  window.cvTogglePlay = async function () {
+    await _cvEnsure();
+    if (ChaVibe.playing) {
+      ChaVibe.stop(); _cvSyncUI(false);
+    } else {
+      await ChaVibe.start(); _cvSyncUI(true);
+    }
+  };
+
+  // Intensité
+  window.cvSetIntensity = function (v) {
+    ChaVibe.setIntensity(v);
+    const el = document.getElementById('cv-ival');
+    if (el) el.textContent = parseFloat(v).toFixed(1);
+    const bar = document.getElementById('cv-field-bar');
+    if (bar && ChaVibe.playing) bar.style.width = (30 + ChaVibe.intensity * 7).toFixed(0) + '%';
+  };
+
+  // Volume
+  window.cvSetVol = function (v) {
+    ChaVibe.setOutputVol(v);
+    const el = document.getElementById('cv-vval');
+    if (el) el.textContent = Math.round(v * 100) + '%';
+  };
+
+  // Reverb
+  window.cvSetReverb = function (v) {
+    ChaVibe.setReverbMix(v);
+    const el = document.getElementById('cv-rval');
+    if (el) el.textContent = Math.round(v * 100) + '%';
+  };
+
+  // Toggle thème
+  window.cvToggleTheme = function (btn) {
+    btn.classList.toggle('active');
+    const active = Array.from(document.querySelectorAll('.cv-theme-btn.active')).map(b => b.dataset.th);
+    ChaVibe.setThemes(active);
+  };
+
+  // Thème aléatoire
+  window.cvRandomTheme = function () {
+    const all  = Array.from(document.querySelectorAll('.cv-theme-btn'));
+    const keys = all.map(b => b.dataset.th);
+    // Sélectionne 1 à 3 thèmes au hasard
+    const count  = 1 + Math.floor(Math.random() * 2);
+    const chosen = keys.sort(() => Math.random() - 0.5).slice(0, count);
+    all.forEach(b => {
+      b.classList.toggle('active', chosen.includes(b.dataset.th));
+    });
+    ChaVibe.setThemes(chosen);
+  };
+})();
 </script>
 <script>
 window.FBF_MODULES = window.FBF_MODULES || [

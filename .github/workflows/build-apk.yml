@@ -50,7 +50,22 @@ jobs:
           cp ../bg-rotator.css ../bg-rotator.js ../audio-bus.js www/
           mkdir -p www/img
           cp ../img/*.jpg www/img/
-          echo "www/ contents:"; ls -lh www/; echo "www/img:"; ls -lh www/img/
+          # Module FBF 432 1re version (natif Web Audio, sans Tone.js)
+          cp -r ../fbf432 www/fbf432
+          # ChaVibe engine
+          mkdir -p www/chavibe
+          cp -r ../chavibe/. www/chavibe/
+          # Samples (manifest + fichiers audio — vides = synthèse fallback)
+          mkdir -p www/samples
+          cp ../samples/manifest.json www/samples/
+          for d in nature voix chamanique meditation user; do
+            mkdir -p www/samples/$d
+            if [ -d "../samples/$d" ]; then
+              find "../samples/$d" \( -name "*.ogg" -o -name "*.mp3" -o -name "*.wav" \) \
+                -exec cp {} "www/samples/$d/" \; 2>/dev/null || true
+            fi
+          done
+          echo "www/ contents:"; ls -lh www/; echo "www/samples:"; ls -lh www/samples/
 
       - name: Remove Google Fonts (offline fallback)
         working-directory: apk/www
@@ -85,6 +100,9 @@ jobs:
               printf "  {file:'%s', title:'%s', ico:'\\u25c9'}" "$f" "$t"
               first=0
             done
+            # Module split-file FBF 432 (dans son sous-dossier)
+            [ $first -eq 0 ] && echo ","
+            printf "  {file:'fbf432/index.html', title:'FBF 432', ico:'\\u25c9'}"
             echo ""
             echo "];"
           } > modules.js
