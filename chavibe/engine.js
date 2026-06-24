@@ -41,6 +41,16 @@ const ChaVibe = (() => {
     },
   };
 
+  // ── Synthèse de secours — toujours disponible même sans manifest ──
+  const SYNTH_POOL = [
+    { id:'fb_throat',   file:null, synthType:'throat',   dominantHz:108, stereoZone:'left'   },
+    { id:'fb_angelic',  file:null, synthType:'angelic',  dominantHz:324, stereoZone:'right'  },
+    { id:'fb_tibetan',  file:null, synthType:'tibetan',  dominantHz:72,  stereoZone:'center' },
+    { id:'fb_harmonic', file:null, synthType:'harmonic', dominantHz:216, stereoZone:'spread' },
+    { id:'fb_whisper',  file:null, synthType:'whisper',  dominantHz:800, stereoZone:'wide'   },
+    { id:'fb_drone',    file:null, synthType:'drone',    dominantHz:162, stereoZone:'spread' },
+  ];
+
   // ── État interne ─────────────────────────────────────────────────
   let _AC = null, _outG = null, _comp = null, _rvNode = null, _rvWet = null, _rvDry = null;
   let _ready = false, _initing = null;
@@ -194,18 +204,21 @@ const ChaVibe = (() => {
 
   // ── Sélection pondérée d'une entrée ──────────────────────────────
   function _pick() {
-    if (!_manifest) return null;
-    const pool = [];
-    for (const th of _themes) {
-      const t = _manifest.themes[th];
-      if (t && t.samples) t.samples.forEach(s => pool.push(s));
+    // Pool manifest (thèmes actifs) + toujours le pool de synthèse de secours
+    const pool = [...SYNTH_POOL];
+    if (_manifest) {
+      for (const th of _themes) {
+        const t = _manifest.themes[th];
+        if (t && t.samples) t.samples.forEach(s => pool.push(s));
+      }
     }
-    if (!pool.length) return null;
 
     const weights = pool.map(e => {
       const harmony = 0.30 + 0.70 * _hScore(e.dominantHz || 200);
       const fresh   = _recent.includes(e.id) ? 0.20 : 1.0;
-      return harmony * fresh;
+      // Légère préférence pour les samples réels (plus riches) quand disponibles
+      const pref    = e.file ? 1.25 : 1.0;
+      return harmony * fresh * pref;
     });
     const tot = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * tot;
@@ -424,24 +437,27 @@ const ChaVibe = (() => {
   }
 
   // ── Scheduler principal ───────────────────────────────────────────
-  async function _schedule() {
-    if (!_playing) return;
+  // Timing : intensité 0 → ~25s, intensité 5 → ~6s, intensité 9.9 → ~1.5s
+  function _nextWait() {
+    const t = _intensity / 9.9;
+    const base = 1.5 + 23.5 * Math.pow(1 - t, 2.2);
+    const wave = _wave();
+    // La spirale 72s module légèrement le rythme (phase de pic = plus dense)
+    const wMod = 0.7 + 0.6 * (1 - wave);
+    return base * wMod * (0.75 + 0.5 * Math.random());
+  }
 
-    const wave     = _wave();
-    const baseWait = Math.max(3.5, 58 - _intensity * 5.5);
-    const jitter   = baseWait * (0.4 + 0.6 * (1 - wave));
-    const wait     = (baseWait + Math.random() * jitter) / (_intensity > 0.5 ? 1 : 4);
-
+  function _fireEntry() {
     const entry = _pick();
-    if (entry) {
-      if (entry.file) {
-        _spawnSample(entry).catch(() => _spawnSynth(entry));
-      } else {
-        _spawnSynth(entry);
-      }
-    }
+    if (!entry) return;
+    if (entry.file) _spawnSample(entry).catch(() => _spawnSynth(entry));
+    else            _spawnSynth(entry);
+  }
 
-    _sched = setTimeout(_schedule, wait * 1000);
+  function _schedule() {
+    if (!_playing) return;
+    _fireEntry();
+    _sched = setTimeout(_schedule, _nextWait() * 1000);
   }
 
   // ── API publique ──────────────────────────────────────────────────
@@ -452,7 +468,10 @@ const ChaVibe = (() => {
     _playing = true;
     _waveT0  = _ctx().currentTime;
     _recent  = [];
-    _schedule();
+    // Premier son immédiat (1.2 s après start pour laisser l'AC respirer)
+    setTimeout(() => { if (_playing) _fireEntry(); }, 1200);
+    // Puis scheduler régulier
+    _sched = setTimeout(_schedule, _nextWait() * 1000);
   }
 
   function stop() {
