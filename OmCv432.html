@@ -1309,6 +1309,15 @@ input.param-input{
 }
 
 
+
+/* ── OmCv432 tab extras ────────────────────────────────────────────────── */
+.bina-btn, .mast-btn {
+  border-color: rgba(96,216,255,.35) !important;
+  color: #60D8FF !important;
+  min-width: 40px; padding: .28rem .4rem; font-size: .68rem;
+}
+.mast-btn { border-color: rgba(245,212,96,.35) !important; color: #F5D460 !important; }
+#rec-start-btn:disabled { opacity: .4; }
 </style>
 <link rel="stylesheet" href="bg-rotator.css">
 <style id="cosmic-bg-override">
@@ -1374,12 +1383,31 @@ input.param-input{
 
 <!-- ── Tab: Aléatoire 🟢 ─────────────────────────────────────────────────── -->
 <div class="tab-panel open" id="panAlea">
-  <div class="tp-title">✦ OmCv432 · Binaural</div>
+  <div class="tp-title" style="color:#56FFB0">🎲 OmCv432 · Aléatoire</div>
+
   <div class="tp-freq-display" id="alea-freq-display">— Hz</div>
   <div class="tp-freq-sub" id="alea-wave-state">Fréquence harmonique aléatoire</div>
+
   <div class="tp-play-row">
     <button class="tp-play-btn" id="alea-play-btn" onclick="aleaToggleFlow()">▶ Lancer</button>
   </div>
+
+  <div class="tp-section">Mode</div>
+  <div class="tp-info-row">
+    <span>Mode harmonique</span>
+    <label class="fx-toggle">
+      <input type="checkbox" id="alea-harmonic-on" checked onchange="_harmonicModeOn=this.checked">
+      <span class="fx-toggle-track"></span>
+    </label>
+  </div>
+  <div class="tp-info-row">
+    <span>FX aléatoires au départ</span>
+    <label class="fx-toggle">
+      <input type="checkbox" id="alea-randomfx-on" checked onchange="_randomFXOn=this.checked">
+      <span class="fx-toggle-track"></span>
+    </label>
+  </div>
+
   <div class="tp-section">Fréquence active</div>
   <div class="tp-info-row">
     <span>Fréquence maître</span>
@@ -1393,42 +1421,53 @@ input.param-input{
     <span>État cérébral</span>
     <span class="tp-info-val" id="alea-brain-wave">—</span>
   </div>
-  <div class="tp-play-row" style="margin-top:1.5rem">
-    <button class="tp-stop-btn" onclick="aleaNewFreq()" style="border-color:rgba(86,255,176,.5);color:#86FFC0">⟳ Nouvelle fréquence</button>
+
+  <div class="tp-play-row" style="margin-top:1.4rem;gap:.7rem;flex-wrap:wrap">
+    <button class="tp-stop-btn" onclick="aleaNewFreq()" style="border-color:rgba(86,255,176,.5);color:#86FFC0">⟳ Fréquence</button>
+    <button class="tp-stop-btn" onclick="aleaApplyRandomFX()" style="border-color:rgba(86,255,176,.4);color:#80FFD0">✦ FX random</button>
   </div>
+
+  <div class="tp-section">Paires actives</div>
+  <div id="alea-pairs-compact" style="font-size:.65rem;color:rgba(200,180,255,.55);line-height:1.8"></div>
 </div>
 
 <!-- ── Tab: Binaural 🔵 ─────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panBina">
   <div class="tp-title" style="color:#60D8FF">〰 Binaural · Paires</div>
-  <div class="tp-section">Paires d'oscillateurs</div>
-  <div id="bina-pairs-list"><!-- populated by JS --></div>
-  <div class="tp-section">Delta global</div>
+
+  <div class="tp-section">Delta global (battement binaural)</div>
   <div class="tp-info-row">
-    <span>Δ binaural</span>
+    <span>Δ global</span>
     <span class="tp-info-val" id="bina-global-delta">— Hz</span>
   </div>
-  <div class="tp-play-row">
-    <button class="tp-stop-btn" onclick="binaNudge(-9)" style="border-color:rgba(96,216,255,.4);color:#60D8FF">−9 Hz</button>
-    <button class="tp-stop-btn" onclick="binaNudge(-1.8)" style="border-color:rgba(96,216,255,.4);color:#60D8FF">−1.8</button>
-    <button class="tp-stop-btn" onclick="binaNudge(+1.8)" style="border-color:rgba(96,216,255,.4);color:#60D8FF">+1.8</button>
-    <button class="tp-stop-btn" onclick="binaNudge(+9)" style="border-color:rgba(96,216,255,.4);color:#60D8FF">+9 Hz</button>
+  <div class="tp-play-row" style="gap:.5rem">
+    <button class="tp-stop-btn bina-btn" onclick="binaNudge(-36)">−36</button>
+    <button class="tp-stop-btn bina-btn" onclick="binaNudge(-9)">−9</button>
+    <button class="tp-stop-btn bina-btn" onclick="binaNudge(-1.8)">−1.8</button>
+    <button class="tp-stop-btn bina-btn" onclick="binaNudge(+1.8)">+1.8</button>
+    <button class="tp-stop-btn bina-btn" onclick="binaNudge(+9)">+9</button>
+    <button class="tp-stop-btn bina-btn" onclick="binaNudge(+36)">+36</button>
   </div>
+
+  <div class="tp-section">Paires — fréquence individuelle</div>
+  <div id="bina-pairs-list"><!-- populated by _updateBinaPanel() --></div>
 </div>
 
 <!-- ── Tab: Master 🟡 ─────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panMaster">
   <div class="tp-title" style="color:#F5D460">★ Master</div>
+
   <div class="tp-section">Fréquence maître</div>
   <div class="tp-freq-display" id="master-freq-display">— Hz</div>
-  <div class="tp-play-row">
-    <button class="tp-stop-btn" onclick="masterNudge(-54)" style="border-color:rgba(245,212,96,.4);color:#F5D460">−54</button>
-    <button class="tp-stop-btn" onclick="masterNudge(-18)" style="border-color:rgba(245,212,96,.4);color:#F5D460">−18</button>
-    <button class="tp-stop-btn" onclick="masterNudge(-9)" style="border-color:rgba(245,212,96,.4);color:#F5D460">−9</button>
-    <button class="tp-stop-btn" onclick="masterNudge(+9)" style="border-color:rgba(245,212,96,.4);color:#F5D460">+9</button>
-    <button class="tp-stop-btn" onclick="masterNudge(+18)" style="border-color:rgba(245,212,96,.4);color:#F5D460">+18</button>
-    <button class="tp-stop-btn" onclick="masterNudge(+54)" style="border-color:rgba(245,212,96,.4);color:#F5D460">+54</button>
+  <div class="tp-play-row" style="gap:.45rem;flex-wrap:wrap">
+    <button class="tp-stop-btn mast-btn" onclick="masterNudge(-54)">−54</button>
+    <button class="tp-stop-btn mast-btn" onclick="masterNudge(-18)">−18</button>
+    <button class="tp-stop-btn mast-btn" onclick="masterNudge(-9)">−9</button>
+    <button class="tp-stop-btn mast-btn" onclick="masterNudge(+9)">+9</button>
+    <button class="tp-stop-btn mast-btn" onclick="masterNudge(+18)">+18</button>
+    <button class="tp-stop-btn mast-btn" onclick="masterNudge(+54)">+54</button>
   </div>
+
   <div class="tp-section">Volume maître</div>
   <div class="tp-info-row">
     <span>Volume</span>
@@ -1436,6 +1475,45 @@ input.param-input{
   </div>
   <input type="range" class="fx-slider" min="0" max="1" step="0.01" value="0.8"
     oninput="masterVolChange(this.value)">
+
+  <div class="tp-section">Binaural</div>
+  <div class="tp-info-row">
+    <span>FX binaural actif</span>
+    <label class="fx-toggle">
+      <input type="checkbox" id="master-bina-on" checked onchange="masterToggleBinaural(this.checked)">
+      <span class="fx-toggle-track"></span>
+    </label>
+  </div>
+  <div class="tp-info-row">
+    <span>Delta actuel</span>
+    <span class="tp-info-val" id="master-delta-val">— Hz</span>
+  </div>
+
+  <div class="tp-section">Enregistrement WAV</div>
+  <div id="rec-status" style="font-size:.65rem;color:rgba(200,180,255,.5);text-align:center;margin:.4rem 0">
+    Arrêté
+  </div>
+  <div class="tp-play-row" style="gap:.8rem">
+    <button class="tp-play-btn" id="rec-start-btn" onclick="masterStartRecord()"
+      style="border-color:#FF6B6B;color:#FF6B6B;background:rgba(255,80,80,.06)">⏺ Enregistrer</button>
+    <button class="tp-stop-btn" id="rec-stop-btn" onclick="masterStopRecord()" disabled
+      style="opacity:.4">⏹ Stop</button>
+  </div>
+  <div style="font-size:.58rem;color:rgba(200,180,255,.3);text-align:center;margin-top:.3rem">
+    Sauvegarde dans Téléchargements · format WebM
+  </div>
+
+  <div class="tp-section">Samples</div>
+  <div id="sample-cats" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem">
+    <button class="tp-stop-btn" onclick="masterImportSample('Voix')"       style="font-size:.68rem">🎤 Voix</button>
+    <button class="tp-stop-btn" onclick="masterImportSample('Instruments')" style="font-size:.68rem">🎸 Instruments</button>
+    <button class="tp-stop-btn" onclick="masterImportSample('Drone')"       style="font-size:.68rem">〜 Drone</button>
+    <button class="tp-stop-btn" onclick="masterImportSample('Ambiance')"    style="font-size:.68rem">🌿 Ambiance</button>
+    <button class="tp-stop-btn" onclick="masterImportSample('Chakra')"      style="font-size:.68rem">✦ Chakra</button>
+  </div>
+  <input type="file" id="sample-file-input" accept="audio/*" style="display:none"
+    onchange="masterHandleSampleFile(this)">
+  <div id="sample-loaded-list" style="font-size:.65rem;color:rgba(200,180,255,.5);min-height:1rem"></div>
 </div>
 
 <nav id="bottom-nav">
@@ -2782,8 +2860,8 @@ function drawMetatron(){
    paramètres façon Flux Omcha. Réutilise la caméra V (drag/zoom).
    ════════════════════════════════════════════════════════════════ */
 const FX3D = {
-  form:'sphere', ratio:'432/360',
-  density:220, torsion:3.0, expansion:1.0, spread:1.0, glow:0.65, polarity:0.0,
+  form:'torus', ratio:'432/360',
+  density:265, torsion:3.0, expansion:1.0, spread:1.0, glow:0.65, polarity:0.0,
   _pts:null, _pairs:null
 };
 const FX3D_RATIOS = {
@@ -3592,6 +3670,16 @@ function buildMasterFXHTML() {
       <button class="fx-preset-btn del"  id="ps-del-${s}"  onclick="delPreset(${s})"  disabled>✕</button>
     </div>`).join('');
   return `<div class="fx-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+      <button onclick="aleaApplyRandomFX()"
+        style="padding:.35rem .85rem;border-radius:12px;border:1px solid rgba(86,255,176,.4);
+               background:rgba(86,255,176,.07);color:#80FFD0;font-size:.68rem;cursor:pointer;
+               font-family:inherit;letter-spacing:.06em">✦ FX aléatoires</button>
+      <button onclick="resetAllFX()"
+        style="padding:.35rem .85rem;border-radius:12px;border:1px solid rgba(200,100,255,.25);
+               background:rgba(200,100,255,.05);color:rgba(200,180,255,.65);font-size:.68rem;cursor:pointer;
+               font-family:inherit;letter-spacing:.06em">↺ Reset FX</button>
+    </div>
     <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem;">
       <div class="dot" id="dot"></div>
       <span id="stxt" style="font-size:.9rem;font-style:italic;letter-spacing:.1em;color:rgba(200,170,255,.7);">Initialisation...</span>
@@ -3976,7 +4064,7 @@ function updateDisplay() {
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = masterFreq;
   const mi  = document.getElementById('master-input');
   if (mi && document.activeElement!==mi) mi.value = masterFreq;
-  document.title = '0mcha396 · ' + masterFreq + ' Hz';
+  document.title = 'OmCv432 · ' + masterFreq.toFixed(1) + ' Hz';
   PAIRS.forEach((_,i) => updatePairUI(i));
   updateMasterState();
   patchRandomTable();
@@ -4331,42 +4419,39 @@ function showTab(tabId, btn) {
 }
 
 
-// ── Tab panel JS helpers ──────────────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════════════════
+// OmCv432 — Steps 2-6 : helpers Aléatoire / Binaural / Master
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── State ─────────────────────────────────────────────────────────────────
+let _harmonicModeOn = true;
+let _randomFXOn     = true;
+let _prevDelta      = 1.8;    // sauvegarde pour toggle binaural on/off
+let _binauralActive = true;
+
+// ── Step 2 · Aléatoire helpers ────────────────────────────────────────────
 
 function _updateAleaPanel() {
-  const f = masterFreq.toFixed(1);
-  const d = globalDelta.toFixed(2);
+  const f  = masterFreq.toFixed(1);
+  const d  = globalDelta.toFixed(2);
   const ws = waveState(globalDelta);
-  const el1 = document.getElementById('alea-freq-display');
-  const el2 = document.getElementById('alea-master-hz');
-  const el3 = document.getElementById('alea-delta-hz');
-  const el4 = document.getElementById('alea-brain-wave');
-  const el5 = document.getElementById('alea-wave-state');
-  const el6 = document.getElementById('master-freq-display');
-  if (el1) el1.textContent = f + ' Hz';
-  if (el2) el2.textContent = f + ' Hz';
-  if (el3) el3.textContent = d + ' Hz';
-  if (el4) { el4.textContent = ws.s; el4.style.color = ws.c; }
-  if (el5) el5.textContent = 'Ratio harmonique — ' + ws.s;
-  if (el6) el6.textContent = f + ' Hz';
-}
-
-function _updateBinaPanel() {
-  const list = document.getElementById('bina-pairs-list');
-  const gd = document.getElementById('bina-global-delta');
-  if (gd) gd.textContent = globalDelta.toFixed(2) + ' Hz';
-  if (!list) return;
-  list.innerHTML = '';
-  PAIRS.forEach((p, i) => {
-    const pf = calcPFreq(i).toFixed(1);
-    const delta = (i < MASTER_IDX) ? globalDelta : 0;
-    const ifHz = (calcPFreq(i) + delta).toFixed(1);
-    const row = document.createElement('div');
-    row.className = 'tp-pair-row';
-    row.innerHTML = '<span>' + p.label + '</span>' +
-      '<span class="tp-pair-freq">' + pf + ' / ' + ifHz + ' Hz</span>';
-    list.appendChild(row);
-  });
+  const set = (id, v, c) => { const e = document.getElementById(id); if(e){e.textContent=v; if(c)e.style.color=c;} };
+  set('alea-freq-display', f + ' Hz');
+  set('alea-master-hz',    f + ' Hz');
+  set('alea-delta-hz',     d + ' Hz');
+  set('alea-brain-wave',   ws.s, ws.c);
+  set('alea-wave-state',   'Ratio harmonique — ' + ws.s);
+  set('master-freq-display', f + ' Hz');
+  set('master-delta-val',  d + ' Hz');
+  // Compact pairs for Aléatoire tab
+  const cp = document.getElementById('alea-pairs-compact');
+  if (cp) {
+    cp.innerHTML = PAIRS.slice(0, MASTER_IDX).map((p, i) =>
+      p.label + ' · <b style="color:#86FFC0">' + calcPFreq(i).toFixed(0) + '</b> / ' +
+      (calcPFreq(i) + p.ida.polarity * globalDelta).toFixed(0) + ' Hz'
+    ).join('<br>');
+  }
 }
 
 function aleaToggleFlow() {
@@ -4375,6 +4460,7 @@ function aleaToggleFlow() {
     stopFlow();
     if (btn) { btn.textContent = '▶ Lancer'; btn.classList.remove('active'); }
   } else {
+    if (_randomFXOn) aleaApplyRandomFX();
     startFlow();
     if (btn) { btn.textContent = '■ Stop'; btn.classList.add('active'); }
     _updateAleaPanel();
@@ -4386,42 +4472,145 @@ function aleaNewFreq() {
   _updateAleaPanel();
   _updateBinaPanel();
   if (flowing) {
-    // Retune live oscillators
-    PAIRS.forEach((_, i) => {
+    PAIRS.forEach((p, i) => {
       const n = nodes[i]; if (!n) return;
       const t = aNow() + TUNE_T;
       const pf = calcPFreq(i);
-      const id_f = pf + PAIRS[i].ida.polarity * globalDelta;
       n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
-      n.o2.frequency.setTargetAtTime(id_f, t, TUNE_T);
+      if (i < MASTER_IDX) n.o2 && n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
     });
   }
 }
 
-function binaNudge(dHz) {
-  globalDelta = Math.max(0.5, Math.min(54, globalDelta + dHz));
+const _FX_SPACES  = ['sec','grotte','cathedrale','cosmos'];
+const _FX_SPACE_WET = {sec:0, grotte:0.25, cathedrale:0.45, cosmos:0.65};
+
+function aleaApplyRandomFX() {
+  if (!eqLow) return; // FX chain not initialized yet
+  const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
+
+  // Reverb
+  const space = _FX_SPACES[Math.floor(Math.random() * _FX_SPACES.length)];
+  const rvbWet = _FX_SPACE_WET[space] + rnd(-0.05, 0.05);
+  setReverbSpace(space).catch(()=>{});
+  const rwEl = document.getElementById('reverbWet');
+  if (rwEl) { rwEl.value = rvbWet.toFixed(2); updateFX('reverbWet', rvbWet); }
+
+  // Delay
+  const dTime = rnd(0.12, 0.45), dFb = rnd(0.2, 0.5), dWet = rnd(0.0, 0.3);
+  [['delayTime', dTime], ['delayFeedback', dFb], ['delayWet', dWet]].forEach(([id, v]) => {
+    const el = document.getElementById(id); if (el) { el.value = v; updateFX(id, v); }
+  });
+
+  // Ping-pong
+  const ppT = rnd(0.1, 0.35), ppF = rnd(0.2, 0.45), ppW = rnd(0.0, 0.25);
+  [['ppTime', ppT], ['ppFeedback', ppF], ['ppWet', ppW]].forEach(([id, v]) => {
+    const el = document.getElementById(id); if (el) { el.value = v; updateFX(id, v); }
+  });
+
+  // LFO tremolo ON, rate/depth random
+  const lfoRate = rnd(0.04, 0.4), lfoDepth = rnd(0.03, 0.12);
+  const lfoOnEl = document.getElementById('lfo-on');
+  if (lfoOnEl && !lfoOnEl.checked) { lfoOnEl.checked = true; if(typeof lfoToggle==='function') lfoToggle(true); }
+  const lrEl = document.getElementById('lfo-rate'), ldEl = document.getElementById('lfo-depth');
+  if (lrEl) { lrEl.value = lfoRate; if(typeof lfoSetRate==='function') lfoSetRate(lfoRate); }
+  if (ldEl) { ldEl.value = lfoDepth; if(typeof lfoSetDepth==='function') lfoSetDepth(lfoDepth); }
+
+  // EQ subtle randomization
+  const mEqLowGain  = rnd(-3, 3), mEqMidGain = rnd(-4, 4), mEqHighGain = rnd(-3, 3);
+  [['m-eq-low', mEqLowGain], ['m-eq-mid', mEqMidGain], ['m-eq-high', mEqHighGain]].forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = v.toFixed(1); el.dispatchEvent(new Event('input')); }
+  });
+}
+
+function resetAllFX() {
+  // Reset sliders to neutral
+  const resets = [
+    ['reverbWet',0],['delayWet',0],['ppWet',0],
+    ['m-eq-low',0],['m-eq-mid',0],['m-eq-high',0],
+    ['m-trim',1],['m-fader',1],['m-glue',0],
+  ];
+  resets.forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = v; el.dispatchEvent(new Event('input')); }
+  });
+  const lfoOnEl = document.getElementById('lfo-on');
+  if (lfoOnEl && lfoOnEl.checked) { lfoOnEl.checked = false; if(typeof lfoToggle==='function') lfoToggle(false); }
+}
+
+// ── Step 3 · Binaural helpers ─────────────────────────────────────────────
+
+function _updateBinaPanel() {
+  const list = document.getElementById('bina-pairs-list');
+  const gd   = document.getElementById('bina-global-delta');
+  if (gd) gd.textContent = globalDelta.toFixed(2) + ' Hz';
+  if (!list) return;
+  list.innerHTML = PAIRS.map((p, i) => {
+    const pf  = calcPFreq(i).toFixed(1);
+    const idf = (calcPFreq(i) + p.ida.polarity * globalDelta).toFixed(1);
+    const col = p.color || '#86FFC0';
+    return `<div style="border-bottom:1px solid rgba(200,100,255,.1);padding:.55rem .2rem">
+      <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.3rem">
+        <span style="color:${col};font-weight:600">${p.label}</span>
+        <span style="font-family:'Share Tech Mono',monospace;color:rgba(220,200,255,.8)">${pf} / ${idf} Hz</span>
+      </div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+        ${[−54,−18,−9,9,18,54].map(d =>
+          `<button onclick="binaShiftPair(${i},${d})"
+            style="flex:1;min-width:36px;padding:.25rem .1rem;border-radius:8px;
+                   border:1px solid rgba(96,216,255,.28);background:rgba(96,216,255,.06);
+                   color:#60D8FF;font-size:.64rem;cursor:pointer;font-family:inherit">
+            ${d>0?'+':''}${d}</button>`
+        ).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function binaShiftPair(idx, dHz) {
+  const p = PAIRS[idx]; if (!p) return;
+  if (idx === MASTER_IDX) {
+    masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
+  } else {
+    p.pingala.baseFreq = Math.max(36, Math.min(432, p.pingala.baseFreq + dHz));
+  }
   _updateBinaPanel();
+  _updateAleaPanel();
+  if (flowing) {
+    const n = nodes[idx]; if (!n) return;
+    const pf = calcPFreq(idx), t = aNow() + TUNE_T;
+    n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
+    if (n.o2 && idx < MASTER_IDX)
+      n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
+  }
+}
+
+function binaNudge(dHz) {
+  globalDelta = Math.max(0.1, Math.min(54, globalDelta + dHz));
+  _prevDelta  = globalDelta;
+  _updateBinaPanel();
+  _updateAleaPanel();
   if (flowing) {
     PAIRS.forEach((p, i) => {
       if (i === MASTER_IDX) return;
       const n = nodes[i]; if (!n) return;
-      const pf = calcPFreq(i);
-      const t = aNow() + TUNE_T;
-      n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
+      const pf = calcPFreq(i), t = aNow() + TUNE_T;
+      n.o2 && n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
     });
   }
 }
+
+// ── Master helpers ─────────────────────────────────────────────────────────
 
 function masterNudge(dHz) {
   masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
   _updateAleaPanel();
   _updateBinaPanel();
   if (flowing) {
-    const n = nodes[MASTER_IDX]; if (n) {
-      const pf = calcPFreq(MASTER_IDX);
-      const t = aNow() + TUNE_T;
-      n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
-    }
+    const n = nodes[MASTER_IDX]; if (!n) return;
+    const pf = calcPFreq(MASTER_IDX), t = aNow() + TUNE_T;
+    n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
   }
 }
 
@@ -4429,10 +4618,123 @@ function masterVolChange(v) {
   masterVol = parseFloat(v);
   const el = document.getElementById('master-vol-val');
   if (el) el.textContent = Math.round(masterVol * 100) + '%';
-  if (typeof masterGain !== 'undefined' && masterGain) {
-    masterGain.gain.setTargetAtTime(masterVol, aNow(), 0.05);
+  if (masterGain) masterGain.gain.setTargetAtTime(masterVol, aNow(), 0.05);
+}
+
+function masterToggleBinaural(on) {
+  _binauralActive = on;
+  if (on) {
+    globalDelta = _prevDelta || 1.8;
+  } else {
+    _prevDelta  = globalDelta;
+    globalDelta = 0;
+  }
+  _updateAleaPanel();
+  _updateBinaPanel();
+  if (flowing) binaNudge(0); // retune with new delta
+}
+
+// ── Step 6 · WAV Record ───────────────────────────────────────────────────
+
+let _mediaRecorder   = null;
+let _recordChunks    = [];
+let _recStreamDest   = null;
+
+function masterStartRecord() {
+  if (_mediaRecorder && _mediaRecorder.state !== 'inactive') return;
+  if (!flowing) {
+    const st = document.getElementById('rec-status');
+    if (st) st.textContent = '▲ Lancez le binaural d'abord !';
+    return;
+  }
+  try {
+    const c = audioCtx();
+    _recStreamDest = c.createMediaStreamDestination();
+    // Connect after limiter (post-FX capture)
+    if (limiter) limiter.connect(_recStreamDest);
+    else if (masterGain) masterGain.connect(_recStreamDest);
+
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus' : 'audio/webm';
+    _mediaRecorder = new MediaRecorder(_recStreamDest.stream, { mimeType });
+    _recordChunks  = [];
+    _mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _recordChunks.push(e.data); };
+    _mediaRecorder.onstop = () => {
+      const blob = new Blob(_recordChunks, { type: 'audio/webm' });
+      _downloadRecording(blob);
+      if (limiter && _recStreamDest) try { limiter.disconnect(_recStreamDest); } catch(e) {}
+      _recStreamDest = null;
+    };
+    _mediaRecorder.start(1000); // chunk toutes les 1 s
+
+    const st   = document.getElementById('rec-status');
+    const btnS = document.getElementById('rec-start-btn');
+    const btnP = document.getElementById('rec-stop-btn');
+    if (st)   st.textContent = '⏺ En cours…';
+    if (btnS) btnS.disabled = true;
+    if (btnP) { btnP.disabled = false; btnP.style.opacity = '1'; }
+  } catch(err) {
+    const st = document.getElementById('rec-status');
+    if (st) st.textContent = '✕ ' + (err.message || 'Erreur MediaRecorder');
   }
 }
+
+function masterStopRecord() {
+  if (!_mediaRecorder || _mediaRecorder.state === 'inactive') return;
+  _mediaRecorder.stop();
+  const st   = document.getElementById('rec-status');
+  const btnS = document.getElementById('rec-start-btn');
+  const btnP = document.getElementById('rec-stop-btn');
+  if (st)   st.textContent = '✓ Sauvegardé';
+  if (btnS) btnS.disabled = false;
+  if (btnP) { btnP.disabled = true; btnP.style.opacity = '.4'; }
+}
+
+function _downloadRecording(blob) {
+  const d   = new Date();
+  const dd  = String(d.getDate()).padStart(2,'0');
+  const mm  = String(d.getMonth()+1).padStart(2,'0');
+  const yy  = String(d.getFullYear()).slice(-2);
+  const name = 'Record-binaural-' + dd + '-' + mm + '-' + yy + '.webm';
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 2000);
+}
+
+// ── Step 6 · Sample import by category ───────────────────────────────────
+
+let _currentSampleCat = 'Voix';
+const _sampleStore = { Voix:[], Instruments:[], Drone:[], Ambiance:[], Chakra:[] };
+
+function masterImportSample(category) {
+  _currentSampleCat = category;
+  const fi = document.getElementById('sample-file-input');
+  if (fi) fi.click();
+}
+
+function masterHandleSampleFile(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  const cat = _currentSampleCat;
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    _sampleStore[cat].push({ name: f.name, url, cat });
+  });
+  _renderSampleList();
+  input.value = '';
+}
+
+function _renderSampleList() {
+  const el = document.getElementById('sample-loaded-list');
+  if (!el) return;
+  const all = Object.entries(_sampleStore).flatMap(([cat, arr]) =>
+    arr.map(s => `<span style="color:rgba(200,180,255,.6)">[${cat}]</span> ${s.name}`)
+  );
+  el.innerHTML = all.length ? all.join('<br>') : '<em>Aucun sample chargé</em>';
+}
+
 
 // ── Panel navigation (tab-nav centré) ────────────────────────────
 let _openPanel = null;
@@ -4717,6 +5019,15 @@ function init() {
   // Init 3D geometry engine
   animMetatron();
   setGeometry(0); // Cube Métatron par défaut, taille max
+  // 3D defaults OmCv432 : Torus, densité 75%, rotation auto ON
+  setTimeout(() => {
+    fx3dSetForm('torus');
+    fx3dSet('density', 265, 'v3-density');
+    const ds = document.querySelector('input[oninput*="density"]');
+    if (ds) ds.value = 265;
+    const ck = document.querySelector('input[onchange*="autoRot"]');
+    if (ck) { ck.checked = true; if(typeof V!=='undefined') V.autoRot = true; }
+  }, 200);
 
   // Sync global delta
   setGlobalDelta(globalDelta);
