@@ -475,6 +475,7 @@ function _renderPresets() {
 // ── Init ──────────────────────────────────────────────────────────
 function init() {
   loadState();
+  harmonicRandomInit();
 
   // Inject FX panel
   const fxBody = document.getElementById('panel-fx-body');

@@ -59,14 +59,21 @@ function waveState(hz) {
 
 function calcPFreq(i) {
   const p = PAIRS[i].pingala;
-  if (i === MASTER_IDX) return Math.min(486, masterFreq);
-  return Math.max(54, Math.min(486, masterFreq * RATIO_OPTS[p.ri].r * p.n));
+  if (i === MASTER_IDX) return Math.min(432, masterFreq);
+  return Math.max(36, Math.min(432, masterFreq * RATIO_OPTS[p.ri].r * p.n));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(54, Math.min(486, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(36, Math.min(432, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(54, Math.min(486, f)); }
+function safeF(f)    { return Math.max(36, Math.min(432, f)); }
+
+const HARMONIC_RATIOS = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 16/9, 2];
+function harmonicRandomInit() {
+  const root  = 36 + Math.random() * 72;
+  const ratio = HARMONIC_RATIOS[Math.floor(Math.random() * HARMONIC_RATIOS.length)];
+  masterFreq  = Math.min(432, Math.max(36, Math.round(root * ratio)));
+}
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 

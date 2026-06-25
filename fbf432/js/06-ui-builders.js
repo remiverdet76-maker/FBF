@@ -233,6 +233,7 @@ function buildMasterFXHTML() {
     <div class="flow-row">
       <button class="btn-flow" id="btn-ray" onclick="startFlow()" style="border-color:#86FFC0;color:#86FFC0;background:rgba(134,255,192,0.06);">Rayonner</button>
       <button class="btn-flow" id="btn-dis" onclick="stopFlow()"  style="border-color:#FF8E8E;color:#FF8E8E;background:rgba(255,142,142,0.06);">Dissoudre</button>
+      <button class="btn-flow" id="btn-rec" onclick="recToggle()" style="border-color:#FFB347;color:#FFB347;background:rgba(255,179,71,0.06);">⏺ Rec</button>
     </div>
     <div class="mvol-wrap" style="margin-top:.55rem;">
       <span class="mvol-label">Volume général</span>
@@ -666,6 +667,11 @@ function buildPairHTML(pair, i) {
           </div>
         </div>
       </div>
+    </div>
+    <div style="margin-top:.5rem;padding:.3rem .5rem;background:rgba(0,0,0,.15);border-radius:7px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:.7rem;color:rgba(200,170,255,.55);letter-spacing:.06em;">LFO doux</span>
+      <button id="btn-lfo-${i}" onclick="toggleOscVolLFO(${i})"
+        style="font-size:.68rem;padding:.18rem .5rem;background:transparent;border:1px solid ${c}44;color:${c}88;border-radius:6px;cursor:pointer;">〜 Activer</button>
     </div>
   </div>`;
 }

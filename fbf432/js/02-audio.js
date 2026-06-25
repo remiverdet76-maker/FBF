@@ -528,6 +528,42 @@ function masterTick() {
   drawSpectroid();
 }
 
+/* ---------- 2.10 · LFO DOUX PAR OSCILLATEUR ---------- */
+const _oscVolLFOs = {};
+
+function attachOscVolLFO(id, rate, depth) {
+  clearOscVolLFO(id);
+  const node = nodes[id]; if (!node) return;
+  const c = audioCtx();
+  const lfo = c.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = rate || 0.2;
+  const dg  = c.createGain(); dg.gain.value = depth || 0.07;
+  lfo.connect(dg); dg.connect(node.g.gain);
+  lfo.start();
+  _oscVolLFOs[id] = { lfo, dg };
+}
+
+function clearOscVolLFO(id) {
+  const l = _oscVolLFOs[id]; if (!l) return;
+  try { l.lfo.stop(); l.lfo.disconnect(); l.dg.disconnect(); } catch(e) {}
+  delete _oscVolLFOs[id];
+}
+
+function toggleOscVolLFO(i) {
+  const pid = PAIRS[i].pingala.id;
+  const iid = PAIRS[i].ida.id;
+  if (_oscVolLFOs[pid] || _oscVolLFOs[iid]) {
+    clearOscVolLFO(pid); clearOscVolLFO(iid);
+    const btn = document.getElementById('btn-lfo-' + i);
+    if (btn) { btn.textContent = '〜 Activer'; btn.style.opacity = ''; }
+  } else {
+    const rate = 0.08 + Math.random() * 0.35;
+    attachOscVolLFO(pid, rate, 0.07);
+    attachOscVolLFO(iid, rate, 0.07);
+    const btn = document.getElementById('btn-lfo-' + i);
+    if (btn) { btn.textContent = '〜 Actif'; btn.style.opacity = '0.55'; }
+  }
+}
+
 function ui(state, text) {
   const dot=document.getElementById('dot'); if(dot) dot.classList.toggle('live', state === 'live');
   const st=document.getElementById('status'); if(st) st.classList.toggle('live', state === 'live');
