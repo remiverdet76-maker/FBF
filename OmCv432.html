@@ -1336,6 +1336,90 @@ input.param-input{
   #cosmic-bg{display:none!important;}
   #meta-canvas{filter:contrast(1.16) saturate(1.18);}
 
+
+/* ══ OmCv432 — Synth Studio (bulles oscillateurs) ═════════════════════ */
+.synth-field {
+  position: relative; width: 100%; height: 264px;
+  margin: 0.2rem 0 0.6rem;
+}
+.synth-bubble {
+  position: absolute; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 1.5px solid; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .14s, box-shadow .2s;
+  backdrop-filter: blur(4px);
+}
+.synth-bubble:active { transform: scale(0.93); }
+.synth-bubble.playing { box-shadow: 0 0 18px -2px var(--bc), inset 0 0 12px -4px var(--bc); }
+.synth-bubble.muted { opacity: 0.32; filter: grayscale(0.7); }
+.synth-bubble .sb-wave { font-size: 0.5rem; letter-spacing: 0.04em; opacity: 0.75; }
+.synth-bubble .sb-freq { font-size: 0.6rem; font-weight: 600; }
+.synth-bubble.master .sb-freq { font-size: 0.72rem; }
+
+/* Oscillator sheet (bottom drawer) */
+.osc-sheet {
+  position: fixed; left: 0; right: 0; bottom: -100%;
+  max-height: 78vh; overflow-y: auto;
+  background: rgba(7,4,22,0.985); backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0; border-top: 1px solid rgba(255,255,255,0.12);
+  z-index: 400; transition: bottom .28s cubic-bezier(.32,.72,0,1);
+  scrollbar-width: none;
+}
+.osc-sheet::-webkit-scrollbar { display: none; }
+.osc-sheet.open { bottom: 0; }
+.osc-sheet-handle { width: 38px; height: 4px; background: rgba(255,255,255,0.18); border-radius: 2px; margin: 10px auto 4px; }
+.osc-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0.3rem 1.1rem; }
+.osc-sheet-title { font-size: 0.9rem; font-weight: 600; color: rgba(225,215,255,.85); }
+.osc-sheet-close { background: none; border: none; color: rgba(220,200,255,.5); font-size: 1.1rem; cursor: pointer; }
+.osc-sheet-body { padding: 0.5rem 1.1rem 1.6rem; }
+.osc-wave-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.4rem; margin: 0.4rem 0 0.9rem; }
+.osc-wave-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(210,200,255,.65); border-radius: 8px; padding: 0.45rem 0.2rem;
+  font-size: 0.62rem; cursor: pointer; text-align: center;
+}
+.osc-wave-btn.on { background: rgba(96,216,255,0.14); border-color: #60D8FF; color: #60D8FF; }
+.osc-slider-row { margin: 0.55rem 0; }
+.osc-slider-row label { display: flex; justify-content: space-between; font-size: 0.7rem; color: rgba(200,190,255,.6); margin-bottom: 0.2rem; }
+.osc-slider-row input[type=range] { width: 100%; }
+.osc-sheet-btns { display: flex; gap: 0.5rem; margin-top: 0.9rem; flex-wrap: wrap; }
+.osc-act-btn {
+  flex: 1; min-width: 90px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15); color: rgba(210,200,255,.7);
+  border-radius: 10px; padding: 0.5rem; font-size: 0.72rem; cursor: pointer; text-align: center;
+}
+.osc-act-btn.render { border-color: #56FFB0; color: #56FFB0; background: rgba(86,255,176,0.08); }
+.osc-act-btn.mute   { border-color: #FF8E8E; color: #FF8E8E; }
+.osc-sheet-bd, .synth-qm-bd {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 390; display: none;
+}
+.osc-sheet-bd.on, .synth-qm-bd.on { display: block; }
+
+/* Quick menu (long-tap) */
+.synth-qm {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(0.9);
+  background: rgba(10,6,28,0.98); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px; padding: 0.8rem; z-index: 410; display: none;
+  min-width: 230px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.synth-qm.open { display: block; animation: qmIn .16s ease; }
+@keyframes qmIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.85);} to{opacity:1;transform:translate(-50%,-50%) scale(1);} }
+.synth-qm-title { text-align: center; font-size: 0.8rem; color: rgba(220,210,255,.8); margin-bottom: 0.6rem; }
+.synth-qm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.4rem; }
+.synth-qm-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(210,200,255,.7); border-radius: 9px; padding: 0.5rem 0.3rem;
+  font-size: 0.66rem; cursor: pointer; text-align: center;
+}
+.synth-qm-btn:active { background: rgba(96,216,255,0.18); }
+.synth-add-btn {
+  display: block; width: 100%; margin: 0.3rem 0 0.2rem;
+  background: rgba(86,255,176,0.08); border: 1px dashed rgba(86,255,176,0.4);
+  color: #56FFB0; border-radius: 10px; padding: 0.5rem; font-size: 0.74rem; cursor: pointer;
+}
+
 /* ══ OmCv432 — Nav 5 onglets colorés ══════════════════════════════ */
 #bottom-nav {
   display: flex;
@@ -1472,8 +1556,8 @@ input.param-input{
   </div>
   <div class="pan3d-sec">Forme</div>
   <div class="fx3d-forms">
-    <button class="fx3d-form on" data-f="sphere"   onclick="fx3dSetForm('sphere')">Sphère</button>
-    <button class="fx3d-form"    data-f="torus"    onclick="fx3dSetForm('torus')">Torus</button>
+    <button class="fx3d-form"    data-f="sphere"   onclick="fx3dSetForm('sphere')">Sphère</button>
+    <button class="fx3d-form on" data-f="torus"    onclick="fx3dSetForm('torus')">Torus</button>
     <button class="fx3d-form"    data-f="metatron" onclick="fx3dSetForm('metatron')">Métatron</button>
     <button class="fx3d-form"    data-f="merkaba"  onclick="fx3dSetForm('merkaba')">Merkaba</button>
   </div>
@@ -1487,8 +1571,8 @@ input.param-input{
     <button class="fx3d-ratio" data-r="396/360" onclick="fx3dSetRatio('396/360')">396/360</button>
   </div>
   <div class="pan3d-sec">Paramètres flux</div>
-  <div class="pan3d-row"><label>Densité</label><span id="v3-density">220</span></div>
-  <input type="range" class="fx-slider" min="40" max="340" step="2" value="220" oninput="fx3dSet('density',this.value,'v3-density')">
+  <div class="pan3d-row"><label>Densité</label><span id="v3-density">265</span></div>
+  <input type="range" class="fx-slider" min="40" max="340" step="2" value="265" oninput="fx3dSet('density',this.value,'v3-density')">
   <div class="pan3d-row"><label>Torsion ω</label><span id="v3-torsion">3.00</span></div>
   <input type="range" class="fx-slider" min="0.5" max="12" step="0.1" value="3" oninput="fx3dSet('torsion',this.value,'v3-torsion')">
   <div class="pan3d-row"><label>Vitesse</label><span id="v3-speed">1.00</span></div>
@@ -1592,10 +1676,34 @@ input.param-input{
   </div>
 </div>
 
+<!-- ── Synth Studio : feuille oscillateur + menu rapide ─────────────── -->
+<div id="osc-sheet" class="osc-sheet">
+  <div class="osc-sheet-handle"></div>
+  <div class="osc-sheet-head">
+    <span class="osc-sheet-title" id="osc-sheet-title">Oscillateur</span>
+    <button class="osc-sheet-close" onclick="closeOscSheet()">✕</button>
+  </div>
+  <div class="osc-sheet-body" id="osc-sheet-body"></div>
+</div>
+<div id="osc-sheet-bd" class="osc-sheet-bd" onclick="closeOscSheet()"></div>
+
+<div id="synth-qm" class="synth-qm">
+  <div class="synth-qm-title" id="qm-title">Oscillateur</div>
+  <div class="synth-qm-grid">
+    <button class="synth-qm-btn" onclick="qmAction('rand')">🎲 Random</button>
+    <button class="synth-qm-btn" onclick="qmAction('randfx')">✦ Random FX</button>
+    <button class="synth-qm-btn" onclick="qmAction('mute')">🔇 Mute</button>
+    <button class="synth-qm-btn" onclick="qmAction('m9')">−9 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('m18')">−18 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('m36')">−36 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('p9')">+9 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('p18')">+18 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('p36')">+36 Hz</button>
+  </div>
+</div>
+<div id="synth-qm-bd" class="synth-qm-bd" onclick="closeQuickMenu()"></div>
+
 <div id="drop-menu">
-  <button class="dmenu-item" onclick="cvOpen();closeMenu()">
-    <span class="dmenu-ico">✦</span>ChaVibe — Jeu évolutif
-  </button>
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
   </button>
@@ -1621,78 +1729,6 @@ input.param-input{
   <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
 </div>
 
-<!-- ══ ChaVibe — Panel slide-up ══════════════════════════════════════ -->
-<div id="chavibe-panel" role="dialog" aria-label="ChaVibe">
-  <div id="cv-handle"></div>
-  <div id="cv-head">
-    <span id="cv-title">✦ ChaVibe</span>
-    <button id="cv-close" onclick="cvClose()" aria-label="Fermer">✕</button>
-  </div>
-  <div id="cv-body">
-
-    <!-- Thèmes -->
-    <div>
-      <div class="pct" style="margin-bottom:.55rem">Thèmes actifs</div>
-      <div id="cv-themes">
-        <button class="cv-theme-btn active" data-th="nature"    onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🌿</span>Nature</button>
-        <button class="cv-theme-btn active" data-th="voix"      onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🎤</span>Voix</button>
-        <button class="cv-theme-btn"        data-th="chamanique"onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🥁</span>Chamanique</button>
-        <button class="cv-theme-btn"        data-th="meditation"onclick="cvToggleTheme(this)"><span class="cv-theme-ico">🔔</span>Méditation</button>
-        <button class="cv-theme-btn"        data-th="user"      onclick="cvToggleTheme(this)"><span class="cv-theme-ico">⬆</span>Mes samples</button>
-      </div>
-    </div>
-
-    <!-- Intensité -->
-    <div>
-      <div class="pct" style="margin-bottom:.55rem">Intensité · spatialisation</div>
-      <div class="cv-row">
-        <span class="cv-lbl">Intensité</span>
-        <input type="range" class="cv-range" id="cv-intensity" min="0" max="9.9" step="0.1" value="5.0"
-          oninput="cvSetIntensity(this.value)">
-        <span class="cv-val" id="cv-ival">5.0</span>
-      </div>
-      <div class="cv-row">
-        <span class="cv-lbl">Volume</span>
-        <input type="range" class="cv-range" id="cv-vol" min="0" max="1" step="0.01" value="0.52"
-          oninput="cvSetVol(this.value)">
-        <span class="cv-val" id="cv-vval">52%</span>
-      </div>
-      <div class="cv-row">
-        <span class="cv-lbl">Reverb</span>
-        <input type="range" class="cv-range" id="cv-rvb" min="0" max="1" step="0.01" value="0.55"
-          oninput="cvSetReverb(this.value)">
-        <span class="cv-val" id="cv-rval">55%</span>
-      </div>
-    </div>
-
-    <!-- Champ stéréo (indicateur visuel) -->
-    <div>
-      <div class="pct" style="margin-bottom:.35rem">Champ stéréo actif</div>
-      <div id="cv-field"><div id="cv-field-bar"></div><span class="cv-note" id="cv-note">— en attente du play —</span></div>
-    </div>
-
-    <!-- Boutons -->
-    <div class="cv-btns">
-      <button class="cv-btn cv-play" id="cv-playbtn" onclick="cvTogglePlay()">▶ Lancer</button>
-      <button class="cv-btn" onclick="cvRandomTheme()">⟳ Thème aléatoire</button>
-    </div>
-
-    <div style="font-size:.6rem;color:rgba(180,140,255,.35);text-align:center;line-height:1.4">
-      Ajouter vos samples : <code style="color:rgba(200,160,255,.5)">samples/&lt;thème&gt;/fichier.ogg</code><br>
-      puis l'entrée correspondante dans <code style="color:rgba(200,160,255,.5)">samples/manifest.json</code>
-    </div>
-
-  </div>
-</div>
-
-<!-- Mini-player : module actif en fond (audio continue après fermeture overlay) -->
-<div id="module-mini-player">
-  <span class="mmp-pulse"></span>
-  <span class="mmp-icon">♪</span>
-  <span class="mmp-label" id="mmp-title">Module</span>
-  <button class="mmp-btn" onclick="reopenModule()">⬚ Rouvrir</button>
-  <button class="mmp-btn stop" onclick="stopModuleForReal()">✕ Stop</button>
-</div>
 
 <div id="osc-modal">
   <div id="osc-modal-inner">
@@ -1788,14 +1824,14 @@ function waveState(hz) {
 
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
-  if (i === MASTER_IDX) return Math.min(486, masterFreq);
-  return Math.max(54, Math.min(486, PAIRS[i].pingala.baseFreq));
+  if (i === MASTER_IDX) return Math.min(432, masterFreq);
+  return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(54, Math.min(486, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(36, Math.min(432, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(54, Math.min(486, f)); }
+function safeF(f)    { return Math.max(36, Math.min(432, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
@@ -2976,8 +3012,8 @@ function drawMetatron(){
    paramètres façon Flux Omcha. Réutilise la caméra V (drag/zoom).
    ════════════════════════════════════════════════════════════════ */
 const FX3D = {
-  form:'sphere', ratio:'432/360',
-  density:220, torsion:3.0, expansion:1.0, spread:1.0, glow:0.65, polarity:0.0,
+  form:'torus', ratio:'432/360',
+  density:265, torsion:3.0, expansion:1.0, spread:1.0, glow:0.65, polarity:0.0,
   _pts:null, _pairs:null
 };
 const FX3D_RATIOS = {
@@ -3349,6 +3385,41 @@ function setRandRatioMode(m, btn) {
 function setRandUseFX(v) { RAND_OPTS.useFX = !!v; }
 
 // ── FX aléatoire (mobile-safe) ──────────────────────────────────────
+
+/* ══ OmCv432 — LFO doux sur le volume de CHAQUE oscillateur ════════════ */
+let _oscVolLFOs = [];
+function clearOscVolLFO() {
+  _oscVolLFOs.forEach(x => {
+    try { x.lfo.stop(); x.lfo.disconnect(); } catch(e) {}
+    try { x.depth.disconnect(); } catch(e) {}
+  });
+  _oscVolLFOs = [];
+}
+function attachOscVolLFO(rate, depth) {
+  if (!AC) return;
+  clearOscVolLFO();
+  PAIRS.forEach(p => {
+    [p.pingala.id, p.ida.id].forEach(id => {
+      const n = nodes[id]; if (!n || !n.g) return;
+      const lfo = AC.createOscillator(); lfo.type = 'sine';
+      lfo.frequency.value = Math.max(0.02, rate * (0.8 + Math.random() * 0.4));
+      const dg = AC.createGain();
+      // profondeur relative au volume courant de l'oscillateur (modulation douce)
+      dg.gain.value = depth * Math.max(0.02, n.g.gain.value || 0.1);
+      lfo.connect(dg); dg.connect(n.g.gain); lfo.start();
+      _oscVolLFOs.push({ lfo, depth: dg });
+    });
+  });
+}
+let _oscLFOActive = false;
+function toggleOscVolLFO() {
+  _oscLFOActive = !_oscLFOActive;
+  if (_oscLFOActive) attachOscVolLFO(0.12, 0.04); else clearOscVolLFO();
+  const b = document.getElementById('btn-osc-lfo');
+  if (b) { b.classList.toggle('on', _oscLFOActive); b.textContent = _oscLFOActive ? '〜 LFO doux ON' : '〜 LFO doux'; }
+}
+
+function aleaApplyRandomFX() { randomizeFX(); }
 function randomizeFX() {
   // Tout sur mobile (APK) : pas de reverb, delay léger, EQ doux (chorus retiré)
   const delT  = +(0.15 + Math.random() * .5).toFixed(2);
@@ -3381,6 +3452,11 @@ function randomizeFX() {
   if (brEl) { brEl.value = breathRate;  if (typeof breathSet==='function') breathSet('rate', breathRate); }
   if (bdEl) { bdEl.value = breathDepth; if (typeof breathSet==='function') breathSet('depth', breathDepth); }
   if (boEl) { boEl.checked = breathOn;  if (typeof breathToggle==='function') breathToggle(breathOn); }
+  // Nouveau FX : LFO doux sur le volume de chaque oscillateur (60% chance)
+  if (Math.random() < 0.6 && AC) { _oscLFOActive = true; attachOscVolLFO(0.08 + Math.random()*0.2, 0.025 + Math.random()*0.04); }
+  else { _oscLFOActive = false; clearOscVolLFO(); }
+  const _lb = document.getElementById('btn-osc-lfo');
+  if (_lb) { _lb.classList.toggle('on', _oscLFOActive); _lb.textContent = _oscLFOActive ? '〜 LFO doux ON' : '〜 LFO doux'; }
 }
 
 // ── Contrôles individuels oscillateurs ─────────────────────────────
@@ -3449,7 +3525,7 @@ function setMasterVol(v) {
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(54, Math.min(486, f));
+  masterFreq = Math.max(36, Math.min(432, f));
   updateDisplay();
   if (typeof flowing !== 'undefined' && flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -4888,11 +4964,14 @@ function aleaNewFreq() {
   masterUpdateDisplay();
 }
 
-// ── Onglet Binaural — panneau dynamique ──────────────────────────────
+// ── Onglet Binaural — Synth Studio (bulles) + liste fréquences ────────
 function buildBinaPanel() {
   const body = document.getElementById('panBina-body');
   if (!body) return;
-  body.innerHTML = PAIRS.map((p, i) => `
+  body.innerHTML =
+    '<div class="synth-field" id="synth-field"></div>' +
+    '<button class="synth-add-btn" onclick="synthAddOsc()">＋ Ajouter un oscillateur</button>' +
+    PAIRS.map((p, i) => `
     <div class="bina-pair">
       <div class="bina-dot" style="background:${p.color}"></div>
       <span class="bina-label">${i === MASTER_IDX ? 'Maître' : p.label}</span>
@@ -4905,6 +4984,229 @@ function buildBinaPanel() {
         <button class="bina-btn" onclick="binaShift(${i},9)">+9</button>
       </div>
     </div>`).join('');
+  requestAnimationFrame(buildBubbles);
+}
+
+/* ══ OmCv432 — Synth Studio : moteur bulles + formes d'onde ════════════ */
+const WAVEFORMS = [
+  { id:'sine',     label:'SINE'     },
+  { id:'sawtooth', label:'SAW'      },
+  { id:'square',   label:'SQUARE'   },
+  { id:'triangle', label:'TRI'      },
+  { id:'supersaw', label:'SUPERSAW' },
+  { id:'pulse',    label:'PULSE'    },
+  { id:'bell',     label:'BELL'     },
+  { id:'spreadoct',label:'SPRD OCT' },
+];
+const SUPERSAW_DETUNE = [-20,-12,-5,5,12,20];
+PAIRS.forEach(p => { if(!p.waveform) p.waveform='sine'; });
+
+let _sheetIdx = -1, _qmIdx = -1, _longTapTimer = null, _longTapped = false;
+
+function buildBubbles() {
+  const field = document.getElementById('synth-field');
+  if (!field) return;
+  field.innerHTML = '';
+  const W = field.offsetWidth || 320, H = field.offsetHeight || 264;
+  const cx = W/2, cy = H/2;
+  const R  = Math.min(W,H) * 0.37;
+  PAIRS.forEach((p, i) => {
+    let x, y, size;
+    if (i === MASTER_IDX) { x = cx; y = cy; size = 74; }
+    else {
+      const ang = (i*60 - 90) * Math.PI/180;
+      x = cx + R*Math.cos(ang); y = cy + R*Math.sin(ang); size = 58;
+    }
+    const col = p.color || '#86FFC0';
+    const div = document.createElement('div');
+    div.className = 'synth-bubble' + (i===MASTER_IDX?' master':'')
+      + (flowing && nodes[p.pingala.id] ? ' playing':'')
+      + (mutedOscs[p.pingala.id] ? ' muted':'');
+    div.style.cssText =
+      'left:'+(x-size/2).toFixed(1)+'px;top:'+(y-size/2).toFixed(1)+'px;'+
+      'width:'+size+'px;height:'+size+'px;--bc:'+col+';'+
+      'background:radial-gradient(circle at 38% 33%,'+col+'33,'+col+'0d);'+
+      'border-color:'+col+';color:'+col+';';
+    const wave = (p.waveform||'sine').toUpperCase().slice(0,5);
+    div.innerHTML = '<span class="sb-wave">'+wave+'</span>'+
+                    '<span class="sb-freq">'+calcPFreq(i).toFixed(0)+'</span>';
+    // tap court → feuille | long tap → menu rapide
+    div.addEventListener('pointerdown', ev => {
+      _longTapped = false;
+      _longTapTimer = setTimeout(() => { _longTapped = true; openQuickMenu(i); }, 420);
+    });
+    const cancel = () => { if(_longTapTimer){clearTimeout(_longTapTimer);_longTapTimer=null;} };
+    div.addEventListener('pointerup', ev => {
+      cancel(); if (!_longTapped) openOscSheet(i);
+    });
+    div.addEventListener('pointercancel', cancel);
+    div.addEventListener('pointermove', cancel);
+    field.appendChild(div);
+  });
+}
+
+// ── Feuille oscillateur ──────────────────────────────────────────────
+function openOscSheet(i) {
+  _sheetIdx = i;
+  const p = PAIRS[i];
+  document.getElementById('osc-sheet-title').textContent =
+    (i===MASTER_IDX ? '★ Maître' : '〰 ' + p.label) + ' — ' + calcPFreq(i).toFixed(1) + ' Hz';
+  const body = document.getElementById('osc-sheet-body');
+  const wave = p.waveform || 'sine';
+  body.innerHTML =
+    '<div class="osc-wave-grid">' +
+      WAVEFORMS.map(w => '<button class="osc-wave-btn'+(w.id===wave?' on':'')+
+        '" onclick="oscSetWave('+i+',\''+w.id+'\')">'+w.label+'</button>').join('') +
+    '</div>' +
+    '<div class="osc-slider-row"><label>Volume <span id="osc-vv">'+(p.pingala.vol*100).toFixed(0)+'%</span></label>' +
+      '<input type="range" min="0" max="0.4" step="0.005" value="'+p.pingala.vol+'" oninput="oscSetVol('+i+',this.value)"></div>' +
+    '<div class="osc-slider-row"><label>Delta binaural <span id="osc-dv">'+p.ida.delta.toFixed(1)+' Hz</span></label>' +
+      '<input type="range" min="0.1" max="36" step="0.1" value="'+p.ida.delta+'" oninput="oscSetDelta('+i+',this.value)"></div>' +
+    '<div class="osc-sheet-btns">' +
+      '<button class="osc-act-btn" onclick="binaShift('+i+',-9);openOscSheet('+i+')">−9 Hz</button>' +
+      '<button class="osc-act-btn" onclick="binaShift('+i+',9);openOscSheet('+i+')">+9 Hz</button>' +
+      '<button class="osc-act-btn" onclick="binaRand('+i+');openOscSheet('+i+')">🎲 Random</button>' +
+    '</div>' +
+    '<div class="osc-sheet-btns">' +
+      '<button class="osc-act-btn mute" onclick="oscToggleMute('+i+')">'+(mutedOscs[p.pingala.id]?'▶ Activer':'🔇 Mute')+'</button>' +
+      '<button class="osc-act-btn render" onclick="oscRenderSample('+i+')">⬇ Créer sample WAV</button>' +
+    '</div>';
+  document.getElementById('osc-sheet').classList.add('open');
+  document.getElementById('osc-sheet-bd').classList.add('on');
+}
+function closeOscSheet() {
+  document.getElementById('osc-sheet').classList.remove('open');
+  document.getElementById('osc-sheet-bd').classList.remove('on');
+  _sheetIdx = -1;
+}
+
+function oscSetVol(i, v) {
+  v = parseFloat(v); PAIRS[i].pingala.vol = v; PAIRS[i].ida.vol = v;
+  const el = document.getElementById('osc-vv'); if (el) el.textContent = (v*100).toFixed(0)+'%';
+  if (flowing) {
+    const np = nodes[PAIRS[i].pingala.id], ni = nodes[PAIRS[i].ida.id];
+    if (np && !mutedOscs[PAIRS[i].pingala.id]) safeRamp(np.g.gain, v, 0.2);
+    if (ni && !mutedOscs[PAIRS[i].ida.id])     safeRamp(ni.g.gain, v, 0.2);
+  }
+}
+function oscSetDelta(i, v) {
+  v = parseFloat(v); PAIRS[i].ida.delta = v;
+  const el = document.getElementById('osc-dv'); if (el) el.textContent = v.toFixed(1)+' Hz';
+  if (flowing) tuneOsc(PAIRS[i].ida.id, calcIFreq(i));
+  buildBubbles();
+}
+function oscToggleMute(i) {
+  const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+  const m = !mutedOscs[pid]; mutedOscs[pid] = m; mutedOscs[iid] = m;
+  const np = nodes[pid], ni = nodes[iid];
+  if (np) safeRamp(np.g.gain, m?0:PAIRS[i].pingala.vol, 0.3);
+  if (ni) safeRamp(ni.g.gain, m?0:PAIRS[i].ida.vol, 0.3);
+  openOscSheet(i); buildBubbles();
+}
+
+// ── Formes d'onde (vrai synthé) ──────────────────────────────────────
+function _clearSupers(n){ if(n && n._supers){ n._supers.forEach(s=>{try{s.o.stop();s.o.disconnect();}catch(e){}}); n._supers=[]; } }
+function oscSetWave(i, wave) {
+  PAIRS[i].waveform = wave;
+  [PAIRS[i].pingala.id, PAIRS[i].ida.id].forEach(id => {
+    const n = nodes[id]; if (!n) return;
+    _clearSupers(n);
+    if (wave === 'supersaw') {
+      n.o.type = 'sawtooth';
+      n._supers = SUPERSAW_DETUNE.map(dt => {
+        const o = AC.createOscillator(); o.type='sawtooth';
+        o.frequency.value = n.o.frequency.value; o.detune.value = dt;
+        const g = AC.createGain(); g.gain.value = 0.5/SUPERSAW_DETUNE.length;
+        o.connect(g); g.connect(n.g); o.start(); return {o,g};
+      });
+    } else if (wave === 'pulse') {
+      const nH=24, d=0.25, real=new Float32Array(nH), imag=new Float32Array(nH);
+      for(let k=1;k<nH;k++) real[k]=(2/(k*Math.PI))*Math.sin(k*Math.PI*d);
+      try { n.o.setPeriodicWave(AC.createPeriodicWave(real,imag)); } catch(e){ n.o.type='square'; }
+    } else if (wave === 'bell') {
+      n.o.type='sine';
+      const mod=AC.createOscillator(); mod.type='sine'; mod.frequency.value=n.o.frequency.value*2.76;
+      const mg=AC.createGain(); mg.gain.value=n.o.frequency.value*1.4;
+      mod.connect(mg); mg.connect(n.o.frequency); mod.start();
+      n._supers=[{o:mod,g:mg}];
+    } else if (wave === 'spreadoct') {
+      n.o.type='sine';
+      const o=AC.createOscillator(); o.type='sine'; o.frequency.value=n.o.frequency.value*2;
+      const g=AC.createGain(); g.gain.value=0.45; o.connect(g); g.connect(n.g); o.start();
+      n._supers=[{o,g}];
+    } else {
+      try { n.o.type = wave; } catch(e) {}
+    }
+  });
+  openOscSheet(i); buildBubbles();
+}
+
+// ── Render oscillateur → sample WAV ──────────────────────────────────
+async function oscRenderSample(i) {
+  const p = PAIRS[i], dur = 3.0;
+  try {
+    const oc = new OfflineAudioContext(2, Math.round(44100*dur), 44100);
+    const wave = p.waveform || 'sine';
+    [[calcPFreq(i), -0.6, p.pingala.vol],[calcIFreq(i), 0.6, p.ida.vol]].forEach(([f,pan,vol]) => {
+      const g = oc.createGain();
+      g.gain.setValueAtTime(0,0); g.gain.linearRampToValueAtTime(vol*2.2,0.05); g.gain.setTargetAtTime(0,dur-0.4,0.12);
+      const pp = oc.createStereoPanner(); pp.pan.value = pan; g.connect(pp); pp.connect(oc.destination);
+      const t = (wave==='supersaw'||wave==='pulse'||wave==='bell'||wave==='spreadoct') ? 'sawtooth' : wave;
+      const o = oc.createOscillator(); o.type = (wave==='pulse'?'square':(wave==='bell'||wave==='spreadoct'?'sine':t));
+      o.frequency.value = f; o.connect(g); o.start(0); o.stop(dur);
+      if (wave==='supersaw') SUPERSAW_DETUNE.forEach(dt=>{ const os=oc.createOscillator();os.type='sawtooth';os.frequency.value=f;os.detune.value=dt;const gs=oc.createGain();gs.gain.value=vol*1.1/SUPERSAW_DETUNE.length;os.connect(gs);gs.connect(pp);os.start(0);os.stop(dur);});
+      if (wave==='spreadoct'){ const o2=oc.createOscillator();o2.type='sine';o2.frequency.value=f*2;const g2=oc.createGain();g2.gain.value=vol;o2.connect(g2);g2.connect(pp);o2.start(0);o2.stop(dur);}
+    });
+    const buf = await oc.startRendering();
+    _downloadWav(_bufToWav(buf), 'OmCv432-'+(p.label||'osc').replace(/[^a-z0-9]/gi,'-')+'-'+calcPFreq(i).toFixed(0)+'Hz.wav');
+    ui('info', 'Sample WAV créé');
+  } catch(e) { ui('error', 'Render impossible : '+e.message); }
+}
+function _bufToWav(buf) {
+  const nc=buf.numberOfChannels, sr=buf.sampleRate, len=buf.length;
+  const il=new Float32Array(len*nc);
+  for(let c=0;c<nc;c++){const ch=buf.getChannelData(c);for(let s=0;s<len;s++)il[s*nc+c]=ch[s];}
+  const pcm=new Int16Array(il.length);
+  for(let i=0;i<il.length;i++)pcm[i]=Math.max(-32768,Math.min(32767,il[i]*32767));
+  const dv=new DataView(new ArrayBuffer(44+pcm.byteLength));
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');dv.setUint32(4,36+pcm.byteLength,true);ws(8,'WAVE');ws(12,'fmt ');
+  dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,nc,true);
+  dv.setUint32(24,sr,true);dv.setUint32(28,sr*nc*2,true);dv.setUint16(32,nc*2,true);
+  dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,pcm.byteLength,true);
+  new Int16Array(dv.buffer,44).set(pcm);
+  return new Blob([dv.buffer],{type:'audio/wav'});
+}
+function _downloadWav(blob, name) {
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},3000);
+}
+
+// ── Menu rapide (long tap) ───────────────────────────────────────────
+function openQuickMenu(i) {
+  _qmIdx = i;
+  document.getElementById('qm-title').textContent = i===MASTER_IDX ? '★ Maître' : PAIRS[i].label;
+  document.getElementById('synth-qm').classList.add('open');
+  document.getElementById('synth-qm-bd').classList.add('on');
+}
+function closeQuickMenu() {
+  document.getElementById('synth-qm').classList.remove('open');
+  document.getElementById('synth-qm-bd').classList.remove('on');
+}
+function qmAction(act) {
+  const i = _qmIdx; closeQuickMenu(); if (i < 0) return;
+  const d = { m9:-9, m18:-18, m36:-36, p9:9, p18:18, p36:36 };
+  if (d[act] !== undefined) binaShift(i, d[act]);
+  else if (act === 'rand')   binaRand(i);
+  else if (act === 'randfx') aleaApplyRandomFX();
+  else if (act === 'mute')   oscToggleMute(i);
+  buildBubbles();
+}
+
+// ── Ajout d'oscillateur (placeholder évolutif) ───────────────────────
+function synthAddOsc() {
+  ui('info', 'Ajout d\'oscillateur — module synthé étendu à venir');
 }
 
 function binaShift(i, dHz) {
@@ -4956,9 +5258,69 @@ function masterNudge(dHz) {
   updateInfobar();
 }
 
+/* ══ OmCv432 — Banque de samples (5 catégories) ═══════════════════════ */
+const SAMPLE_CATS = {
+  voix:        { label:'🎤 Voix',        items:[] },
+  instruments: { label:'🎸 Instruments', items:[] },
+  drone:       { label:'🌊 Drone',       items:[] },
+  ambiance:    { label:'🌿 Ambiance',    items:[] },
+  chakra:      { label:'☯ Chakra',       items:[] },
+};
+let _sampleSource = null, _sampleGain = null, _sampleCurCat = null;
+
 function sampleOpenCat(cat) {
-  // Étape 8 — banque samples. Pour l'instant : info
-  ui('info', 'Banque ' + cat + ' — à venir étape 8');
+  _sampleCurCat = cat;
+  const c = SAMPLE_CATS[cat]; if (!c) return;
+  document.getElementById('osc-sheet-title').textContent = c.label + ' — samples';
+  const body = document.getElementById('osc-sheet-body');
+  const list = c.items.length
+    ? c.items.map((it,k)=>'<button class="osc-act-btn" style="flex:1 1 100%" onclick="samplePlay(\''+cat+'\','+k+')">▶ '+it.name+'</button>').join('')
+    : '<div style="text-align:center;color:rgba(200,190,255,.4);font-size:.72rem;padding:.6rem">Aucun sample — importez un fichier audio</div>';
+  body.innerHTML =
+    '<div class="osc-sheet-btns" style="flex-direction:column">'+ list +'</div>'+
+    '<div class="osc-sheet-btns">'+
+      '<button class="osc-act-btn render" onclick="document.getElementById(\'sample-import\').click()">⬆ Importer un audio</button>'+
+      '<button class="osc-act-btn mute" onclick="sampleStop()">■ Stop sample</button>'+
+    '</div>'+
+    '<input type="file" id="sample-import" accept="audio/*" style="display:none" onchange="sampleImport(event)">'+
+    '<div class="osc-slider-row" style="margin-top:.7rem"><label>Volume sample <span id="smp-vv">70%</span></label>'+
+      '<input type="range" min="0" max="1" step="0.01" value="0.7" oninput="sampleSetVol(this.value)"></div>';
+  document.getElementById('osc-sheet').classList.add('open');
+  document.getElementById('osc-sheet-bd').classList.add('on');
+}
+
+function sampleImport(ev) {
+  const f = ev.target.files && ev.target.files[0]; if (!f || !_sampleCurCat) return;
+  const url = URL.createObjectURL(f);
+  SAMPLE_CATS[_sampleCurCat].items.push({ name: f.name.slice(0,24), url });
+  sampleOpenCat(_sampleCurCat);
+}
+
+async function samplePlay(cat, k) {
+  const it = SAMPLE_CATS[cat] && SAMPLE_CATS[cat].items[k]; if (!it) return;
+  try {
+    sampleStop();
+    const c = audioCtx();
+    const resp = await fetch(it.url); const ab = await resp.arrayBuffer();
+    const buf = await c.decodeAudioData(ab);
+    _sampleSource = c.createBufferSource(); _sampleSource.buffer = buf; _sampleSource.loop = true;
+    _sampleGain = c.createGain(); _sampleGain.gain.value = 0.7;
+    _sampleSource.connect(_sampleGain);
+    // post-master : passe par le limiteur si dispo, sinon destination
+    if (typeof limiter !== 'undefined' && limiter) _sampleGain.connect(limiter);
+    else _sampleGain.connect(c.destination);
+    _sampleSource.start();
+    ui('info', 'Sample en lecture (loop)');
+  } catch(e) { ui('error', 'Lecture impossible : '+e.message); }
+}
+function sampleStop() {
+  if (_sampleSource) { try{_sampleSource.stop();_sampleSource.disconnect();}catch(e){} _sampleSource=null; }
+  if (_sampleGain)   { try{_sampleGain.disconnect();}catch(e){} _sampleGain=null; }
+}
+function sampleSetVol(v) {
+  v = parseFloat(v);
+  const el = document.getElementById('smp-vv'); if (el) el.textContent = Math.round(v*100)+'%';
+  if (_sampleGain) _sampleGain.gain.setTargetAtTime(v, aNow(), 0.1);
 }
 
 // ── Enregistrement WAV (APK) ──────────────────────────────────────────
@@ -5002,10 +5364,9 @@ async function recToggle() {
 
 function init() {
   loadState();
-  // Fréquence harmonique aléatoire à chaque ouverture
-  harmonicRandomInit();
-  // Horloge cosmique : la Fréquence Maître naît de l'heure solaire courante
+  // Horloge cosmique (base) puis fréquence harmonique aléatoire (prioritaire à chaque ouverture)
   try { masterFreq = cosmicMasterFreq(); } catch(e) {}
+  harmonicRandomInit();
 
   // Inject FX panel
   const fxBody = document.getElementById('panel-fx-body');
@@ -5045,6 +5406,8 @@ function init() {
   // Infobar tick indépendant (1s)
   setInterval(updateInfobar, 1000);
 
+  // 3D : rotation automatique aléatoire (sens + vitesse)
+  try { V.autoRot = true; V.spd = 0.6 + Math.random() * 1.0; V.try_ = (Math.random() < 0.5 ? 1 : -1) * 0.002; } catch(e) {}
   ui('idle', 'Prêt · Touchez la sphère pour rayonner');
   // Ouvrir onglet Aléatoire par défaut
   setTimeout(() => { const btn = document.getElementById('tab-alea'); showTab('alea', btn); }, 120);
@@ -5411,94 +5774,6 @@ const Bowl = (() => {
 if (typeof window !== 'undefined') window.Bowl = Bowl;
 
 
-</script>
-<script src="chavibe/engine.js"></script>
-<script>
-/* ══ ChaVibe UI ════════════════════════════════════════════════════ */
-(function () {
-  // Initialisation : charge le manifest au premier ouverture du panel
-  let _cvInited = false;
-  async function _cvEnsure() {
-    if (_cvInited) return;
-    _cvInited = true;
-    await ChaVibe.init();
-    await ChaVibe.loadManifest();
-  }
-
-  // Panel open / close
-  window.cvOpen = function () {
-    document.getElementById('chavibe-panel').classList.add('open');
-    _cvEnsure();
-  };
-  window.cvClose = function () {
-    document.getElementById('chavibe-panel').classList.remove('open');
-  };
-
-  // Synchro UI bouton play
-  window._cvSyncUI = function (live) {
-    const btn = document.getElementById('cv-playbtn');
-    if (!btn) return;
-    btn.textContent = live ? '■ Stop' : '▶ Lancer';
-    btn.classList.toggle('live', live);
-    const note = document.getElementById('cv-note');
-    if (note) note.textContent = live ? '▸ jeu actif — spirale 72 s' : '— en attente du play —';
-    const bar = document.getElementById('cv-field-bar');
-    if (bar) bar.style.width = live ? (30 + ChaVibe.intensity * 7).toFixed(0) + '%' : '0%';
-  };
-
-  // Bouton play (indépendant du flow Omcha)
-  window.cvTogglePlay = async function () {
-    await _cvEnsure();
-    if (ChaVibe.playing) {
-      ChaVibe.stop(); _cvSyncUI(false);
-    } else {
-      await ChaVibe.start(); _cvSyncUI(true);
-    }
-  };
-
-  // Intensité
-  window.cvSetIntensity = function (v) {
-    ChaVibe.setIntensity(v);
-    const el = document.getElementById('cv-ival');
-    if (el) el.textContent = parseFloat(v).toFixed(1);
-    const bar = document.getElementById('cv-field-bar');
-    if (bar && ChaVibe.playing) bar.style.width = (30 + ChaVibe.intensity * 7).toFixed(0) + '%';
-  };
-
-  // Volume
-  window.cvSetVol = function (v) {
-    ChaVibe.setOutputVol(v);
-    const el = document.getElementById('cv-vval');
-    if (el) el.textContent = Math.round(v * 100) + '%';
-  };
-
-  // Reverb
-  window.cvSetReverb = function (v) {
-    ChaVibe.setReverbMix(v);
-    const el = document.getElementById('cv-rval');
-    if (el) el.textContent = Math.round(v * 100) + '%';
-  };
-
-  // Toggle thème
-  window.cvToggleTheme = function (btn) {
-    btn.classList.toggle('active');
-    const active = Array.from(document.querySelectorAll('.cv-theme-btn.active')).map(b => b.dataset.th);
-    ChaVibe.setThemes(active);
-  };
-
-  // Thème aléatoire
-  window.cvRandomTheme = function () {
-    const all  = Array.from(document.querySelectorAll('.cv-theme-btn'));
-    const keys = all.map(b => b.dataset.th);
-    // Sélectionne 1 à 3 thèmes au hasard
-    const count  = 1 + Math.floor(Math.random() * 2);
-    const chosen = keys.sort(() => Math.random() - 0.5).slice(0, count);
-    all.forEach(b => {
-      b.classList.toggle('active', chosen.includes(b.dataset.th));
-    });
-    ChaVibe.setThemes(chosen);
-  };
-})();
 </script>
 <script>
 window.FBF_MODULES = window.FBF_MODULES || [
