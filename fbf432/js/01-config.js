@@ -37,6 +37,24 @@ const PAIRS = [
     pingala:{id:'p6', ri:0, n:1.0, vol:.14}, ida:{id:'i6', delta:1.8, polarity:1, vol:.14} },
 ];
 
+// Panoramique 3D par paire [pingala, ida] — spread différent selon position hexagonale
+const OSC_PAN = [
+  [-0.65, 0.65],  // Paire 1 — large
+  [-0.45, 0.45],  // Paire 2 — medium
+  [-0.80, 0.80],  // Paire 3 — très large
+  [-0.55, 0.55],  // Paire 4
+  [-0.90, 0.90],  // Paire 5 — max spread
+  [-0.35, 0.35],  // Paire 6 — étroit
+  [-0.22, 0.22],  // Maître — centre
+];
+
+// Courbe isosonique : graves plus forts, aigus plus doux
+function isosonicVol(freq, base) {
+  const f = Math.max(36, Math.min(432, freq));
+  const k = 1 + 0.52 * (1 - Math.log(f / 36) / Math.log(432 / 36));
+  return base * Math.max(0.5, Math.min(1.75, k));
+}
+
 let mutedOscs = {};
 PAIRS.forEach(p => {
   mutedOscs[p.pingala.id] = false;

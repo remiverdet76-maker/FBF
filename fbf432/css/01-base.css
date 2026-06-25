@@ -36,16 +36,32 @@ body{
   pointer-events:all;
 }
 
-/* Dock droit — Flux (haut) + Nav (bas), centrés verticalement */
-#right-dock{
+/* Dock bas — Flux + Nav horizontaux */
+#bottom-dock{
   position:fixed;
-  right:.8rem;
-  top:50%;transform:translateY(-50%);
-  display:flex;flex-direction:column;align-items:center;
-  gap:.55rem;
+  bottom:0;left:0;right:0;height:54px;
+  display:flex;flex-direction:row;align-items:center;
+  gap:.28rem;padding:0 .45rem;
   z-index:100;
+  background:rgba(2,1,14,.92);
+  border-top:1px solid rgba(200,100,255,.22);
+  backdrop-filter:blur(20px);
+  box-shadow:0 -4px 24px rgba(80,40,160,.18);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
 }
-#flux-side{ position:static; }
+#bottom-dock.collapsed{transform:translateY(54px);}
+#dock-chevron{
+  position:fixed;bottom:54px;right:.5rem;
+  width:32px;height:20px;
+  background:rgba(2,1,14,.88);
+  border:1px solid rgba(200,100,255,.22);border-bottom:none;
+  border-radius:8px 8px 0 0;
+  color:rgba(200,140,255,.8);font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:101;
+  transition:bottom .35s cubic-bezier(.4,0,.2,1);
+}
+#dock-chevron.dock-up{bottom:0;}
 
 /* FBF Hub — bas centre, bouton seul */
 #fbf-hub{
@@ -55,10 +71,10 @@ body{
   display:flex;align-items:center;
 }
 
-/* Visualiseur spectral — bas centre, cellule argentée */
+/* Visualiseur spectral — au-dessus du dock */
 #spectroid-bar{
   position:fixed;
-  bottom:0;left:50%;transform:translateX(-50%);
+  bottom:54px;left:50%;transform:translateX(-50%);
   width:min(680px,88vw);height:80px;
   z-index:22;
   background:linear-gradient(135deg,rgba(180,180,200,.12),rgba(220,220,240,.06),rgba(150,160,180,.10));
@@ -84,12 +100,14 @@ body{
   backdrop-filter:blur(10px);
 }
 
-/* Navigation — dans #right-dock, colonne verticale */
+/* Navigation — dans #bottom-dock, ligne horizontale */
 #tab-nav{
   position:static;
-  display:flex;flex-direction:column;
-  gap:.32rem;align-items:stretch;
+  display:flex;flex-direction:row;
+  gap:.18rem;align-items:center;flex:1;
+  overflow-x:auto;scrollbar-width:none;
 }
+#tab-nav::-webkit-scrollbar{display:none;}
 
 /* ─── Panels latéraux ────────────────────── */
 .side-panel{

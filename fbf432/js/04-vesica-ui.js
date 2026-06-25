@@ -2,28 +2,42 @@
    04-vesica-ui.js — Sphères Vesica & édition
    ═══════════════════════════════════════════ */
 
-// Long press (<480ms) = mute/unmute | Long press (≥480ms) = modal
-var _vpTimer=null, _vpFired=false;
+// Short tap = mute/unmute | 420ms = show micro-btns | 480ms = open modal
+var _vpTimer=null, _vpFired=false, _vpMbTimer=null, _vpMbFired=false;
 function _vpStart(i,e){
   if(e.type==='touchstart'){try{e.preventDefault();}catch(x){}}
-  _vpFired=false; clearTimeout(_vpTimer);
-  _vpTimer=setTimeout(()=>{_vpFired=true;_vpTimer=null;openOscModal(i);},480);
+  _vpFired=false; _vpMbFired=false;
+  clearTimeout(_vpTimer); clearTimeout(_vpMbTimer);
+  _vpMbTimer=setTimeout(()=>{
+    _vpMbFired=true;
+    const wrap=document.getElementById('vp'+i);
+    if(wrap)wrap.querySelectorAll('.micro-btn').forEach(b=>b.classList.add('mb-visible'));
+    _vpMbTimer=setTimeout(()=>{
+      const w=document.getElementById('vp'+i);
+      if(w)w.querySelectorAll('.micro-btn').forEach(b=>b.classList.remove('mb-visible'));
+    },3200);
+  },420);
+  _vpTimer=setTimeout(()=>{_vpFired=true;_vpTimer=null;clearTimeout(_vpMbTimer);openOscModal(i);},480);
 }
 function _vpEnd(i){
-  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;if(!_vpFired)toggleMuteP(i);}
+  clearTimeout(_vpMbTimer);
+  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;if(!_vpFired&&!_vpMbFired)toggleMuteP(i);}
 }
-function _vpCancel(){clearTimeout(_vpTimer);_vpTimer=null;}
+function _vpCancel(){clearTimeout(_vpTimer);_vpTimer=null;clearTimeout(_vpMbTimer);_vpMbTimer=null;}
 
 function buildVesicaPairs() {
   const layer = document.getElementById('sphere-layer');
   if (!layer) return;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const sz = Math.min(vw, vh);
+  const dockEl = document.getElementById('bottom-dock');
+  const dockH = (dockEl && !dockEl.classList.contains('collapsed')) ? (dockEl.offsetHeight || 54) : 0;
+  const sz = Math.min(vw, vh - dockH);
   document.querySelectorAll('.vp-wrap,.vp-center-wrap').forEach(n => n.remove());
 
-  const cx = vw / 2, cy = vh / 2;
-  const R  = sz * 0.34;
+  const cx = vw / 2;
+  const cy = (vh - dockH) / 2;
+  const R  = sz * 0.32;
 
   for (let i = 0; i < 6; i++) {
     const pair = PAIRS[i];

@@ -46,44 +46,47 @@
    hauteur faible. Le desktop (large ET haut) garde son layout flottant. */
 @media (max-width: 900px), (max-height: 500px) {
 
-  /* Onglets : colonne à droite, TOUJOURS visible, ~1/4 de largeur */
-  #right-dock {
-    right: 4px !important;
-    gap: .4rem !important;
-    z-index: 100 !important;          /* au-dessus des panneaux */
+  /* Dock bas — plus compact sur mobile */
+  #bottom-dock {
+    height: 48px !important;
+    padding: 0 .22rem !important;
+    gap: .12rem !important;
   }
-  #tab-nav {
-    padding: .3rem .24rem !important;
-    gap: .3rem !important;
-    border-radius: 16px !important;
-  }
-  #tab-nav .tnav-btn,
-  .tnav-btn {
-    font-size: .56rem !important;
-    padding: .5rem .34rem !important;
-    width: 19vw !important; max-width: 78px !important;
-  }
-  #flux-btn {
-    width: 19vw !important; max-width: 78px !important;
-    height: 62px !important; border-radius: 18px !important;
-  }
-  .flux-icon  { font-size: 1.05rem !important; }
-  .flux-txt   { font-size: .4rem !important; }
-  .flux-state { font-size: .46rem !important; }
+  #dock-chevron { bottom: 48px !important; }
+  #dock-chevron.dock-up { bottom: 0 !important; }
+  #bottom-dock.collapsed { transform: translateY(48px) !important; }
+  #spectroid-bar { bottom: 48px !important; width: 72vw !important; }
 
-  /* Panneau ouvert : 3/4 gauche, plein hauteur. Les onglets (1/4) restent à droite. */
+  #flux-btn {
+    width: 64px !important; max-width: 72px !important;
+    height: 36px !important; border-radius: 8px !important;
+  }
+  .flux-icon  { font-size: .9rem !important; }
+  .flux-txt   { font-size: .36rem !important; }
+  .flux-state { font-size: .38rem !important; }
+
+  #tab-nav .tnav-btn, .tnav-btn {
+    font-size: .5rem !important;
+    padding: .28rem .36rem !important;
+  }
+  #btn-harmonic {
+    font-size: .5rem !important;
+    padding: .28rem .36rem !important;
+  }
+
+  /* Panneaux : plein écran au-dessus du dock */
   .pan-left.open,
   .pan-right.open {
     position: fixed !important;
-    left: 0 !important; right: auto !important;
-    top: 0 !important;
-    width: 76vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    left: 0 !important; right: 0 !important;
+    top: 0 !important; bottom: 48px !important;
+    width: 100% !important;
+    max-height: calc(100vh - 48px) !important;
+    height: auto !important;
     border-radius: 0 !important;
-    border-left: none !important;
-    border-right: 1px solid rgba(0,204,255,.22) !important;
-    padding: 16px 12px !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(0,204,255,.18) !important;
+    padding: 14px 12px !important;
     overflow-y: auto !important;
     z-index: 80 !important;
   }
@@ -92,5 +95,4 @@
   #hdr { display: none !important; }
   #freq-mini { display: none !important; }
   #infobar   { display: none !important; }
-  #spectroid-bar { width: 70vw !important; }
 }

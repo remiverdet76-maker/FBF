@@ -122,10 +122,12 @@ function releaseOsc(node) {
 function swapPingala(i) {
   if (!flowing || !masterGain) return;
   const { pingala } = PAIRS[i];
+  const pan = (typeof OSC_PAN !== 'undefined' && OSC_PAN[i]) ? OSC_PAN[i][0] : -1;
+  const vol = typeof isosonicVol === 'function' ? isosonicVol(calcPFreq(i), pingala.vol) : pingala.vol;
   if (nodes[pingala.id]) {
     tuneOsc(pingala.id, calcPFreq(i));
   } else {
-    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), vol, pan);
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   _applyAntiCrack();
@@ -134,10 +136,12 @@ function swapPingala(i) {
 function swapIda(i) {
   if (!flowing || !masterGain) return;
   const { ida } = PAIRS[i];
+  const pan = (typeof OSC_PAN !== 'undefined' && OSC_PAN[i]) ? OSC_PAN[i][1] : 1;
+  const vol = typeof isosonicVol === 'function' ? isosonicVol(calcIFreq(i), ida.vol) : ida.vol;
   if (nodes[ida.id]) {
     tuneOsc(ida.id, calcIFreq(i));
   } else {
-    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), vol, pan);
   }
   _applyAntiCrack();
   updatePairUI(i);

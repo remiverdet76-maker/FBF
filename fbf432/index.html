@@ -23,70 +23,79 @@
 <canvas id="meta-canvas"></canvas>
 <div id="sphere-layer"></div>
 
-<!-- Dock droit : Flux (au-dessus) + Navigation (en dessous) -->
-<div id="right-dock">
-  <div id="flux-side">
-    <button id="flux-btn" onclick="fbfToggle()">
-      <span class="flux-icon" id="flux-icon">◉</span>
-      <span class="flux-txt" id="flux-txt">FLUX</span>
-      <span class="flux-state" id="flux-state-side">OFF</span>
-    </button>
-  </div>
+<!-- Dock bas : FLUX + Navigation horizontale -->
+<div id="bottom-dock">
+  <button id="flux-btn" onclick="fbfToggle()">
+    <span class="flux-icon" id="flux-icon">◉</span>
+    <span class="flux-txt" id="flux-txt">FLUX</span>
+    <span class="flux-state" id="flux-state-side">OFF</span>
+  </button>
   <nav id="tab-nav">
-    <button class="tnav-btn tnav-geo"     id="tGeo"    onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
-    <button class="tnav-btn tnav-random"  id="tRand"   onclick="tPanel('panRand','tRand')">⚄ Aléatoire</button>
-    <button class="tnav-btn tnav-horloge" id="tUT"     onclick="tPanel('panUT','tUT')">⊙ UT432</button>
-    <button class="tnav-btn tnav-fx"      id="tFX"     onclick="tPanel('panFX','tFX')">✦ FX</button>
-    <button class="tnav-btn tnav-notice"  id="tNotice"  onclick="tPanel('panNotice','tNotice')">≡ Notice</button>
-    <button class="tnav-btn tnav-samples" id="tSamples" onclick="tPanel('panSamples','tSamples')">◎ Samples</button>
-    <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
+    <button class="tnav-btn tnav-geo"     id="tGeo"     onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
+    <button class="tnav-btn tnav-random"  id="tRand"    onclick="tPanel('panRand','tRand')">⚄ Aléa</button>
+    <button class="tnav-btn tnav-horloge" id="tUT"      onclick="tPanel('panUT','tUT')">⊙ UT</button>
+    <button class="tnav-btn tnav-fx"      id="tFX"      onclick="tPanel('panFX','tFX')">✦ FX</button>
+    <button class="tnav-btn tnav-notice"  id="tNotice"  onclick="tPanel('panNotice','tNotice')">≡</button>
+    <button class="tnav-btn tnav-samples" id="tSamples" onclick="tPanel('panSamples','tSamples')">◎</button>
   </nav>
+  <button id="btn-harmonic" onclick="globalHarmonicRandom()" title="Randomisation harmonique globale">⚄ ♪</button>
+  <button id="btn-rec" class="tnav-btn tnav-rec" onclick="recToggle()">⏺ Rec</button>
+  <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
 </div>
+<button id="dock-chevron" onclick="toggleDock()" title="Masquer / afficher le dock">⌄</button>
 
-<!-- Panel : Géométrie 3D — gauche -->
+<!-- Panel : FX3D — gauche -->
 <div class="pan-left" id="panGeo">
-  <div class="pct">Géométrie Sacrée — 13 Vivantes</div>
+  <div class="pct">FX3D · 4 Formes Vivantes</div>
   <div class="geometry-grid" id="geo-grid"></div>
 
-  <div class="pct" style="margin-top:.9rem">Paramètres Omcha</div>
-  <div class="sl-row">
-    <label>Torsion ω <span id="sv-wi">3.5×</span></label>
-    <input type="range" min="5" max="90" value="63" oninput="g3dSetWi(this.value)">
+  <div class="pct" style="margin-top:.65rem">Ratio fréquentiel</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.2rem;margin-bottom:.45rem;">
+    <button class="geometry-btn fx3d-ratio on" data-r="432/360" onclick="fx3dSetRatio('432/360')">432/360</button>
+    <button class="geometry-btn fx3d-ratio" data-r="360/432" onclick="fx3dSetRatio('360/432')">360/432</button>
+    <button class="geometry-btn fx3d-ratio" data-r="396/432" onclick="fx3dSetRatio('396/432')">396/432</button>
+    <button class="geometry-btn fx3d-ratio" data-r="432/396" onclick="fx3dSetRatio('432/396')">432/396</button>
+    <button class="geometry-btn fx3d-ratio" data-r="360/396" onclick="fx3dSetRatio('360/396')">360/396</button>
+    <button class="geometry-btn fx3d-ratio" data-r="396/360" onclick="fx3dSetRatio('396/360')">396/360</button>
   </div>
-  <div class="sl-row">
-    <label>Densité <span id="sv-ns">160</span></label>
-    <input type="range" min="40" max="320" value="160" oninput="g3dSetNs(this.value)">
-  </div>
-  <div class="sl-row">
-    <label>Vitesse <span id="sv-spd">1.0×</span></label>
-    <input type="range" min="0" max="30" value="10" oninput="g3dSetSpd(this.value)">
-  </div>
-  <div class="sl-row">
-    <label>Expansion radiale <span id="sv-ex">0.14</span></label>
-    <input type="range" min="2" max="45" value="14" oninput="g3dSetEx(this.value)">
-  </div>
-  <div class="sl-row">
-    <label>Étendue axiale <span id="sv-tm">7.0</span></label>
-    <input type="range" min="20" max="120" value="70" oninput="g3dSetTM(this.value)">
-  </div>
-  <div class="sl-row">
-    <label>Glow <span id="sv-glow">60%</span></label>
-    <input type="range" min="0" max="100" value="60" oninput="g3dSetGlow(this.value)">
-  </div>
-  <div class="sw-row">Rotation auto     <input type="checkbox" class="sw" id="ckRot" checked onchange="V.autoRot=this.checked"></div>
-  <div class="sw-row">Ponts harmoniques <input type="checkbox" class="sw" id="ckBr"  checked onchange="HP.br=this.checked"></div>
-  <div class="sw-row">Particules flux   <input type="checkbox" class="sw" id="ckPa"  checked onchange="HP.pa=this.checked"></div>
-  <div class="sw-row">Mandala fond      <input type="checkbox" class="sw" id="ckMa"  checked onchange="HP.ma=this.checked"></div>
-  <div class="sw-row">Labels fractals   <input type="checkbox" class="sw" id="ckLa"  checked onchange="HP.la=this.checked"></div>
 
-  <div class="pct" style="margin-top:.9rem">Auto-Évolution</div>
+  <div class="pct" style="margin-top:.5rem">Paramètres FX3D</div>
+  <div class="sl-row">
+    <label>Torsion <span id="sv-wi">3.0×</span></label>
+    <input type="range" min="5" max="90" value="30" oninput="g3dSetWi(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Densité <span id="sv-ns">220</span></label>
+    <input type="range" min="40" max="320" value="220" oninput="g3dSetNs(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Vitesse <span id="sv-spd">0.8×</span></label>
+    <input type="range" min="0" max="30" value="8" oninput="g3dSetSpd(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Expansion <span id="sv-ex">1.00</span></label>
+    <input type="range" min="10" max="200" value="100" oninput="g3dSetEx(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Étendue <span id="sv-tm">1.00</span></label>
+    <input type="range" min="10" max="200" value="100" oninput="g3dSetTM(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Glow <span id="sv-glow">65%</span></label>
+    <input type="range" min="0" max="100" value="65" oninput="g3dSetGlow(this.value)">
+  </div>
+  <div class="sw-row">Rotation auto  <input type="checkbox" class="sw" id="ckRot" checked onchange="V.autoRot=this.checked"></div>
+  <div class="sw-row">Particules flux <input type="checkbox" class="sw" id="ckPa"  checked onchange="HP.pa=this.checked"></div>
+  <div class="sw-row">Mandala fond   <input type="checkbox" class="sw" id="ckMa"  checked onchange="HP.ma=this.checked"></div>
+
+  <div class="pct" style="margin-top:.65rem">Auto-Évolution</div>
   <div class="sw-row">Mode évolution <input type="checkbox" class="sw" id="ckAE" onchange="g3dToggleAE(this.checked)"></div>
   <div class="sl-row">
-    <label>Vitesse évolution <span id="sv-ae-spd">0.3×</span></label>
+    <label>Vitesse évol. <span id="sv-ae-spd">0.3×</span></label>
     <input type="range" min="1" max="30" value="3" oninput="g3dSetAESpd(this.value)">
   </div>
   <div class="geo-med-note">
-    Les 13 structures morphent organiquement en boucle.<br>Torsion, expansion et champ toroïdal s'animent seuls.
+    Sphère · Torus · Métatron · Merkaba<br>Lignes lumineuses colorées par ratio fréquentiel sacré.
   </div>
 </div>
 
