@@ -4682,11 +4682,19 @@ function showTab(tabId, btn) {
 // ══════════════════════════════════════════════════════════════════════════
 
 const WAVEFORMS = [
-  { id:'sine',     label:'SINE'     },
-  { id:'sawtooth', label:'SAW'      },
-  { id:'square',   label:'SQUARE'   },
-  { id:'triangle', label:'TRI'      },
-  { id:'supersaw', label:'SUPERSAW' },
+  { id:'sine',      label:'SINE'     },
+  { id:'sawtooth',  label:'SAW'      },
+  { id:'square',    label:'SQUARE'   },
+  { id:'triangle',  label:'TRI'      },
+  { id:'supersaw',  label:'SUPERSAW' },
+  { id:'sawsaw',    label:'SAW+SAW'  },
+  { id:'pulse',     label:'PULSE'    },
+  { id:'sawsquare', label:'SAW+SQR'  },
+  { id:'sqrsqr',    label:'SQR+SQR'  },
+  { id:'bell',      label:'BELL'     },
+  { id:'deafsaw',   label:'DEAF SAW' },
+  { id:'spreadoct', label:'SPRD OCT' },
+  { id:'spread5th', label:'SPRD 5th' },
 ];
 const SUPERSAW_DETUNE = [-20, -12, -5, 5, 12, 20]; // cents for detuned saws
 
@@ -4880,24 +4888,50 @@ function oscSetWaveform(wave) {
   updateBubbleUI(_oscSheetIdx);
 }
 
+function _cleanOscExtras(n) {
+  if (!n) return;
+  if (n._supers) {
+    n._supers.forEach(s => { try{s.o.stop();s.o.disconnect();}catch(e){} try{s.g.disconnect();}catch(e){} });
+    n._supers = [];
+  }
+  if (n._modOsc) {
+    try{n._modOsc.stop();n._modOsc.disconnect();}catch(e){}
+    if (n._modGain) { try{n._modGain.disconnect();}catch(e){} n._modGain=null; }
+    n._modOsc = null;
+  }
+  if (n._filter) {
+    try{n.o.disconnect(n._filter);n._filter.disconnect(n.g);}catch(e){}
+    try{n.o.connect(n.g);}catch(e){}
+    n._filter = null;
+  }
+  try { n.o.detune.value = 0; } catch(e) {}
+}
+
 function _applyWaveform(idx, wave) {
-  const p = PAIRS[Math.min(idx, MASTER_IDX)];
+  const p = idx <= MASTER_IDX ? PAIRS[idx] : USER_OSCS[idx - MASTER_IDX - 1];
+  if (!p) return;
   [p.pingala.id, p.ida.id].forEach(id => {
     const n = nodes[id]; if (!n) return;
-    if (wave === 'supersaw') {
-      _buildSupersaw(n);
-    } else {
-      // Clean supersaw extras
-      if (n._supers) { n._supers.forEach(s => { try {s.o.stop(); s.o.disconnect(); s.g.disconnect();} catch(e){}  }); n._supers = []; }
-      try { n.o.type = wave; } catch(e) {}
+    _cleanOscExtras(n);
+    switch (wave) {
+      case 'sine': case 'sawtooth': case 'square': case 'triangle':
+        n.o.type = wave; break;
+      case 'supersaw':  _buildSupersaw(n);  break;
+      case 'sawsaw':    _buildSawSaw(n);    break;
+      case 'pulse':     _buildPulse(n);     break;
+      case 'sawsquare': _buildSawSquare(n); break;
+      case 'sqrsqr':    _buildSqrSqr(n);   break;
+      case 'bell':      _buildBell(n);      break;
+      case 'deafsaw':   _buildDeafSaw(n);   break;
+      case 'spreadoct': _buildSpreadOct(n); break;
+      case 'spread5th': _buildSpread5th(n); break;
+      default: try { n.o.type = wave; } catch(e) { n.o.type = 'sine'; }
     }
   });
 }
 
 function _buildSupersaw(n) {
   if (!n) return;
-  // Remove previous supers
-  if (n._supers) { n._supers.forEach(s => { try{s.o.stop(); s.o.disconnect(); s.g.disconnect();}catch(e){} }); }
   n.o.type = 'sawtooth';
   const c = audioCtx();
   n._supers = SUPERSAW_DETUNE.map(dt => {
@@ -4905,8 +4939,86 @@ function _buildSupersaw(n) {
     o.frequency.value = n.o.frequency.value; o.detune.value = dt;
     const g = c.createGain(); g.gain.value = 0.55 / SUPERSAW_DETUNE.length;
     o.connect(g); g.connect(n.g); o.start();
-    return { o, g };
+    return {o, g};
   });
+}
+
+function _buildSawSaw(n) {
+  n.o.type = 'sawtooth'; n.o.detune.value = -6;
+  const c = audioCtx();
+  const o = c.createOscillator(); o.type = 'sawtooth';
+  o.frequency.value = n.o.frequency.value; o.detune.value = 6;
+  const g = c.createGain(); g.gain.value = 0.65;
+  o.connect(g); g.connect(n.g); o.start();
+  n._supers = [{o, g}];
+}
+
+function _buildPulse(n) {
+  const c = audioCtx(); const nH = 32; const d = 0.25;
+  const real = new Float32Array(nH); const imag = new Float32Array(nH);
+  for (let k = 1; k < nH; k++) real[k] = (2/(k*Math.PI)) * Math.sin(k*Math.PI*d);
+  n.o.setPeriodicWave(c.createPeriodicWave(real, imag, {disableNormalization: false}));
+  n._supers = [];
+}
+
+function _buildSawSquare(n) {
+  n.o.type = 'sawtooth';
+  const c = audioCtx();
+  const o = c.createOscillator(); o.type = 'square';
+  o.frequency.value = n.o.frequency.value;
+  const g = c.createGain(); g.gain.value = 0.40;
+  o.connect(g); g.connect(n.g); o.start();
+  n._supers = [{o, g}];
+}
+
+function _buildSqrSqr(n) {
+  n.o.type = 'square'; n.o.detune.value = -5;
+  const c = audioCtx();
+  const o = c.createOscillator(); o.type = 'square';
+  o.frequency.value = n.o.frequency.value; o.detune.value = 5;
+  const g = c.createGain(); g.gain.value = 0.65;
+  o.connect(g); g.connect(n.g); o.start();
+  n._supers = [{o, g}];
+}
+
+function _buildBell(n) {
+  n.o.type = 'sine';
+  const c = audioCtx(); const freq = n.o.frequency.value;
+  const mod = c.createOscillator(); mod.type = 'sine';
+  mod.frequency.value = freq * 2.8;
+  const mg = c.createGain(); mg.gain.value = freq * 2.0;
+  mod.connect(mg); mg.connect(n.o.frequency); mod.start();
+  n._modOsc = mod; n._modGain = mg; n._supers = [];
+}
+
+function _buildDeafSaw(n) {
+  n.o.type = 'sawtooth';
+  const c = audioCtx();
+  try { n.o.disconnect(n.g); } catch(e) {}
+  const f = c.createBiquadFilter();
+  f.type = 'lowpass'; f.frequency.value = 600; f.Q.value = 3;
+  n.o.connect(f); f.connect(n.g);
+  n._filter = f; n._supers = [];
+}
+
+function _buildSpreadOct(n) {
+  n.o.type = 'sine';
+  const c = audioCtx(); const freq = n.o.frequency.value;
+  const o = c.createOscillator(); o.type = 'sine';
+  o.frequency.value = freq * 2;
+  const g = c.createGain(); g.gain.value = 0.5;
+  o.connect(g); g.connect(n.g); o.start();
+  n._supers = [{o, g}];
+}
+
+function _buildSpread5th(n) {
+  n.o.type = 'sine';
+  const c = audioCtx(); const freq = n.o.frequency.value;
+  const o = c.createOscillator(); o.type = 'sine';
+  o.frequency.value = freq * 1.5;
+  const g = c.createGain(); g.gain.value = 0.6;
+  o.connect(g); g.connect(n.g); o.start();
+  n._supers = [{o, g}];
 }
 
 function oscSetVol(v) {
@@ -4959,28 +5071,82 @@ function oscToggleMute() {
   updateBubbleUI(_oscSheetIdx);
 }
 
+function _renderOscVoice(oc, waveform, freq, pan, vol, dur) {
+  const g = oc.createGain(); g.gain.setValueAtTime(0,0); g.gain.linearRampToValueAtTime(vol,0.05); g.gain.setTargetAtTime(0,dur-0.3,0.1);
+  const pp = oc.createStereoPanner(); pp.pan.value = pan;
+  g.connect(pp); pp.connect(oc.destination);
+
+  function mkOsc(type, f, dt) {
+    const o = oc.createOscillator(); o.type = type; o.frequency.value = f; if (dt) o.detune.value = dt;
+    return o;
+  }
+
+  switch (waveform) {
+    case 'supersaw': {
+      const main = mkOsc('sawtooth', freq); main.connect(g); main.start(0); main.stop(dur);
+      SUPERSAW_DETUNE.forEach(dt => {
+        const gs = oc.createGain(); gs.gain.value = vol*0.45/SUPERSAW_DETUNE.length;
+        const os = mkOsc('sawtooth', freq, dt); os.connect(gs); gs.connect(pp); os.start(0); os.stop(dur);
+      }); break;
+    }
+    case 'sawsaw': {
+      const a = mkOsc('sawtooth',freq); a.detune.value=-6; a.connect(g); a.start(0); a.stop(dur);
+      const gs = oc.createGain(); gs.gain.value = vol*0.65;
+      const b = mkOsc('sawtooth',freq); b.detune.value=6; b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
+    }
+    case 'pulse': {
+      const nH=32; const d=0.25;
+      const real=new Float32Array(nH); const imag=new Float32Array(nH);
+      for(let k=1;k<nH;k++) real[k]=(2/(k*Math.PI))*Math.sin(k*Math.PI*d);
+      const pw = oc.createPeriodicWave(real,imag,{disableNormalization:false});
+      const o = oc.createOscillator(); o.setPeriodicWave(pw); o.frequency.value=freq;
+      o.connect(g); o.start(0); o.stop(dur); break;
+    }
+    case 'sawsquare': {
+      const a = mkOsc('sawtooth',freq); a.connect(g); a.start(0); a.stop(dur);
+      const gs = oc.createGain(); gs.gain.value = vol*0.40;
+      const b = mkOsc('square',freq); b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
+    }
+    case 'sqrsqr': {
+      const a = mkOsc('square',freq); a.detune.value=-5; a.connect(g); a.start(0); a.stop(dur);
+      const gs = oc.createGain(); gs.gain.value = vol*0.65;
+      const b = mkOsc('square',freq); b.detune.value=5; b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
+    }
+    case 'bell': {
+      const carrier = mkOsc('sine',freq); carrier.connect(g); carrier.start(0); carrier.stop(dur);
+      const mg = oc.createGain(); mg.gain.value = freq*2.0;
+      const mod = mkOsc('sine',freq*2.8); mod.connect(mg); mg.connect(carrier.frequency); mod.start(0); mod.stop(dur); break;
+    }
+    case 'deafsaw': {
+      const f = oc.createBiquadFilter(); f.type='lowpass'; f.frequency.value=600; f.Q.value=3;
+      f.connect(g);
+      const a = mkOsc('sawtooth',freq); a.connect(f); a.start(0); a.stop(dur); break;
+    }
+    case 'spreadoct': {
+      const a = mkOsc('sine',freq); a.connect(g); a.start(0); a.stop(dur);
+      const gs = oc.createGain(); gs.gain.value = vol*0.5;
+      const b = mkOsc('sine',freq*2); b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
+    }
+    case 'spread5th': {
+      const a = mkOsc('sine',freq); a.connect(g); a.start(0); a.stop(dur);
+      const gs = oc.createGain(); gs.gain.value = vol*0.6;
+      const b = mkOsc('sine',freq*1.5); b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
+    }
+    default: {
+      const o = mkOsc(waveform||'sine', freq); o.connect(g); o.start(0); o.stop(dur);
+    }
+  }
+}
+
 async function oscSheetRender() {
   const idx = _oscSheetIdx; if (idx < 0) return;
   const p   = _curPair();
   const dur = 3.0;
   try {
     const ctx = new OfflineAudioContext(2, Math.round(44100 * dur), 44100);
-    const wave = (p.waveform === 'supersaw') ? 'sawtooth' : (p.waveform || 'sine');
+    const wv  = p.waveform || 'sine';
     [[calcPFreq(idx), -0.7, p.pingala.vol], [calcIFreq(idx), 0.7, p.ida.vol]].forEach(([freq, pan, vol]) => {
-      const o = ctx.createOscillator(); o.type = wave; o.frequency.value = freq;
-      const g = ctx.createGain(); g.gain.value = 0;
-      const t0 = 0.05;
-      g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(vol, t0); g.gain.setTargetAtTime(0, dur - 0.3, 0.1);
-      const pp = ctx.createStereoPanner(); pp.pan.value = pan;
-      o.connect(g); g.connect(pp); pp.connect(ctx.destination);
-      o.start(0); o.stop(dur);
-      if (wave === 'sawtooth' && p.waveform === 'supersaw') {
-        SUPERSAW_DETUNE.forEach(dt => {
-          const os = ctx.createOscillator(); os.type='sawtooth'; os.frequency.value=freq; os.detune.value=dt;
-          const gs = ctx.createGain(); gs.gain.value=vol*0.5/SUPERSAW_DETUNE.length;
-          os.connect(gs); gs.connect(pp); os.start(0); os.stop(dur);
-        });
-      }
+      _renderOscVoice(ctx, wv, freq, pan, vol, dur);
     });
     const buf = await ctx.startRendering();
     const blob = _audioBufferToWav(buf);
