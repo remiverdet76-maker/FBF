@@ -37,72 +37,29 @@ jobs:
         working-directory: apk
         run: npm install
 
-      - name: Prepare web assets
+      - name: Prepare web assets — FBF 432 seul
         working-directory: apk
         run: |
           mkdir -p www
-          # Tous les HTML de la racine sont embarqués (modules auto-détectés).
-          for f in ../*.html; do [ -f "$f" ] && cp "$f" www/; done
-          # Page d'accueil = Omcha396
-          cp ../0mcha396_v2.html www/index.html
-          rm -f www/0mcha396_v2.html
-          # Fond cosmique rotatif + bus audio + 9:16 images
-          cp ../bg-rotator.css ../bg-rotator.js ../audio-bus.js www/
-          mkdir -p www/img
-          cp ../img/*.jpg www/img/
-          # Module FBF 432 1re version (natif Web Audio, sans Tone.js)
-          cp -r ../fbf432 www/fbf432
-          # ChaVibe engine
-          mkdir -p www/chavibe
-          cp -r ../chavibe/. www/chavibe/
-          # Samples (manifest + fichiers audio — vides = synthèse fallback)
+          # FBF 432 est la seule page de l'APK
+          cp -r ../fbf432/. www/
+          # Samples (Voix/Instruments/Drone/Ambiance/Chakra)
           mkdir -p www/samples
-          cp ../samples/manifest.json www/samples/
-          for d in nature voix chamanique meditation user; do
+          for d in voix instruments drone ambiance chakra; do
             mkdir -p www/samples/$d
             if [ -d "../samples/$d" ]; then
               find "../samples/$d" \( -name "*.ogg" -o -name "*.mp3" -o -name "*.wav" \) \
                 -exec cp {} "www/samples/$d/" \; 2>/dev/null || true
             fi
           done
-          echo "www/ contents:"; ls -lh www/; echo "www/samples:"; ls -lh www/samples/
+          echo "www/ contents:"; ls -lh www/
 
       - name: Remove Google Fonts (offline fallback)
         working-directory: apk/www
         run: |
-          # Sur tous les HTML : retire preconnect + feuilles de style Google Fonts
-          for f in *.html; do
-            sed -i '/<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">/d' "$f"
-            sed -i '/<link rel="preconnect" href="https:\/\/fonts\.gstatic\.com"/d' "$f"
-            sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">||g' "$f"
-            sed -i "s|@import url('https://fonts\.googleapis\.com[^']*');||g" "$f"
-          done
-
-      - name: Audio-bus + manifeste des modules
-        working-directory: apk/www
-        run: |
-          # 1) Injecte le bus d'exclusivité audio dans chaque MODULE (pas l'accueil)
-          for f in *.html; do
-            [ "$f" = "index.html" ] && continue
-            grep -q 'audio-bus.js' "$f" || \
-              sed -i 's#</body>#<script src="audio-bus.js"></script>\n</body>#I' "$f"
-          done
-          # 2) Génère modules.js : FBF 432 EN PREMIER (priorité binaural APK)
-          {
-            echo "window.FBF_MODULES = ["
-            printf "  {file:'fbf432/index.html', title:'FBF 432 \\u2014 Binaural', ico:'\\u25c9'}"
-            for f in *.html; do
-              [ "$f" = "index.html" ] && continue
-              t=$(grep -o '<title>[^<]*</title>' "$f" | head -1 | sed 's/<[^>]*>//g')
-              [ -z "$t" ] && t="$f"
-              t=$(printf '%s' "$t" | sed "s/'/\\\\'/g")
-              echo ","
-              printf "  {file:'%s', title:'%s', ico:'\\u25cd'}" "$f" "$t"
-            done
-            echo ""
-            echo "];"
-          } > modules.js
-          echo "=== modules.js ==="; cat modules.js
+          sed -i '/<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">/d' index.html
+          sed -i '/<link rel="preconnect" href="https:\/\/fonts\.gstatic\.com"/d' index.html
+          sed -i 's|<link href="https://fonts\.googleapis\.com[^"]*" rel="stylesheet">||g' index.html
 
       - name: Add Android platform
         working-directory: apk
@@ -121,7 +78,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: OmCha432-debug
+          name: FBF432-debug
           path: apk/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
@@ -129,6 +86,6 @@ jobs:
         run: |
           APK=apk/android/app/build/outputs/apk/debug/app-debug.apk
           echo "## APK Build Complete" >> $GITHUB_STEP_SUMMARY
-          echo "**App:** OmCha 432 | **Package:** com.fbf.omcha432" >> $GITHUB_STEP_SUMMARY
+          echo "**App:** FBF 432 | **Package:** com.fbf.omcha432" >> $GITHUB_STEP_SUMMARY
           echo "**Size:** $(du -sh $APK | cut -f1)" >> $GITHUB_STEP_SUMMARY
           echo "Télécharger dans l'onglet **Artifacts** ci-dessus." >> $GITHUB_STEP_SUMMARY

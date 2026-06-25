@@ -234,6 +234,34 @@ function triggerHorloge432() {
   }
 }
 
+// ── Dock collapse ─────────────────────────────────────────────────
+function toggleDock() {
+  const dock    = document.getElementById('bottom-dock');
+  const chevron = document.getElementById('dock-chevron');
+  if (!dock) return;
+  const collapsed = dock.classList.toggle('collapsed');
+  if (chevron) {
+    chevron.classList.toggle('dock-up', collapsed);
+    chevron.textContent = collapsed ? '⌃' : '⌄';
+  }
+  setTimeout(buildVesicaPairs, 370);
+}
+
+// ── Randomisation harmonique globale ─────────────────────────────
+function globalHarmonicRandom() {
+  harmonicRandomInit();
+  PAIRS.forEach((pair, i) => {
+    pair.pingala.ri = Math.floor(Math.random() * RATIO_OPTS.length);
+    const deltas = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+    pair.ida.delta = deltas[Math.floor(Math.random() * deltas.length)];
+  });
+  updateDisplay();
+  if (flowing) PAIRS.forEach((_,i) => { tuneOsc(PAIRS[i].pingala.id,calcPFreq(i)); tuneOsc(PAIRS[i].ida.id,calcIFreq(i)); });
+  saveState();
+  const btn = document.getElementById('btn-harmonic');
+  if (btn) { btn.style.color='#86FFC0'; setTimeout(()=>{ if(btn)btn.style.color=''; },900); }
+}
+
 // ── Plein écran ───────────────────────────────────────────────────
 function toggleFullscreen() {
   const el = document.documentElement;
@@ -475,6 +503,7 @@ function _renderPresets() {
 // ── Init ──────────────────────────────────────────────────────────
 function init() {
   loadState();
+  harmonicRandomInit();
 
   // Inject FX panel
   const fxBody = document.getElementById('panel-fx-body');
@@ -505,7 +534,6 @@ function init() {
 
   // Init 3D geometry engine
   animMetatron();
-  setGeometry(0); // Cube Métatron par défaut, taille max
 
   // Sync global delta
   setGlobalDelta(globalDelta);

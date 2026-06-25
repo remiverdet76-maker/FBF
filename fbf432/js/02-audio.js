@@ -122,10 +122,12 @@ function releaseOsc(node) {
 function swapPingala(i) {
   if (!flowing || !masterGain) return;
   const { pingala } = PAIRS[i];
+  const pan = (typeof OSC_PAN !== 'undefined' && OSC_PAN[i]) ? OSC_PAN[i][0] : -1;
+  const vol = typeof isosonicVol === 'function' ? isosonicVol(calcPFreq(i), pingala.vol) : pingala.vol;
   if (nodes[pingala.id]) {
     tuneOsc(pingala.id, calcPFreq(i));
   } else {
-    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), vol, pan);
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   _applyAntiCrack();
@@ -134,10 +136,12 @@ function swapPingala(i) {
 function swapIda(i) {
   if (!flowing || !masterGain) return;
   const { ida } = PAIRS[i];
+  const pan = (typeof OSC_PAN !== 'undefined' && OSC_PAN[i]) ? OSC_PAN[i][1] : 1;
+  const vol = typeof isosonicVol === 'function' ? isosonicVol(calcIFreq(i), ida.vol) : ida.vol;
   if (nodes[ida.id]) {
     tuneOsc(ida.id, calcIFreq(i));
   } else {
-    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), vol, pan);
   }
   _applyAntiCrack();
   updatePairUI(i);
@@ -526,6 +530,42 @@ function masterTick() {
     vcp.style.boxShadow = `0 0 ${Math.round(lvl*22)}px ${pair.color}${alpha},0 0 ${Math.round(lvl*10)}px ${pair.color}44`;
   });
   drawSpectroid();
+}
+
+/* ---------- 2.10 · LFO DOUX PAR OSCILLATEUR ---------- */
+const _oscVolLFOs = {};
+
+function attachOscVolLFO(id, rate, depth) {
+  clearOscVolLFO(id);
+  const node = nodes[id]; if (!node) return;
+  const c = audioCtx();
+  const lfo = c.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = rate || 0.2;
+  const dg  = c.createGain(); dg.gain.value = depth || 0.07;
+  lfo.connect(dg); dg.connect(node.g.gain);
+  lfo.start();
+  _oscVolLFOs[id] = { lfo, dg };
+}
+
+function clearOscVolLFO(id) {
+  const l = _oscVolLFOs[id]; if (!l) return;
+  try { l.lfo.stop(); l.lfo.disconnect(); l.dg.disconnect(); } catch(e) {}
+  delete _oscVolLFOs[id];
+}
+
+function toggleOscVolLFO(i) {
+  const pid = PAIRS[i].pingala.id;
+  const iid = PAIRS[i].ida.id;
+  if (_oscVolLFOs[pid] || _oscVolLFOs[iid]) {
+    clearOscVolLFO(pid); clearOscVolLFO(iid);
+    const btn = document.getElementById('btn-lfo-' + i);
+    if (btn) { btn.textContent = '〜 Activer'; btn.style.opacity = ''; }
+  } else {
+    const rate = 0.08 + Math.random() * 0.35;
+    attachOscVolLFO(pid, rate, 0.07);
+    attachOscVolLFO(iid, rate, 0.07);
+    const btn = document.getElementById('btn-lfo-' + i);
+    if (btn) { btn.textContent = '〜 Actif'; btn.style.opacity = '0.55'; }
+  }
 }
 
 function ui(state, text) {
