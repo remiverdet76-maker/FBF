@@ -1318,6 +1318,149 @@ input.param-input{
 }
 .mast-btn { border-color: rgba(245,212,96,.35) !important; color: #F5D460 !important; }
 #rec-start-btn:disabled { opacity: .4; }
+/* ══ Synth Studio — Bubble view ══════════════════════════════════════════ */
+.synth-bubble-field {
+  position: relative; width: 100%; height: 310px;
+  margin: .2rem 0;
+}
+.synth-bubble {
+  position: absolute; border-radius: 50%; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(200,120,255,.35);
+  transition: transform .12s ease, box-shadow .25s ease;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 16px rgba(0,0,0,.4);
+}
+.synth-bubble:active { transform: scale(.9); }
+.synth-bubble.master { border-width: 2px; border-color: rgba(255,215,96,.55); }
+.synth-bubble.playing {
+  animation: sbGlow 2.2s ease-in-out infinite;
+}
+@keyframes sbGlow {
+  0%,100% { filter: brightness(1); }
+  50%      { filter: brightness(1.35); box-shadow: 0 0 22px 4px var(--bc,rgba(86,255,176,.4)); }
+}
+.synth-bubble.muted { opacity: .35; }
+.bubble-lbl  { font-size: .52rem; letter-spacing: .1em; opacity: .65; text-align:center; }
+.bubble-hz   { font-size: .88rem; font-family: 'Share Tech Mono', monospace; font-weight: 600; }
+.bubble-wave { font-size: .45rem; letter-spacing: .12em; opacity: .55; margin-top: .05rem; }
+
+.synth-add-btn {
+  background: rgba(96,216,255,.12); border: 1px solid rgba(96,216,255,.4);
+  color: #60D8FF; border-radius: 20px; padding: .3rem .85rem;
+  font-size: 1rem; cursor: pointer; font-family: inherit;
+  transition: background .15s;
+}
+.synth-add-btn:active { background: rgba(96,216,255,.25); }
+
+.synth-delta-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .45rem .4rem; background: rgba(8,4,28,.6);
+  border-top: 1px solid rgba(200,100,255,.12); border-radius: 0 0 12px 12px;
+}
+.synth-delta-btn {
+  background: rgba(96,216,255,.08); border: 1px solid rgba(96,216,255,.3);
+  color: #60D8FF; border-radius: 8px; padding: .25rem .55rem;
+  font-size: .66rem; cursor: pointer; font-family: inherit;
+}
+
+/* ══ Oscillateur Sheet ════════════════════════════════════════════════════ */
+.osc-sheet {
+  position: fixed; left: 0; right: 0; bottom: -110%;
+  background: rgba(6,2,22,.97); border-radius: 22px 22px 0 0;
+  border-top: 1.5px solid rgba(180,80,255,.35);
+  z-index: 500; transition: bottom .36s cubic-bezier(.4,0,.2,1);
+  max-height: 82vh; overflow-y: auto; scrollbar-width: none;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.osc-sheet.open { bottom: 0; }
+.osc-sheet::-webkit-scrollbar { display: none; }
+.osc-sheet-handle {
+  width: 38px; height: 4px; border-radius: 2px;
+  background: rgba(200,120,255,.3); margin: 10px auto 0;
+}
+.osc-sheet-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .7rem 1.2rem .5rem;
+  border-bottom: 1px solid rgba(180,80,255,.12);
+}
+.osc-sheet-title {
+  font-family: 'Cinzel Decorative', serif; font-size: .82rem; letter-spacing: .14em;
+  background: linear-gradient(90deg,#C880FF,#60D8FF);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.osc-sheet-close { background:none; border:none; color:rgba(220,200,255,.5); font-size:1rem; cursor:pointer; padding:4px 10px; }
+.osc-sheet-body  { padding: .8rem 1.1rem 1.4rem; }
+
+.osc-sheet-bd {
+  display: none; position: fixed; inset: 0; z-index: 499;
+  background: rgba(0,0,0,.5); backdrop-filter: blur(2px);
+}
+.osc-sheet-bd.on { display: block; }
+
+.osc-sec-lbl {
+  font-size: .55rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(200,170,255,.45); margin-bottom: .35rem;
+}
+.osc-freq-big {
+  font-family: 'Share Tech Mono', monospace; font-size: 1.7rem; color: #86FFC0;
+  text-align: center; margin: .3rem 0 .55rem; letter-spacing: .05em;
+}
+.osc-wave-row { display: flex; gap: .4rem; flex-wrap: wrap; }
+.osc-wave-btn {
+  padding: .32rem .7rem; border-radius: 16px; cursor: pointer;
+  border: 1.5px solid rgba(160,80,255,.3); background: rgba(255,255,255,.04);
+  color: rgba(200,170,255,.75); font-size: .68rem; font-family: inherit;
+  letter-spacing: .06em; transition: all .15s;
+}
+.osc-wave-btn.active {
+  border-color: rgba(200,120,255,.75); background: rgba(160,80,255,.2);
+  color: rgba(230,210,255,.95); box-shadow: 0 0 10px rgba(160,80,255,.25);
+}
+.osc-nudge-row { display: flex; gap: .3rem; justify-content: center; flex-wrap: wrap; }
+.osc-nudge-btn {
+  padding: .28rem .6rem; border-radius: 10px; cursor: pointer;
+  border: 1px solid rgba(86,255,176,.3); background: rgba(86,255,176,.06);
+  color: #86FFC0; font-size: .65rem; font-family: inherit;
+}
+.osc-select {
+  background: rgba(8,4,28,.9); border: 1px solid rgba(180,80,255,.3);
+  color: rgba(220,200,255,.8); border-radius: 8px; padding: .3rem .5rem;
+  font-size: .68rem; font-family: inherit; outline: none;
+}
+
+/* ══ Quick Menu ══════════════════════════════════════════════════════════ */
+.synth-qm {
+  display: none; position: fixed; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); z-index: 510;
+  background: rgba(8,4,28,.97); border: 1.5px solid rgba(180,80,255,.4);
+  border-radius: 18px; padding: .9rem 1rem 1rem; min-width: 240px;
+  backdrop-filter: blur(20px); box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}
+.synth-qm.open { display: block; }
+.qm-label { font-family:'Cinzel Decorative',serif; font-size:.72rem; letter-spacing:.14em; color:#C880FF; text-align:center; margin-bottom:.6rem; }
+.qm-btn {
+  display: block; width: 100%; padding: .42rem .6rem; margin: .25rem 0;
+  border-radius: 10px; cursor: pointer; text-align: left;
+  border: 1px solid rgba(160,80,255,.25); background: rgba(255,255,255,.04);
+  color: rgba(220,200,255,.82); font-size: .72rem; font-family: inherit;
+  transition: background .12s;
+}
+.qm-btn:active { background: rgba(160,80,255,.18); }
+.qm-btn.qm-del { border-color:rgba(255,80,80,.3); color:#FF8888; }
+.qm-btn-sm {
+  padding: .28rem; border-radius: 8px; cursor: pointer;
+  border: 1px solid rgba(96,216,255,.25); background: rgba(96,216,255,.06);
+  color: #60D8FF; font-size: .66rem; font-family: inherit; text-align: center;
+}
+.qm-sep { height:1px; background:rgba(180,80,255,.15); margin:.5rem 0; }
+.synth-qm-bd {
+  display: none; position: fixed; inset: 0; z-index: 509; background: rgba(0,0,0,.4);
+}
+.synth-qm-bd.on { display: block; }
+
 </style>
 <link rel="stylesheet" href="bg-rotator.css">
 <style id="cosmic-bg-override">
@@ -1431,26 +1574,29 @@ input.param-input{
   <div id="alea-pairs-compact" style="font-size:.65rem;color:rgba(200,180,255,.55);line-height:1.8"></div>
 </div>
 
-<!-- ── Tab: Binaural 🔵 ─────────────────────────────────────────────────── -->
+<!-- ── Tab: Binaural / Synth Studio 🔵 ────────────────────────────────── -->
 <div class="tab-panel" id="panBina">
-  <div class="tp-title" style="color:#60D8FF">〰 Binaural · Paires</div>
-
-  <div class="tp-section">Delta global (battement binaural)</div>
-  <div class="tp-info-row">
-    <span>Δ global</span>
-    <span class="tp-info-val" id="bina-global-delta">— Hz</span>
-  </div>
-  <div class="tp-play-row" style="gap:.5rem">
-    <button class="tp-stop-btn bina-btn" onclick="binaNudge(-36)">−36</button>
-    <button class="tp-stop-btn bina-btn" onclick="binaNudge(-9)">−9</button>
-    <button class="tp-stop-btn bina-btn" onclick="binaNudge(-1.8)">−1.8</button>
-    <button class="tp-stop-btn bina-btn" onclick="binaNudge(+1.8)">+1.8</button>
-    <button class="tp-stop-btn bina-btn" onclick="binaNudge(+9)">+9</button>
-    <button class="tp-stop-btn bina-btn" onclick="binaNudge(+36)">+36</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem .2rem .2rem">
+    <span style="font-family:'Cinzel Decorative',serif;font-size:.75rem;letter-spacing:.14em;color:#60D8FF">〰 Synth Studio</span>
+    <button class="synth-add-btn" onclick="synthAddOsc()" title="Ajouter oscillateur">＋</button>
   </div>
 
-  <div class="tp-section">Paires — fréquence individuelle</div>
-  <div id="bina-pairs-list"><!-- populated by _updateBinaPanel() --></div>
+  <!-- Hexagonal bubble field -->
+  <div class="synth-bubble-field" id="synth-bubble-field"></div>
+
+  <!-- Delta bar -->
+  <div class="synth-delta-bar">
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <span style="font-size:.6rem;letter-spacing:.12em;color:rgba(200,180,255,.5)">Δ BINAURAL</span>
+      <span class="tp-info-val" id="bina-global-delta" style="color:#60D8FF">— Hz</span>
+    </div>
+    <div style="display:flex;gap:.3rem">
+      <button class="synth-delta-btn" onclick="binaNudge(-9)">−9</button>
+      <button class="synth-delta-btn" onclick="binaNudge(-1.8)">−1.8</button>
+      <button class="synth-delta-btn" onclick="binaNudge(+1.8)">+1.8</button>
+      <button class="synth-delta-btn" onclick="binaNudge(+9)">+9</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Tab: Master 🟡 ─────────────────────────────────────────────────── -->
@@ -1564,6 +1710,116 @@ input.param-input{
   </div>
   <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
 </div>
+
+
+<!-- ══ Oscillateur Sheet (bottom drawer) ══════════════════════════════════ -->
+<div id="osc-sheet" class="osc-sheet">
+  <div class="osc-sheet-handle"></div>
+  <div class="osc-sheet-head">
+    <span class="osc-sheet-title" id="osc-sheet-title">Oscillateur</span>
+    <button class="osc-sheet-close" onclick="closeOscSheet()">✕</button>
+  </div>
+  <div class="osc-sheet-body">
+
+    <!-- Waveform selector -->
+    <div class="osc-sec-lbl">Forme d'onde</div>
+    <div class="osc-wave-row" id="osc-wave-row"></div>
+
+    <!-- Frequency -->
+    <div class="osc-sec-lbl" style="margin-top:.9rem">Fréquence</div>
+    <div class="osc-freq-big" id="osc-freq-big">— Hz</div>
+    <div class="osc-nudge-row">
+      <button class="osc-nudge-btn" onclick="oscNudge(-54)">−54</button>
+      <button class="osc-nudge-btn" onclick="oscNudge(-18)">−18</button>
+      <button class="osc-nudge-btn" onclick="oscNudge(-9)">−9</button>
+      <button class="osc-nudge-btn" onclick="oscNudge(+9)">+9</button>
+      <button class="osc-nudge-btn" onclick="oscNudge(+18)">+18</button>
+      <button class="osc-nudge-btn" onclick="oscNudge(+54)">+54</button>
+    </div>
+
+    <!-- Volume / Pan / Delta -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.8rem">
+      <div>
+        <div class="osc-sec-lbl">Volume</div>
+        <input type="range" class="fx-slider" id="osc-vol-sl" min="0" max="0.4" step="0.005" value="0.12"
+          oninput="oscSetVol(this.value)">
+        <span class="tp-info-val" id="osc-vol-val" style="font-size:.62rem">30%</span>
+      </div>
+      <div>
+        <div class="osc-sec-lbl">Pan L/R</div>
+        <input type="range" class="fx-slider" id="osc-pan-sl" min="-1" max="1" step="0.02" value="-0.7"
+          oninput="oscSetPan(this.value)">
+        <span class="tp-info-val" id="osc-pan-val" style="font-size:.62rem">−70%</span>
+      </div>
+    </div>
+
+    <!-- Detune / Attack -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.6rem">
+      <div>
+        <div class="osc-sec-lbl">Δ Binaural</div>
+        <input type="range" class="fx-slider" id="osc-delta-sl" min="0" max="36" step="0.1" value="1.8"
+          oninput="oscSetDelta(this.value)">
+        <span class="tp-info-val" id="osc-delta-val" style="font-size:.62rem">1.8 Hz</span>
+      </div>
+      <div>
+        <div class="osc-sec-lbl">Attaque</div>
+        <input type="range" class="fx-slider" id="osc-att-sl" min="0.05" max="4" step="0.05" value="0.5"
+          oninput="oscSetAttack(this.value)">
+        <span class="tp-info-val" id="osc-att-val" style="font-size:.62rem">0.5 s</span>
+      </div>
+    </div>
+
+    <!-- Filtre -->
+    <div style="margin-top:.8rem">
+      <div class="osc-sec-lbl">Filtre</div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+        <select id="osc-filter-type" onchange="oscSetFilter()" class="osc-select">
+          <option value="none">Aucun</option>
+          <option value="lowpass">Low-pass</option>
+          <option value="highpass">High-pass</option>
+          <option value="bandpass">Band-pass</option>
+          <option value="notch">Notch</option>
+        </select>
+        <input type="range" class="fx-slider" id="osc-filter-freq" min="20" max="20000" step="10" value="1000"
+          oninput="oscSetFilter()" style="flex:1">
+        <span class="tp-info-val" id="osc-filter-val" style="font-size:.62rem">1000 Hz</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
+      <button class="tp-play-btn" id="osc-mute-btn" onclick="oscToggleMute()"
+        style="flex:1;border-color:rgba(255,100,100,.5);color:#FF8080;background:rgba(255,80,80,.07)">Mute</button>
+      <button class="tp-play-btn" onclick="oscSheetRender()"
+        style="flex:1;border-color:rgba(86,255,176,.4);color:#86FFC0;background:rgba(86,255,176,.07)">⬇ Sample WAV</button>
+    </div>
+    <div style="font-size:.56rem;color:rgba(200,180,255,.3);text-align:center;margin-top:.4rem">
+      Rend 3 s de l'oscillateur en WAV stéréo
+    </div>
+  </div>
+</div>
+<div id="osc-sheet-bd" class="osc-sheet-bd" onclick="closeOscSheet()"></div>
+
+<!-- ══ Quick menu (long tap) ══════════════════════════════════════════════ -->
+<div id="synth-qm" class="synth-qm">
+  <div class="qm-label" id="qm-label">Oscillateur</div>
+  <button class="qm-btn" onclick="qmAction('rand-freq')">⟳ Fréquence aléatoire</button>
+  <button class="qm-btn" onclick="qmAction('rand-fx')">✦ FX aléatoires</button>
+  <div class="qm-sep"></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem">
+    <button class="qm-btn-sm" onclick="qmAction('n9')">−9 Hz</button>
+    <button class="qm-btn-sm" onclick="qmAction('n18')">−18 Hz</button>
+    <button class="qm-btn-sm" onclick="qmAction('n36')">−36 Hz</button>
+    <button class="qm-btn-sm" onclick="qmAction('p9')">+9 Hz</button>
+    <button class="qm-btn-sm" onclick="qmAction('p18')">+18 Hz</button>
+    <button class="qm-btn-sm" onclick="qmAction('p36')">+36 Hz</button>
+  </div>
+  <div class="qm-sep"></div>
+  <button class="qm-btn" onclick="qmAction('open-sheet')">⚙ Réglages oscillateur</button>
+  <button class="qm-btn qm-del" onclick="qmAction('del')">✕ Supprimer</button>
+  <button class="qm-btn" onclick="closeQuickMenu()" style="color:rgba(200,180,255,.4)">Annuler</button>
+</div>
+<div id="synth-qm-bd" class="synth-qm-bd" onclick="closeQuickMenu()"></div>
 
 
 <div id="osc-modal">
@@ -4420,6 +4676,425 @@ function showTab(tabId, btn) {
 
 
 
+
+// ══════════════════════════════════════════════════════════════════════════
+// OmCv432 · Synth Studio — bubbles, waveforms, sheet, quick menu
+// ══════════════════════════════════════════════════════════════════════════
+
+const WAVEFORMS = [
+  { id:'sine',     label:'SINE'     },
+  { id:'sawtooth', label:'SAW'      },
+  { id:'square',   label:'SQUARE'   },
+  { id:'triangle', label:'TRI'      },
+  { id:'supersaw', label:'SUPERSAW' },
+];
+const SUPERSAW_DETUNE = [-20, -12, -5, 5, 12, 20]; // cents for detuned saws
+
+// Extend PAIRS with synth fields
+PAIRS.forEach((p, i) => {
+  if (!p.waveform) p.waveform = 'sine';
+  if (!p.attack)   p.attack   = 0.5;
+  if (!p.filterType) p.filterType = 'none';
+  if (!p.filterFreq) p.filterFreq = 1000;
+});
+
+let _oscSheetIdx = -1;  // which pair is open in the sheet
+let _qmIdx       = -1;  // which pair has the quick menu open
+let _longTapTimer = null;
+
+// ── USER OSCILLATORS (beyond the 7 built-in pairs) ───────────────────────
+const USER_OSCS = [];
+
+// ─── Bubble layout ────────────────────────────────────────────────────────
+function buildBubbles() {
+  const field = document.getElementById('synth-bubble-field');
+  if (!field) return;
+  field.innerHTML = '';
+  const W  = field.offsetWidth  || 340;
+  const H  = field.offsetHeight || 310;
+  const cx = W / 2, cy = H / 2;
+  const rOuter = Math.min(W, H) * 0.36;
+  const rInner = 0;
+
+  // Helper: create one bubble div
+  function makeBubble(p, idx, x, y, size, isMaster) {
+    const div = document.createElement('div');
+    div.className = 'synth-bubble' + (isMaster ? ' master' : '');
+    if (p.muted) div.classList.add('muted');
+    if (flowing && nodes[p.pingala.id]) div.classList.add('playing');
+    const col = p.color || '#86FFC0';
+    div.style.cssText =
+      'left:'+(x-size/2).toFixed(1)+'px;top:'+(y-size/2).toFixed(1)+'px;' +
+      'width:'+size+'px;height:'+size+'px;' +
+      '--bc:'+col+'44;' +
+      'background:radial-gradient(circle at 38% 35%,'+col+'28,'+col+'0e);' +
+      'border-color:'+col+'60;color:'+col+';';
+    div.id = 'bubble-' + idx;
+    const wave = (p.waveform||'sine').toUpperCase().slice(0,5);
+    const fhz  = isMaster ? masterFreq.toFixed(0) : (p.pingala.baseFreq||calcPFreq(idx)).toFixed(0);
+    div.innerHTML =
+      '<div class="bubble-lbl">'+(isMaster?'★ MASTER':p.label)+'</div>'+
+      '<div class="bubble-hz" id="bubble-hz-'+idx+'">'+fhz+'</div>'+
+      '<div class="bubble-wave" id="bubble-wave-'+idx+'">'+wave+'</div>';
+
+    // Touch interaction: tap vs long-tap
+    let _lt = null;
+    const clear = () => { if (_lt) { clearTimeout(_lt); _lt = null; } };
+    div.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      _lt = setTimeout(() => { _lt = null; openQuickMenu(idx); }, 420);
+    }, { passive: false });
+    div.addEventListener('pointerup', (e) => {
+      if (_lt) { clear(); openOscSheet(idx); }
+    });
+    div.addEventListener('pointercancel', clear);
+    div.addEventListener('pointermove', (e) => {
+      if (_lt && (Math.abs(e.movementX)+Math.abs(e.movementY) > 8)) clear();
+    });
+    field.appendChild(div);
+  }
+
+  // 6 satellites at hex positions (top = pair 0, clockwise)
+  PAIRS.slice(0, MASTER_IDX).forEach((p, i) => {
+    const angle = (i * 60 - 90) * Math.PI / 180;
+    makeBubble(p, i, cx + rOuter * Math.cos(angle), cy + rOuter * Math.sin(angle), 70, false);
+  });
+  // Master center
+  makeBubble(PAIRS[MASTER_IDX], MASTER_IDX, cx, cy, 92, true);
+
+  // User oscillators (extra ring)
+  USER_OSCS.forEach((p, j) => {
+    const angle = (j * 60 - 60) * Math.PI / 180;
+    const r2 = rOuter * 1.72;
+    makeBubble(p, MASTER_IDX + 1 + j, cx + r2 * Math.cos(angle), cy + r2 * Math.sin(angle), 52, false);
+  });
+}
+
+function updateBubbleUI(idx) {
+  const p = idx <= MASTER_IDX ? PAIRS[idx] : USER_OSCS[idx - MASTER_IDX - 1];
+  if (!p) return;
+  const hzEl   = document.getElementById('bubble-hz-' + idx);
+  const waveEl = document.getElementById('bubble-wave-' + idx);
+  const bEl    = document.getElementById('bubble-' + idx);
+  if (hzEl)   hzEl.textContent = (idx === MASTER_IDX ? masterFreq : p.pingala.baseFreq).toFixed(0);
+  if (waveEl) waveEl.textContent = (p.waveform||'sine').toUpperCase().slice(0,5);
+  if (bEl) {
+    bEl.classList.toggle('playing', !!(flowing && nodes[p.pingala.id]));
+    bEl.classList.toggle('muted',   !!p.muted);
+  }
+}
+
+function updateAllBubbles() {
+  PAIRS.forEach((_, i) => updateBubbleUI(i));
+}
+
+// ─── Oscillateur Sheet ────────────────────────────────────────────────────
+function openOscSheet(idx) {
+  _oscSheetIdx = idx;
+  const p = idx < MASTER_IDX ? PAIRS[idx] : PAIRS[MASTER_IDX];
+  const sheet = document.getElementById('osc-sheet');
+  const bd    = document.getElementById('osc-sheet-bd');
+  if (!sheet) return;
+
+  // Title
+  document.getElementById('osc-sheet-title').textContent =
+    idx === MASTER_IDX ? '★ Oscillateur Maître' : (p.label + ' — Oscillateur');
+
+  // Freq display
+  const fhz = idx === MASTER_IDX ? masterFreq : p.pingala.baseFreq;
+  const el = document.getElementById('osc-freq-big');
+  if (el) el.textContent = fhz.toFixed(1) + ' Hz';
+
+  // Waveform buttons
+  const wr = document.getElementById('osc-wave-row');
+  if (wr) {
+    wr.innerHTML = WAVEFORMS.map(w =>
+      '<button class="osc-wave-btn' + (p.waveform===w.id?' active':'') + '" ' +
+      'onclick="oscSetWaveform(''+w.id+'')" data-w="'+w.id+'">'+w.label+'</button>'
+    ).join('');
+  }
+
+  // Volume / pan / delta
+  const vsl = document.getElementById('osc-vol-sl');
+  const vvl = document.getElementById('osc-vol-val');
+  if (vsl) { vsl.value = p.pingala.vol || 0.12; }
+  if (vvl) vvl.textContent = Math.round((p.pingala.vol||0.12)*100/0.4)+'%';
+
+  const psl = document.getElementById('osc-pan-sl');
+  const pvl = document.getElementById('osc-pan-val');
+  if (psl) { const pan = idx===MASTER_IDX ? 0 : -0.7; psl.value = pan; if(pvl) pvl.textContent = (pan>0?'+':'')+(pan*100).toFixed(0)+'%'; }
+
+  const dsl = document.getElementById('osc-delta-sl');
+  const dvl = document.getElementById('osc-delta-val');
+  if (dsl) { dsl.value = globalDelta.toFixed(1); if(dvl) dvl.textContent = globalDelta.toFixed(1)+' Hz'; }
+
+  const asl = document.getElementById('osc-att-sl');
+  const avl = document.getElementById('osc-att-val');
+  if (asl) { asl.value = p.attack||0.5; if(avl) avl.textContent = (p.attack||0.5).toFixed(2)+' s'; }
+
+  // Filter
+  const ft = document.getElementById('osc-filter-type');
+  if (ft) ft.value = p.filterType || 'none';
+  const ff = document.getElementById('osc-filter-freq');
+  if (ff) { ff.value = p.filterFreq || 1000; document.getElementById('osc-filter-val').textContent = (p.filterFreq||1000)+' Hz'; }
+
+  // Mute button
+  const mb = document.getElementById('osc-mute-btn');
+  if (mb) { mb.textContent = p.muted ? '▶ Activer' : 'Mute'; mb.style.borderColor = p.muted ? 'rgba(86,255,176,.5)' : 'rgba(255,100,100,.5)'; mb.style.color = p.muted ? '#86FFC0' : '#FF8080'; }
+
+  sheet.classList.add('open');
+  if (bd) bd.classList.add('on');
+}
+
+function closeOscSheet() {
+  document.getElementById('osc-sheet')?.classList.remove('open');
+  document.getElementById('osc-sheet-bd')?.classList.remove('on');
+}
+
+function _curPair() {
+  return _oscSheetIdx < MASTER_IDX ? PAIRS[_oscSheetIdx] : PAIRS[MASTER_IDX];
+}
+
+function oscNudge(dHz) {
+  const p = _curPair();
+  if (_oscSheetIdx === MASTER_IDX) {
+    masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
+  } else {
+    p.pingala.baseFreq = Math.max(36, Math.min(432, (p.pingala.baseFreq||calcPFreq(_oscSheetIdx)) + dHz));
+  }
+  const fhz = _oscSheetIdx === MASTER_IDX ? masterFreq : p.pingala.baseFreq;
+  const el = document.getElementById('osc-freq-big'); if (el) el.textContent = fhz.toFixed(1)+' Hz';
+  binaShiftPair(_oscSheetIdx, 0); // retune if flowing (uses calcPFreq)
+  updateBubbleUI(_oscSheetIdx);
+  _updateAleaPanel();
+}
+
+function oscSetWaveform(wave) {
+  if (_oscSheetIdx < 0) return;
+  const p = _curPair();
+  p.waveform = wave;
+  // Update button states
+  document.querySelectorAll('#osc-wave-row .osc-wave-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.w === wave));
+  _applyWaveform(_oscSheetIdx, wave);
+  updateBubbleUI(_oscSheetIdx);
+}
+
+function _applyWaveform(idx, wave) {
+  const p = PAIRS[Math.min(idx, MASTER_IDX)];
+  [p.pingala.id, p.ida.id].forEach(id => {
+    const n = nodes[id]; if (!n) return;
+    if (wave === 'supersaw') {
+      _buildSupersaw(n);
+    } else {
+      // Clean supersaw extras
+      if (n._supers) { n._supers.forEach(s => { try {s.o.stop(); s.o.disconnect(); s.g.disconnect();} catch(e){}  }); n._supers = []; }
+      try { n.o.type = wave; } catch(e) {}
+    }
+  });
+}
+
+function _buildSupersaw(n) {
+  if (!n) return;
+  // Remove previous supers
+  if (n._supers) { n._supers.forEach(s => { try{s.o.stop(); s.o.disconnect(); s.g.disconnect();}catch(e){} }); }
+  n.o.type = 'sawtooth';
+  const c = audioCtx();
+  n._supers = SUPERSAW_DETUNE.map(dt => {
+    const o = c.createOscillator(); o.type = 'sawtooth';
+    o.frequency.value = n.o.frequency.value; o.detune.value = dt;
+    const g = c.createGain(); g.gain.value = 0.55 / SUPERSAW_DETUNE.length;
+    o.connect(g); g.connect(n.g); o.start();
+    return { o, g };
+  });
+}
+
+function oscSetVol(v) {
+  const p = _curPair();
+  p.pingala.vol = parseFloat(v);
+  document.getElementById('osc-vol-val').textContent = Math.round(v/0.4*100)+'%';
+  // Apply to live node
+  const n = nodes[p.pingala.id];
+  if (n) n.g.gain.setTargetAtTime(parseFloat(v) * (p.muted?0:1), aNow(), 0.05);
+}
+
+function oscSetPan(v) {
+  document.getElementById('osc-pan-val').textContent = (v>0?'+':'')+(parseFloat(v)*100).toFixed(0)+'%';
+  const p = _curPair();
+  const n = nodes[p.pingala.id];
+  if (n && n.p) n.p.pan.setTargetAtTime(parseFloat(v), aNow(), 0.05);
+}
+
+function oscSetDelta(v) {
+  globalDelta = parseFloat(v);
+  _prevDelta  = globalDelta;
+  document.getElementById('osc-delta-val').textContent = parseFloat(v).toFixed(1)+' Hz';
+  binaNudge(0);
+  _updateAleaPanel();
+}
+
+function oscSetAttack(v) {
+  _curPair().attack = parseFloat(v);
+  document.getElementById('osc-att-val').textContent = parseFloat(v).toFixed(2)+' s';
+}
+
+function oscSetFilter() {
+  const p    = _curPair();
+  const type = document.getElementById('osc-filter-type').value;
+  const freq = parseFloat(document.getElementById('osc-filter-freq').value);
+  p.filterType = type; p.filterFreq = freq;
+  document.getElementById('osc-filter-val').textContent = Math.round(freq)+' Hz';
+}
+
+function oscToggleMute() {
+  if (_oscSheetIdx < 0) return;
+  const p = _curPair();
+  p.muted = !p.muted;
+  const n = nodes[p.pingala.id];
+  if (n) n.g.gain.setTargetAtTime(p.muted ? 0 : p.pingala.vol, aNow(), 0.08);
+  const ni = nodes[p.ida.id];
+  if (ni) ni.g.gain.setTargetAtTime(p.muted ? 0 : p.ida.vol, aNow(), 0.08);
+  const mb = document.getElementById('osc-mute-btn');
+  if (mb) { mb.textContent = p.muted?'▶ Activer':'Mute'; mb.style.color=p.muted?'#86FFC0':'#FF8080'; }
+  updateBubbleUI(_oscSheetIdx);
+}
+
+async function oscSheetRender() {
+  const idx = _oscSheetIdx; if (idx < 0) return;
+  const p   = _curPair();
+  const dur = 3.0;
+  try {
+    const ctx = new OfflineAudioContext(2, Math.round(44100 * dur), 44100);
+    const wave = (p.waveform === 'supersaw') ? 'sawtooth' : (p.waveform || 'sine');
+    [[calcPFreq(idx), -0.7, p.pingala.vol], [calcIFreq(idx), 0.7, p.ida.vol]].forEach(([freq, pan, vol]) => {
+      const o = ctx.createOscillator(); o.type = wave; o.frequency.value = freq;
+      const g = ctx.createGain(); g.gain.value = 0;
+      const t0 = 0.05;
+      g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(vol, t0); g.gain.setTargetAtTime(0, dur - 0.3, 0.1);
+      const pp = ctx.createStereoPanner(); pp.pan.value = pan;
+      o.connect(g); g.connect(pp); pp.connect(ctx.destination);
+      o.start(0); o.stop(dur);
+      if (wave === 'sawtooth' && p.waveform === 'supersaw') {
+        SUPERSAW_DETUNE.forEach(dt => {
+          const os = ctx.createOscillator(); os.type='sawtooth'; os.frequency.value=freq; os.detune.value=dt;
+          const gs = ctx.createGain(); gs.gain.value=vol*0.5/SUPERSAW_DETUNE.length;
+          os.connect(gs); gs.connect(pp); os.start(0); os.stop(dur);
+        });
+      }
+    });
+    const buf = await ctx.startRendering();
+    const blob = _audioBufferToWav(buf);
+    const name = 'OmCv432-'+p.label.replace(/[^a-z0-9]/gi,'-')+'-'+calcPFreq(idx).toFixed(0)+'Hz.wav';
+    _downloadBlob(blob, name);
+  } catch(e) { alert('Erreur rendu : '+e.message); }
+}
+
+function _audioBufferToWav(buf) {
+  const nc=buf.numberOfChannels, sr=buf.sampleRate, len=buf.length;
+  const interleaved = new Float32Array(len * nc);
+  for (let c=0;c<nc;c++) { const ch=buf.getChannelData(c); for(let s=0;s<len;s++) interleaved[s*nc+c]=ch[s]; }
+  const pcm = new Int16Array(interleaved.length);
+  for (let i=0;i<interleaved.length;i++) pcm[i]=Math.max(-32768,Math.min(32767,interleaved[i]*32767));
+  const dv = new DataView(new ArrayBuffer(44 + pcm.byteLength));
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF'); dv.setUint32(4,36+pcm.byteLength,true); ws(8,'WAVE'); ws(12,'fmt ');
+  dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,nc,true);
+  dv.setUint32(24,sr,true); dv.setUint32(28,sr*nc*2,true);
+  dv.setUint16(32,nc*2,true); dv.setUint16(34,16,true); ws(36,'data');
+  dv.setUint32(40,pcm.byteLength,true); new Int16Array(dv.buffer,44).set(pcm);
+  return new Blob([dv.buffer],{type:'audio/wav'});
+}
+
+function _downloadBlob(blob, name) {
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},2000);
+}
+
+// ─── Quick Menu ────────────────────────────────────────────────────────────
+function openQuickMenu(idx) {
+  _qmIdx = idx;
+  const p = idx < MASTER_IDX ? PAIRS[idx] : PAIRS[MASTER_IDX];
+  const lbl = document.getElementById('qm-label');
+  if (lbl) lbl.textContent = idx===MASTER_IDX ? '★ Maître' : p.label;
+  const delBtn = document.querySelector('.qm-btn.qm-del');
+  if (delBtn) delBtn.style.display = idx < MASTER_IDX && idx >= 6 ? 'block' : 'none'; // only user oscs
+  document.getElementById('synth-qm')?.classList.add('open');
+  document.getElementById('synth-qm-bd')?.classList.add('on');
+}
+
+function closeQuickMenu() {
+  document.getElementById('synth-qm')?.classList.remove('open');
+  document.getElementById('synth-qm-bd')?.classList.remove('on');
+}
+
+function qmAction(act) {
+  closeQuickMenu();
+  const dHz = { n9:-9, n18:-18, n36:-36, p9:9, p18:18, p36:36 };
+  if (dHz[act] !== undefined) { binaShiftPair(_qmIdx, dHz[act]); updateBubbleUI(_qmIdx); }
+  else if (act === 'rand-freq') { harmonicRandomInit(); _updateAleaPanel(); _updateBinaPanel(); updateAllBubbles(); }
+  else if (act === 'rand-fx')   { aleaApplyRandomFX(); }
+  else if (act === 'open-sheet') { openOscSheet(_qmIdx); }
+  else if (act === 'del') { synthRemoveOsc(_qmIdx); }
+}
+
+// ─── Add / Remove oscillators ─────────────────────────────────────────────
+const _OSC_COLORS = ['#FF6B6B','#FFB347','#E8FF60','#56FFB0','#60D8FF','#C080FF','#FF80D0','#FFD060'];
+
+function synthAddOsc() {
+  const n   = USER_OSCS.length;
+  const col = _OSC_COLORS[n % _OSC_COLORS.length];
+  const hz  = Math.max(54, Math.min(432, masterFreq * (0.5 + Math.random())));
+  USER_OSCS.push({
+    label:'Osc '+(MASTER_IDX+n+1), color:col, waveform:'sine', muted:false,
+    attack:0.5, filterType:'none', filterFreq:1000,
+    pingala:{id:'u'+(n*2),   ri:0, n:1, baseFreq:hz, vol:.10},
+    ida:    {id:'u'+(n*2+1), delta:globalDelta, polarity:1, vol:.10},
+  });
+  buildBubbles();
+  if (flowing && masterGain) {
+    const up = USER_OSCS[n];
+    nodes[up.pingala.id] = buildOsc(up.pingala.id, hz, up.pingala.vol, -0.6);
+    nodes[up.ida.id]     = buildOsc(up.ida.id, hz+globalDelta, up.ida.vol, 0.6);
+  }
+}
+
+function synthRemoveOsc(globalIdx) {
+  if (globalIdx <= MASTER_IDX) return; // can't remove built-in pairs
+  const uIdx = globalIdx - MASTER_IDX - 1;
+  if (uIdx < 0 || uIdx >= USER_OSCS.length) return;
+  const p = USER_OSCS[uIdx];
+  [p.pingala.id, p.ida.id].forEach(id => {
+    const n = nodes[id]; if (!n) return;
+    if (n._supers) n._supers.forEach(s=>{try{s.o.stop();s.o.disconnect();s.g.disconnect();}catch(e){}});
+    try { n.o.stop(); n.o.disconnect(); n.g.disconnect(); } catch(e) {}
+    delete nodes[id];
+  });
+  USER_OSCS.splice(uIdx, 1);
+  buildBubbles();
+}
+
+// ─── _updateBinaPanel: now just refreshes bubble UI ─────────────────────
+function _updateBinaPanel() {
+  const gd = document.getElementById('bina-global-delta');
+  if (gd) gd.textContent = globalDelta.toFixed(2)+' Hz';
+  buildBubbles();
+}
+
+// Wire bubbles when tab is shown + on flow start/stop
+const _origShowTab = window.showTab;
+window.showTab = function(tabId, btn) {
+  _origShowTab && _origShowTab(tabId, btn);
+  if (tabId === 'bina') setTimeout(buildBubbles, 60);
+};
+
+// Rebuild bubbles after flow start/stop (state change)
+const _origStartFlow = window.startFlow;
+window.startFlow = async function() {
+  await _origStartFlow.apply(this, arguments);
+  setTimeout(updateAllBubbles, 800);
+};
+
 // ══════════════════════════════════════════════════════════════════════════
 // OmCv432 — Steps 2-6 : helpers Aléatoire / Binaural / Master
 // ══════════════════════════════════════════════════════════════════════════
@@ -4473,11 +5148,10 @@ function aleaNewFreq() {
   _updateBinaPanel();
   if (flowing) {
     PAIRS.forEach((p, i) => {
-      const n = nodes[i]; if (!n) return;
-      const t = aNow() + TUNE_T;
-      const pf = calcPFreq(i);
-      n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
-      if (i < MASTER_IDX) n.o2 && n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
+      const np = nodes[p.pingala.id]; if (np) np.o.frequency.setTargetAtTime(calcPFreq(i), aNow()+TUNE_T, TUNE_T);
+      if (i < MASTER_IDX) {
+        const ni = nodes[p.ida.id]; if (ni) ni.o.frequency.setTargetAtTime(calcIFreq(i), aNow()+TUNE_T, TUNE_T);
+      }
     });
   }
 }
@@ -4578,11 +5252,12 @@ function binaShiftPair(idx, dHz) {
   _updateBinaPanel();
   _updateAleaPanel();
   if (flowing) {
-    const n = nodes[idx]; if (!n) return;
-    const pf = calcPFreq(idx), t = aNow() + TUNE_T;
-    n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
-    if (n.o2 && idx < MASTER_IDX)
-      n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
+    const np = nodes[p.pingala.id];
+    if (np) np.o.frequency.setTargetAtTime(calcPFreq(idx), aNow()+TUNE_T, TUNE_T);
+    if (idx < MASTER_IDX) {
+      const ni = nodes[p.ida.id];
+      if (ni) ni.o.frequency.setTargetAtTime(calcIFreq(idx), aNow()+TUNE_T, TUNE_T);
+    }
   }
 }
 
@@ -4594,9 +5269,8 @@ function binaNudge(dHz) {
   if (flowing) {
     PAIRS.forEach((p, i) => {
       if (i === MASTER_IDX) return;
-      const n = nodes[i]; if (!n) return;
-      const pf = calcPFreq(i), t = aNow() + TUNE_T;
-      n.o2 && n.o2.frequency.setTargetAtTime(pf + p.ida.polarity * globalDelta, t, TUNE_T);
+      const ni = nodes[p.ida.id];
+      if (ni) ni.o.frequency.setTargetAtTime(calcIFreq(i), aNow()+TUNE_T, TUNE_T);
     });
   }
 }
@@ -4608,9 +5282,8 @@ function masterNudge(dHz) {
   _updateAleaPanel();
   _updateBinaPanel();
   if (flowing) {
-    const n = nodes[MASTER_IDX]; if (!n) return;
-    const pf = calcPFreq(MASTER_IDX), t = aNow() + TUNE_T;
-    n.o.frequency.setTargetAtTime(pf, t, TUNE_T);
+    const np = nodes[PAIRS[MASTER_IDX].pingala.id];
+    if (np) np.o.frequency.setTargetAtTime(calcPFreq(MASTER_IDX), aNow()+TUNE_T, TUNE_T);
   }
 }
 
@@ -5040,6 +5713,8 @@ function init() {
   // Infobar tick indépendant (1s)
   setInterval(updateInfobar, 1000);
 
+  // Build synth bubbles (Binaural tab)
+  setTimeout(buildBubbles, 150);
   ui('idle', 'Prêt · Touchez la sphère pour rayonner');
 }
 
