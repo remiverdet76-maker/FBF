@@ -342,15 +342,30 @@
   padding:.32rem .52rem;
   text-align:center;flex-shrink:0;
 }
-/* Harmonique global + Rec dans dock */
-#btn-harmonic{
-  flex-shrink:0;font-size:.58rem;padding:.32rem .52rem;
-  border-radius:18px;border:1.5px solid rgba(86,255,176,.42);
-  background:rgba(86,255,176,.1);color:rgba(120,255,200,.9);
-  font-family:'Cinzel Decorative',serif;letter-spacing:.06em;font-weight:700;
-  transition:all .2s;white-space:nowrap;
+/* Bouton ⚄ permanent dans le dock */
+#btn-rand-dock{
+  flex-shrink:0;
+  width:46px;height:42px;
+  border-radius:10px;
+  border:2px solid rgba(192,128,255,.55);
+  background:radial-gradient(circle at 40% 35%,rgba(192,128,255,.22),rgba(10,4,30,.85));
+  color:#C080FF;
+  font-size:1.25rem;line-height:1;
+  font-family:'IM Fell English',serif;
+  cursor:pointer;
+  transition:all .22s;
+  animation:randIdle 3.6s ease-in-out infinite;
 }
-#btn-harmonic:hover{background:rgba(86,255,176,.22);border-color:#56FFB0;box-shadow:0 0 14px rgba(86,255,176,.35);}
+@keyframes randIdle{
+  0%,100%{box-shadow:0 0 8px rgba(192,128,255,.2),0 0 0 1px rgba(192,128,255,.12);}
+  50%{box-shadow:0 0 22px rgba(192,128,255,.55),0 0 0 2px rgba(192,128,255,.3);}
+}
+#btn-rand-dock:hover{
+  background:radial-gradient(circle at 40% 35%,rgba(192,128,255,.38),rgba(10,4,30,.85));
+  border-color:#D29DFF;color:#E0B0FF;
+  box-shadow:0 0 28px rgba(192,128,255,.5);
+}
+#btn-rand-dock:active{transform:scale(.92);}
 .tnav-rec{
   background:rgba(255,80,80,.1) !important;
   border-color:rgba(255,100,100,.4) !important;

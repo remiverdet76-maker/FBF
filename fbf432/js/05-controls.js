@@ -189,29 +189,46 @@ function fbfToggle() {
 }
 
 function triggerMagicAuto() {
-  const {freqMin,freqMax,ratioMode,useFX,rangeOn}=RAND_OPTS;
-  // Plage active → on confine entre min/max ; sinon plage complète 36–864.
+  const {freqMin,freqMax,rangeOn,useFX}=RAND_OPTS;
   const lo = rangeOn ? freqMin : 36;
-  const hi = rangeOn ? freqMax : 864;
-  const newMaster=Math.floor(lo+Math.random()*(hi-lo));
-  const isHigh=newMaster>432;
-  const volBase=isHigh?.024:.12; // 20% si > 432 Hz
-  let ri=Math.floor(Math.random()*RATIO_OPTS.length);
-  let baseN=0.2;
-  PAIRS.forEach((pair,idx)=>{
-    if(ratioMode==='random') ri=Math.floor(Math.random()*RATIO_OPTS.length);
-    else if(ratioMode==='harmonic') ri=idx%RATIO_OPTS.length;
-    pair.pingala.ri=ri;
-    pair.pingala.vol=volBase;
-    pair.ida.vol=volBase;
-    if(idx===MASTER_IDX){pair.pingala.n=1.0;}
-    else{pair.pingala.n=Math.round(baseN*10)/10;baseN+=0.4+Math.random()*.8;}
-    pair.ida.delta=1.8;
+  const hi = rangeOn ? freqMax : 432;
+
+  // Nouvelle densité maître : ratio harmonique appliqué à la valeur courante
+  const rApply = RATIO_OPTS[Math.floor(Math.random()*RATIO_OPTS.length)].r;
+  const newMaster = Math.max(lo, Math.min(hi, Math.round(masterFreq * rApply)));
+
+  // Deltas binaural possibles (pas de gamme — juste des battements)
+  const DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+
+  PAIRS.forEach((pair, idx) => {
+    // Ratio harmonique tiré dans RATIO_OPTS pour chaque paire
+    pair.pingala.ri = Math.floor(Math.random() * RATIO_OPTS.length);
+    if (idx === MASTER_IDX) {
+      pair.pingala.n = 1.0;
+    } else {
+      // n = densité, plage 0.5 → 3.0
+      pair.pingala.n = Math.round((0.5 + Math.random() * 2.5) * 10) / 10;
+    }
+    // Volume isosonique selon la fréquence réelle de la paire
+    const pf = Math.max(36, Math.min(432, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
+    const base = idx === MASTER_IDX ? 0.14 : 0.12;
+    pair.pingala.vol = isosonicVol(pf, base);
+    pair.ida.vol     = isosonicVol(pf, base);
+    // Delta binaural varié par paire (chaque sphère respire à son rythme)
+    pair.ida.delta    = DELTAS[Math.floor(Math.random() * DELTAS.length)];
+    pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
   });
+
   setMasterFreq(newMaster);
-  setGlobalDelta(1.8);
-  if(useFX)randomizeFX();
-  if(!flowing)startFlow();
+  if (useFX) randomizeFX();
+  if (!flowing) startFlow();
+  buildVesicaPairs();
+  patchRandomTable();
+  saveState();
+
+  // Flash visuel du bouton
+  const btn = document.getElementById('btn-rand-dock');
+  if (btn) { btn.style.color='#fff'; setTimeout(()=>{if(btn)btn.style.color='';},400); }
 }
 
 function toggleFullscreen() {

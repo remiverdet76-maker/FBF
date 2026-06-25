@@ -30,15 +30,14 @@
     <span class="flux-txt" id="flux-txt">FLUX</span>
     <span class="flux-state" id="flux-state-side">OFF</span>
   </button>
+  <button id="btn-rand-dock" onclick="triggerMagicAuto()" title="Aléatoire harmonique">⚄</button>
   <nav id="tab-nav">
     <button class="tnav-btn tnav-geo"     id="tGeo"     onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
-    <button class="tnav-btn tnav-random"  id="tRand"    onclick="tPanel('panRand','tRand')">⚄ Aléa</button>
     <button class="tnav-btn tnav-horloge" id="tUT"      onclick="tPanel('panUT','tUT')">⊙ UT</button>
     <button class="tnav-btn tnav-fx"      id="tFX"      onclick="tPanel('panFX','tFX')">✦ FX</button>
     <button class="tnav-btn tnav-notice"  id="tNotice"  onclick="tPanel('panNotice','tNotice')">≡</button>
     <button class="tnav-btn tnav-samples" id="tSamples" onclick="tPanel('panSamples','tSamples')">◎</button>
   </nav>
-  <button id="btn-harmonic" onclick="globalHarmonicRandom()" title="Randomisation harmonique globale">⚄ ♪</button>
   <button id="btn-rec" class="tnav-btn tnav-rec" onclick="recToggle()">⏺ Rec</button>
   <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
 </div>
