@@ -193,29 +193,48 @@ function triggerMagicAuto() {
   const lo = rangeOn ? freqMin : 36;
   const hi = rangeOn ? freqMax : 432;
 
-  // Nouvelle densité maître : ratio harmonique appliqué à la valeur courante
-  const rApply = RATIO_OPTS[Math.floor(Math.random()*RATIO_OPTS.length)].r;
-  const newMaster = Math.max(lo, Math.min(hi, Math.round(masterFreq * rApply)));
+  // ── 1. Ratio-graine : UN seul ratio tire tout le champ ───────────
+  const seedRi  = Math.floor(Math.random() * RATIO_OPTS.length);
+  const seedR   = RATIO_OPTS[seedRi].r;
+  // Inverse du ratio-graine (paires en miroir)
+  const invRi   = RATIO_OPTS.reduce((best,r,i) =>
+    Math.abs(r.r - 1/seedR) < Math.abs(RATIO_OPTS[best].r - 1/seedR) ? i : best, 0);
+  // Ratio composé (seedR²), cherche le plus proche dans le pool
+  const sq      = seedR * seedR;
+  const sqRi    = RATIO_OPTS.reduce((best,r,i) =>
+    Math.abs(r.r - sq) < Math.abs(RATIO_OPTS[best].r - sq) ? i : best, 0);
 
-  // Deltas binaural possibles (pas de gamme — juste des battements)
-  const DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+  // Schéma d'assignation des 6 paires : R / 1/R / R / 1/R / R² / 1/R
+  const RI_SCHEME = [seedRi, invRi, seedRi, invRi, sqRi, invRi];
+
+  // ── 2. n = densités fixes par position hexagonale ─────────────────
+  // Centre plus dense (fondamental), périphérie plus légère
+  const N_SCHEME = [1.0, 2.0, 0.5, 1.5, 3.0, 0.75];
+
+  // ── 3. Delta-base + multiplicateurs cohérents ─────────────────────
+  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+  const baseDelta   = BASE_DELTAS[Math.floor(Math.random() * BASE_DELTAS.length)];
+  const D_MULT      = [1, 2, 0.5, 3, 1.5, 4]; // multiplicateurs par paire
+
+  // ── 4. Nouvelle fréquence maître via ratio-graine ─────────────────
+  const newMaster = Math.max(lo, Math.min(hi, Math.round(masterFreq * seedR)));
 
   PAIRS.forEach((pair, idx) => {
-    // Ratio harmonique tiré dans RATIO_OPTS pour chaque paire
-    pair.pingala.ri = Math.floor(Math.random() * RATIO_OPTS.length);
     if (idx === MASTER_IDX) {
-      pair.pingala.n = 1.0;
+      pair.pingala.ri = seedRi;
+      pair.pingala.n  = 1.0;
+      pair.ida.delta  = baseDelta;
     } else {
-      // n = densité, plage 0.5 → 3.0
-      pair.pingala.n = Math.round((0.5 + Math.random() * 2.5) * 10) / 10;
+      pair.pingala.ri = RI_SCHEME[idx];
+      pair.pingala.n  = N_SCHEME[idx];
+      pair.ida.delta  = Math.max(0.1, Math.min(36,
+        Math.round(baseDelta * D_MULT[idx] * 10) / 10));
     }
-    // Volume isosonique selon la fréquence réelle de la paire
-    const pf = Math.max(36, Math.min(432, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
+    const pf   = Math.max(36, Math.min(432,
+      newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
     const base = idx === MASTER_IDX ? 0.14 : 0.12;
-    pair.pingala.vol = isosonicVol(pf, base);
-    pair.ida.vol     = isosonicVol(pf, base);
-    // Delta binaural varié par paire (chaque sphère respire à son rythme)
-    pair.ida.delta    = DELTAS[Math.floor(Math.random() * DELTAS.length)];
+    pair.pingala.vol  = isosonicVol(pf, base);
+    pair.ida.vol      = isosonicVol(pf, base);
     pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
   });
 
@@ -226,7 +245,6 @@ function triggerMagicAuto() {
   patchRandomTable();
   saveState();
 
-  // Flash visuel du bouton
   const btn = document.getElementById('btn-rand-dock');
   if (btn) { btn.style.color='#fff'; setTimeout(()=>{if(btn)btn.style.color='';},400); }
 }
