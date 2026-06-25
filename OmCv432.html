@@ -347,81 +347,6 @@ body{
   z-index: 100;
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
-.tab-green.active,.tab-green:active { color:#56FFB0; border-top:2px solid #56FFB0; }
-.tab-blue.active,.tab-blue:active   { color:#60D8FF; border-top:2px solid #60D8FF; }
-.tab-red.active,.tab-red:active     { color:#FF6B6B; border-top:2px solid #FF6B6B; }
-.tab-orange.active,.tab-orange:active { color:#FFB347; border-top:2px solid #FFB347; }
-.tab-yellow.active,.tab-yellow:active { color:#F5D460; border-top:2px solid #F5D460; }
-/* ── Tab panels (full-screen overlays) ─────────────────────────────────────── */
-.tab-panel {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 62px;
-  background: rgba(4,2,16,.97);
-  overflow-y: auto;
-  z-index: 90;
-  padding: 1rem 1rem 2rem;
-  scrollbar-width: none;
-}
-.tab-panel.open { display: block; }
-.tab-panel::-webkit-scrollbar { display: none; }
-.tp-title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: .88rem; letter-spacing: .16em;
-  text-align: center; margin: .8rem 0 1.2rem;
-  opacity: .7;
-}
-.tp-freq-display {
-  text-align: center;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 1.6rem; color: #86FFC0;
-  letter-spacing: .08em; margin: 1rem 0 .4rem;
-}
-.tp-freq-sub {
-  text-align: center; font-size: .65rem;
-  letter-spacing: .18em; color: rgba(200,180,255,.55);
-  margin-bottom: 1.4rem;
-}
-.tp-play-row {
-  display: flex; justify-content: center; gap: 1rem;
-  margin: 1.2rem 0;
-}
-.tp-play-btn {
-  padding: .6rem 2rem; border-radius: 28px;
-  font-family: 'Cinzel Decorative', serif;
-  font-size: .78rem; letter-spacing: .12em;
-  cursor: pointer; border: 1.5px solid #86FFC0;
-  background: rgba(86,255,176,.08); color: #86FFC0;
-  transition: all .2s;
-}
-.tp-play-btn.active {
-  background: rgba(86,255,176,.2);
-  box-shadow: 0 0 20px rgba(86,255,176,.3);
-}
-.tp-stop-btn {
-  padding: .6rem 1.5rem; border-radius: 28px;
-  font-family: 'Cinzel Decorative', serif;
-  font-size: .78rem; letter-spacing: .12em;
-  cursor: pointer; border: 1.5px solid rgba(255,80,80,.5);
-  background: rgba(255,80,80,.06); color: #FF8080;
-}
-.tp-section {
-  font-size: .55rem; letter-spacing: .28em; text-transform: uppercase;
-  color: rgba(200,170,255,.45); margin: 1.2rem 0 .6rem;
-  border-bottom: 1px solid rgba(200,100,255,.1); padding-bottom: .3rem;
-}
-.tp-pair-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: .5rem .3rem; border-bottom: 1px solid rgba(200,100,255,.08);
-  font-size: .72rem; color: rgba(220,200,255,.85);
-}
-.tp-pair-freq { font-family: 'Share Tech Mono', monospace; color: #C880FF; }
-.tp-info-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: .4rem 0; font-size: .7rem; color: rgba(200,180,255,.65);
-}
-.tp-info-val { font-family: 'Share Tech Mono', monospace; color: #86FFC0; }
-
 
 .bnav {
   flex: 1;
@@ -559,7 +484,102 @@ body{
 #screen-overlay-close{flex-shrink:0;width:38px;height:38px;border-radius:12px;background:rgba(255,80,80,.12);border:1px solid rgba(255,120,120,.35);color:#ff9999;font-size:1.1rem;line-height:1;cursor:pointer;}
 #screen-overlay-close:active{background:rgba(255,80,80,.28);}
 #screen-frame{flex:1 1 auto;width:100%;height:100%;border:none;background:#02010D;}
+/* Mini-player : module actif en arrière-plan */
+#module-mini-player{display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:350;
+  background:rgba(8,4,28,.94);border:1px solid rgba(200,100,255,.5);border-radius:28px;
+  padding:7px 14px 7px 12px;backdrop-filter:blur(14px);align-items:center;gap:8px;
+  font-size:.7rem;letter-spacing:.08em;color:rgba(220,200,255,.88);white-space:nowrap;box-shadow:0 4px 24px rgba(150,80,255,.22);}
+#module-mini-player.visible{display:flex;}
+#module-mini-player .mmp-icon{font-size:1rem;opacity:.9;}
+#module-mini-player .mmp-label{font-family:'Cinzel Decorative',serif;font-size:.68rem;letter-spacing:.12em;}
+#module-mini-player .mmp-pulse{width:7px;height:7px;border-radius:50%;background:#86FFC0;box-shadow:0 0 6px #86FFC0;animation:mmpPulse 1.4s ease-in-out infinite;}
+@keyframes mmpPulse{0%,100%{opacity:.5;transform:scale(.85);}50%{opacity:1;transform:scale(1.2);}}
+.mmp-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(220,200,255,.8);
+  font-size:.75rem;padding:3px 8px;cursor:pointer;font-family:inherit;transition:background .15s;}
+.mmp-btn:active{background:rgba(255,255,255,.18);}
+.mmp-btn.stop{border-color:rgba(255,120,120,.4);color:#ff9999;}
 
+/* ══ ChaVibe Panel ══════════════════════════════════════════════ */
+#chavibe-panel{
+  position:fixed;bottom:-100%;left:0;right:0;z-index:200;
+  background:rgba(6,2,20,.97);
+  border-top:1.5px solid rgba(180,80,255,.35);
+  border-radius:22px 22px 0 0;
+  padding:0 0 env(safe-area-inset-bottom,0);
+  backdrop-filter:blur(22px);
+  box-shadow:0 -8px 40px rgba(140,60,255,.22);
+  transition:bottom .38s cubic-bezier(.4,0,.2,1);
+  max-height:78vh;overflow-y:auto;scrollbar-width:none;
+}
+#chavibe-panel.open{bottom:62px;}
+#chavibe-panel::-webkit-scrollbar{display:none;}
+#cv-handle{width:40px;height:4px;border-radius:2px;background:rgba(200,120,255,.35);margin:10px auto 0;}
+#cv-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.8rem 1.2rem .5rem;
+  border-bottom:1px solid rgba(180,80,255,.15);
+}
+#cv-title{
+  font-family:'Cinzel Decorative',serif;font-size:.88rem;letter-spacing:.14em;
+  background:linear-gradient(90deg,#C880FF,#86FFC0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#cv-close{background:none;border:none;color:rgba(220,200,255,.5);font-size:1rem;cursor:pointer;padding:4px 8px;}
+#cv-body{padding:.8rem 1.1rem 1rem;display:flex;flex-direction:column;gap:1rem;}
+
+/* Thèmes */
+#cv-themes{display:flex;flex-wrap:wrap;gap:.45rem;}
+.cv-theme-btn{
+  display:flex;align-items:center;gap:.35rem;
+  padding:.32rem .7rem;border-radius:20px;cursor:pointer;
+  border:1.5px solid rgba(160,80,255,.28);
+  background:rgba(255,255,255,.04);
+  color:rgba(200,170,255,.72);font-size:.72rem;font-family:inherit;
+  transition:all .18s;-webkit-tap-highlight-color:transparent;
+}
+.cv-theme-btn.active{
+  border-color:rgba(180,90,255,.75);background:rgba(140,60,255,.18);
+  color:rgba(230,210,255,.95);box-shadow:0 0 10px rgba(140,60,255,.22);
+}
+.cv-theme-ico{font-size:.95rem;}
+
+/* Intensité */
+.cv-row{display:flex;align-items:center;gap:.7rem;min-height:28px;}
+.cv-lbl{font-size:.68rem;letter-spacing:.08em;color:rgba(180,140,255,.65);white-space:nowrap;min-width:60px;}
+.cv-val{font-size:.72rem;color:#C880FF;min-width:28px;text-align:right;font-variant-numeric:tabular-nums;}
+input[type=range].cv-range{
+  flex:1;-webkit-appearance:none;height:3px;
+  background:linear-gradient(90deg,#8840FF,rgba(255,255,255,.08));
+  border-radius:3px;outline:none;cursor:pointer;
+}
+input[type=range].cv-range::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle,#C880FF,#8840FF);
+  box-shadow:0 0 8px rgba(140,60,255,.55);
+}
+
+/* Boutons action */
+.cv-btns{display:flex;gap:.55rem;flex-wrap:wrap;}
+.cv-btn{
+  flex:1;min-width:80px;padding:.42rem .6rem;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(160,80,255,.35);background:rgba(255,255,255,.05);
+  color:rgba(220,200,255,.82);font-size:.72rem;font-family:inherit;
+  transition:all .18s;-webkit-tap-highlight-color:transparent;
+}
+.cv-btn:active{background:rgba(140,60,255,.2);}
+.cv-btn.cv-play{border-color:rgba(134,255,192,.45);color:#86FFC0;}
+.cv-btn.cv-play.live{background:rgba(60,200,120,.12);border-color:#86FFC0;box-shadow:0 0 10px rgba(86,255,176,.2);}
+
+/* Indicateur de voix actives */
+#cv-field{
+  height:28px;border-radius:8px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(160,80,255,.14);
+  position:relative;overflow:hidden;
+}
+#cv-field-bar{position:absolute;top:0;left:0;bottom:0;width:0%;
+  background:linear-gradient(90deg,rgba(140,60,255,.18),rgba(86,255,176,.12));
+  transition:width 1.2s ease;}
+.cv-note{font-size:.6rem;color:rgba(180,140,255,.45);padding:.2rem .5rem;position:relative;}
 
 /* ════════════════════════════════════════════════════════════════ */
 
@@ -1309,164 +1329,212 @@ input.param-input{
 }
 
 
-
-/* ── OmCv432 tab extras ────────────────────────────────────────────────── */
-.bina-btn, .mast-btn {
-  border-color: rgba(96,216,255,.35) !important;
-  color: #60D8FF !important;
-  min-width: 40px; padding: .28rem .4rem; font-size: .68rem;
-}
-.mast-btn { border-color: rgba(245,212,96,.35) !important; color: #F5D460 !important; }
-#rec-start-btn:disabled { opacity: .4; }
-/* ══ Synth Studio — Bubble view ══════════════════════════════════════════ */
-.synth-bubble-field {
-  position: relative; width: 100%; height: 310px;
-  margin: .2rem 0;
-}
-.synth-bubble {
-  position: absolute; border-radius: 50%; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(200,120,255,.35);
-  transition: transform .12s ease, box-shadow .25s ease;
-  user-select: none; -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 2px 16px rgba(0,0,0,.4);
-}
-.synth-bubble:active { transform: scale(.9); }
-.synth-bubble.master { border-width: 2px; border-color: rgba(255,215,96,.55); }
-.synth-bubble.playing {
-  animation: sbGlow 2.2s ease-in-out infinite;
-}
-@keyframes sbGlow {
-  0%,100% { filter: brightness(1); }
-  50%      { filter: brightness(1.35); box-shadow: 0 0 22px 4px var(--bc,rgba(86,255,176,.4)); }
-}
-.synth-bubble.muted { opacity: .35; }
-.bubble-lbl  { font-size: .52rem; letter-spacing: .1em; opacity: .65; text-align:center; }
-.bubble-hz   { font-size: .88rem; font-family: 'Share Tech Mono', monospace; font-weight: 600; }
-.bubble-wave { font-size: .45rem; letter-spacing: .12em; opacity: .55; margin-top: .05rem; }
-
-.synth-add-btn {
-  background: rgba(96,216,255,.12); border: 1px solid rgba(96,216,255,.4);
-  color: #60D8FF; border-radius: 20px; padding: .3rem .85rem;
-  font-size: 1rem; cursor: pointer; font-family: inherit;
-  transition: background .15s;
-}
-.synth-add-btn:active { background: rgba(96,216,255,.25); }
-
-.synth-delta-bar {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: .45rem .4rem; background: rgba(8,4,28,.6);
-  border-top: 1px solid rgba(200,100,255,.12); border-radius: 0 0 12px 12px;
-}
-.synth-delta-btn {
-  background: rgba(96,216,255,.08); border: 1px solid rgba(96,216,255,.3);
-  color: #60D8FF; border-radius: 8px; padding: .25rem .55rem;
-  font-size: .66rem; cursor: pointer; font-family: inherit;
-}
-
-/* ══ Oscillateur Sheet ════════════════════════════════════════════════════ */
-.osc-sheet {
-  position: fixed; left: 0; right: 0; bottom: -110%;
-  background: rgba(6,2,22,.97); border-radius: 22px 22px 0 0;
-  border-top: 1.5px solid rgba(180,80,255,.35);
-  z-index: 500; transition: bottom .36s cubic-bezier(.4,0,.2,1);
-  max-height: 82vh; overflow-y: auto; scrollbar-width: none;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.osc-sheet.open { bottom: 0; }
-.osc-sheet::-webkit-scrollbar { display: none; }
-.osc-sheet-handle {
-  width: 38px; height: 4px; border-radius: 2px;
-  background: rgba(200,120,255,.3); margin: 10px auto 0;
-}
-.osc-sheet-head {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: .7rem 1.2rem .5rem;
-  border-bottom: 1px solid rgba(180,80,255,.12);
-}
-.osc-sheet-title {
-  font-family: 'Cinzel Decorative', serif; font-size: .82rem; letter-spacing: .14em;
-  background: linear-gradient(90deg,#C880FF,#60D8FF);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.osc-sheet-close { background:none; border:none; color:rgba(220,200,255,.5); font-size:1rem; cursor:pointer; padding:4px 10px; }
-.osc-sheet-body  { padding: .8rem 1.1rem 1.4rem; }
-
-.osc-sheet-bd {
-  display: none; position: fixed; inset: 0; z-index: 499;
-  background: rgba(0,0,0,.5); backdrop-filter: blur(2px);
-}
-.osc-sheet-bd.on { display: block; }
-
-.osc-sec-lbl {
-  font-size: .55rem; letter-spacing: .2em; text-transform: uppercase;
-  color: rgba(200,170,255,.45); margin-bottom: .35rem;
-}
-.osc-freq-big {
-  font-family: 'Share Tech Mono', monospace; font-size: 1.7rem; color: #86FFC0;
-  text-align: center; margin: .3rem 0 .55rem; letter-spacing: .05em;
-}
-.osc-wave-row { display: flex; gap: .4rem; flex-wrap: wrap; }
-.osc-wave-btn {
-  padding: .32rem .7rem; border-radius: 16px; cursor: pointer;
-  border: 1.5px solid rgba(160,80,255,.3); background: rgba(255,255,255,.04);
-  color: rgba(200,170,255,.75); font-size: .68rem; font-family: inherit;
-  letter-spacing: .06em; transition: all .15s;
-}
-.osc-wave-btn.active {
-  border-color: rgba(200,120,255,.75); background: rgba(160,80,255,.2);
-  color: rgba(230,210,255,.95); box-shadow: 0 0 10px rgba(160,80,255,.25);
-}
-.osc-nudge-row { display: flex; gap: .3rem; justify-content: center; flex-wrap: wrap; }
-.osc-nudge-btn {
-  padding: .28rem .6rem; border-radius: 10px; cursor: pointer;
-  border: 1px solid rgba(86,255,176,.3); background: rgba(86,255,176,.06);
-  color: #86FFC0; font-size: .65rem; font-family: inherit;
-}
-.osc-select {
-  background: rgba(8,4,28,.9); border: 1px solid rgba(180,80,255,.3);
-  color: rgba(220,200,255,.8); border-radius: 8px; padding: .3rem .5rem;
-  font-size: .68rem; font-family: inherit; outline: none;
-}
-
-/* ══ Quick Menu ══════════════════════════════════════════════════════════ */
-.synth-qm {
-  display: none; position: fixed; left: 50%; top: 50%;
-  transform: translate(-50%, -50%); z-index: 510;
-  background: rgba(8,4,28,.97); border: 1.5px solid rgba(180,80,255,.4);
-  border-radius: 18px; padding: .9rem 1rem 1rem; min-width: 240px;
-  backdrop-filter: blur(20px); box-shadow: 0 8px 40px rgba(0,0,0,.6);
-}
-.synth-qm.open { display: block; }
-.qm-label { font-family:'Cinzel Decorative',serif; font-size:.72rem; letter-spacing:.14em; color:#C880FF; text-align:center; margin-bottom:.6rem; }
-.qm-btn {
-  display: block; width: 100%; padding: .42rem .6rem; margin: .25rem 0;
-  border-radius: 10px; cursor: pointer; text-align: left;
-  border: 1px solid rgba(160,80,255,.25); background: rgba(255,255,255,.04);
-  color: rgba(220,200,255,.82); font-size: .72rem; font-family: inherit;
-  transition: background .12s;
-}
-.qm-btn:active { background: rgba(160,80,255,.18); }
-.qm-btn.qm-del { border-color:rgba(255,80,80,.3); color:#FF8888; }
-.qm-btn-sm {
-  padding: .28rem; border-radius: 8px; cursor: pointer;
-  border: 1px solid rgba(96,216,255,.25); background: rgba(96,216,255,.06);
-  color: #60D8FF; font-size: .66rem; font-family: inherit; text-align: center;
-}
-.qm-sep { height:1px; background:rgba(180,80,255,.15); margin:.5rem 0; }
-.synth-qm-bd {
-  display: none; position: fixed; inset: 0; z-index: 509; background: rgba(0,0,0,.4);
-}
-.synth-qm-bd.on { display: block; }
-
 </style>
 <link rel="stylesheet" href="bg-rotator.css">
 <style id="cosmic-bg-override">
   html,body{background:transparent !important;}
   #cosmic-bg{display:none!important;}
   #meta-canvas{filter:contrast(1.16) saturate(1.18);}
+
+
+/* ══ OmCv432 — Synth Studio (bulles oscillateurs) ═════════════════════ */
+.synth-field {
+  position: relative; width: 100%; height: 264px;
+  margin: 0.2rem 0 0.6rem;
+}
+.synth-bubble {
+  position: absolute; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 1.5px solid; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .14s, box-shadow .2s;
+  backdrop-filter: blur(4px);
+}
+.synth-bubble:active { transform: scale(0.93); }
+.synth-bubble.playing { box-shadow: 0 0 18px -2px var(--bc), inset 0 0 12px -4px var(--bc); }
+.synth-bubble.muted { opacity: 0.32; filter: grayscale(0.7); }
+.synth-bubble .sb-wave { font-size: 0.5rem; letter-spacing: 0.04em; opacity: 0.75; }
+.synth-bubble .sb-freq { font-size: 0.6rem; font-weight: 600; }
+.synth-bubble.master .sb-freq { font-size: 0.72rem; }
+
+/* Oscillator sheet (bottom drawer) */
+.osc-sheet {
+  position: fixed; left: 0; right: 0; bottom: -100%;
+  max-height: 78vh; overflow-y: auto;
+  background: rgba(7,4,22,0.985); backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0; border-top: 1px solid rgba(255,255,255,0.12);
+  z-index: 400; transition: bottom .28s cubic-bezier(.32,.72,0,1);
+  scrollbar-width: none;
+}
+.osc-sheet::-webkit-scrollbar { display: none; }
+.osc-sheet.open { bottom: 0; }
+.osc-sheet-handle { width: 38px; height: 4px; background: rgba(255,255,255,0.18); border-radius: 2px; margin: 10px auto 4px; }
+.osc-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0.3rem 1.1rem; }
+.osc-sheet-title { font-size: 0.9rem; font-weight: 600; color: rgba(225,215,255,.85); }
+.osc-sheet-close { background: none; border: none; color: rgba(220,200,255,.5); font-size: 1.1rem; cursor: pointer; }
+.osc-sheet-body { padding: 0.5rem 1.1rem 1.6rem; }
+.osc-wave-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.4rem; margin: 0.4rem 0 0.9rem; }
+.osc-wave-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(210,200,255,.65); border-radius: 8px; padding: 0.45rem 0.2rem;
+  font-size: 0.62rem; cursor: pointer; text-align: center;
+}
+.osc-wave-btn.on { background: rgba(96,216,255,0.14); border-color: #60D8FF; color: #60D8FF; }
+.osc-slider-row { margin: 0.55rem 0; }
+.osc-slider-row label { display: flex; justify-content: space-between; font-size: 0.7rem; color: rgba(200,190,255,.6); margin-bottom: 0.2rem; }
+.osc-slider-row input[type=range] { width: 100%; }
+.osc-sheet-btns { display: flex; gap: 0.5rem; margin-top: 0.9rem; flex-wrap: wrap; }
+.osc-act-btn {
+  flex: 1; min-width: 90px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15); color: rgba(210,200,255,.7);
+  border-radius: 10px; padding: 0.5rem; font-size: 0.72rem; cursor: pointer; text-align: center;
+}
+.osc-act-btn.render { border-color: #56FFB0; color: #56FFB0; background: rgba(86,255,176,0.08); }
+.osc-act-btn.mute   { border-color: #FF8E8E; color: #FF8E8E; }
+.osc-sheet-bd, .synth-qm-bd {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 390; display: none;
+}
+.osc-sheet-bd.on, .synth-qm-bd.on { display: block; }
+
+/* Quick menu (long-tap) */
+.synth-qm {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(0.9);
+  background: rgba(10,6,28,0.98); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px; padding: 0.8rem; z-index: 410; display: none;
+  min-width: 230px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.synth-qm.open { display: block; animation: qmIn .16s ease; }
+@keyframes qmIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.85);} to{opacity:1;transform:translate(-50%,-50%) scale(1);} }
+.synth-qm-title { text-align: center; font-size: 0.8rem; color: rgba(220,210,255,.8); margin-bottom: 0.6rem; }
+.synth-qm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.4rem; }
+.synth-qm-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(210,200,255,.7); border-radius: 9px; padding: 0.5rem 0.3rem;
+  font-size: 0.66rem; cursor: pointer; text-align: center;
+}
+.synth-qm-btn:active { background: rgba(96,216,255,0.18); }
+.synth-add-btn {
+  display: block; width: 100%; margin: 0.3rem 0 0.2rem;
+  background: rgba(86,255,176,0.08); border: 1px dashed rgba(86,255,176,0.4);
+  color: #56FFB0; border-radius: 10px; padding: 0.5rem; font-size: 0.74rem; cursor: pointer;
+}
+
+/* ══ OmCv432 — Nav 5 onglets colorés ══════════════════════════════ */
+#bottom-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 58px;
+  background: rgba(4,2,16,0.97);
+  border-top: 1px solid rgba(255,255,255,0.09);
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bnav {
+  flex: 1; border: none; background: transparent;
+  color: rgba(200,190,255,.45);
+  font-size: 0.58rem; letter-spacing: 0.01em;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px;
+  cursor: pointer; transition: color 0.18s, background 0.18s;
+  padding: 0; outline: none; -webkit-tap-highlight-color: transparent;
+}
+.bnav .bnav-icon { font-size: 1.15rem; line-height: 1; }
+.bnav .bnav-lbl  { font-size: 0.56rem; }
+.bnav.active { background: rgba(255,255,255,0.05); }
+.tab-green.active { color: #56FFB0; }
+.tab-blue.active  { color: #60D8FF; }
+.tab-red.active   { color: #FF6B6B; }
+.tab-orange.active{ color: #FF9A4A; }
+.tab-yellow.active{ color: #FFD060; }
+
+/* ── Panels onglets (slide-up) ──────────────────────────────────── */
+.tab-panel {
+  position: fixed;
+  left: 0; right: 0; bottom: 58px;
+  max-height: 70vh;
+  background: rgba(5,3,20,0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transform: translateY(102%);
+  transition: transform 0.26s cubic-bezier(.32,.72,0,1);
+  z-index: 90;
+  overflow-y: auto; overflow-x: hidden;
+  border-radius: 18px 18px 0 0;
+  border-top: 1px solid rgba(255,255,255,0.11);
+  scrollbar-width: none;
+}
+.tab-panel::-webkit-scrollbar { display: none; }
+.tab-panel.open { transform: translateY(0); }
+.tp-handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 2px;
+  margin: 10px auto 4px;
+}
+.tp-head {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.1rem 0.3rem;
+}
+.tp-icon  { font-size: 1.1rem; }
+.tp-title { font-size: 0.85rem; font-weight: 600; color: rgba(220,210,255,.8); letter-spacing: 0.06em; }
+.tp-body  { padding: 0.4rem 1.1rem 1.2rem; }
+.tp-row   { display: flex; align-items: center; justify-content: space-between; margin: 0.55rem 0; }
+.tp-label { font-size: 0.75rem; color: rgba(200,190,255,.65); }
+.tp-section { font-size: 0.68rem; color: rgba(200,190,255,.45); letter-spacing: 0.08em; text-transform: uppercase; margin: 0.9rem 0 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.3rem; }
+.tp-freq-display { text-align: center; font-size: 1.6rem; font-weight: 300; color: rgba(220,210,255,.85); letter-spacing: 0.04em; padding: 0.4rem 0; }
+.tp-nudge-row { display: flex; gap: 0.3rem; justify-content: center; flex-wrap: wrap; margin: 0.5rem 0; }
+.tp-nudge {
+  background: rgba(255,208,96,0.1); border: 1px solid rgba(255,208,96,0.3);
+  color: #FFD060; border-radius: 8px; padding: 0.3rem 0.5rem;
+  font-size: 0.72rem; cursor: pointer; min-width: 36px;
+}
+.tp-nudge:active { background: rgba(255,208,96,0.22); }
+.tp-toggle {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(200,190,255,.5); border-radius: 20px; padding: 0.2rem 0.8rem;
+  font-size: 0.72rem; cursor: pointer;
+}
+.tp-toggle.on { background: rgba(86,255,176,0.12); border-color: #56FFB0; color: #56FFB0; }
+.tp-btn-green {
+  background: rgba(86,255,176,0.12); border: 1px solid #56FFB0;
+  color: #56FFB0; border-radius: 10px; padding: 0.4rem 1rem;
+  font-size: 0.78rem; cursor: pointer;
+}
+.tp-btn-dim {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(200,190,255,.6); border-radius: 10px; padding: 0.4rem 1rem;
+  font-size: 0.78rem; cursor: pointer;
+}
+.tp-btn-rec {
+  background: rgba(255,107,107,0.12); border: 1px solid #FF6B6B;
+  color: #FF6B6B; border-radius: 10px; padding: 0.4rem 1.2rem;
+  font-size: 0.8rem; cursor: pointer; width: 100%; text-align: center;
+}
+.tp-cat-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(200,190,255,.7); border-radius: 20px; padding: 0.3rem 0.8rem;
+  font-size: 0.75rem; cursor: pointer;
+}
+.tp-cat-btn:active { background: rgba(255,208,96,0.15); border-color: #FFD060; color: #FFD060; }
+
+/* Binaural panel rows */
+.bina-pair {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.45rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.bina-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.bina-label { font-size: 0.72rem; color: rgba(200,190,255,.6); width: 64px; flex-shrink: 0; }
+.bina-freqs { flex: 1; font-size: 0.75rem; color: rgba(220,210,255,.8); }
+.bina-btns  { display: flex; gap: 0.25rem; }
+.bina-btn {
+  background: rgba(96,216,255,0.08); border: 1px solid rgba(96,216,255,0.25);
+  color: #60D8FF; border-radius: 6px; padding: 0.15rem 0.3rem;
+  font-size: 0.62rem; cursor: pointer; min-width: 28px; text-align: center;
+}
+.bina-btn:active { background: rgba(96,216,255,0.22); }
+
 </style>
 </head>
 <body>
@@ -1488,8 +1556,8 @@ input.param-input{
   </div>
   <div class="pan3d-sec">Forme</div>
   <div class="fx3d-forms">
-    <button class="fx3d-form on" data-f="sphere"   onclick="fx3dSetForm('sphere')">Sphère</button>
-    <button class="fx3d-form"    data-f="torus"    onclick="fx3dSetForm('torus')">Torus</button>
+    <button class="fx3d-form"    data-f="sphere"   onclick="fx3dSetForm('sphere')">Sphère</button>
+    <button class="fx3d-form on" data-f="torus"    onclick="fx3dSetForm('torus')">Torus</button>
     <button class="fx3d-form"    data-f="metatron" onclick="fx3dSetForm('metatron')">Métatron</button>
     <button class="fx3d-form"    data-f="merkaba"  onclick="fx3dSetForm('merkaba')">Merkaba</button>
   </div>
@@ -1503,8 +1571,8 @@ input.param-input{
     <button class="fx3d-ratio" data-r="396/360" onclick="fx3dSetRatio('396/360')">396/360</button>
   </div>
   <div class="pan3d-sec">Paramètres flux</div>
-  <div class="pan3d-row"><label>Densité</label><span id="v3-density">220</span></div>
-  <input type="range" class="fx-slider" min="40" max="340" step="2" value="220" oninput="fx3dSet('density',this.value,'v3-density')">
+  <div class="pan3d-row"><label>Densité</label><span id="v3-density">265</span></div>
+  <input type="range" class="fx-slider" min="40" max="340" step="2" value="265" oninput="fx3dSet('density',this.value,'v3-density')">
   <div class="pan3d-row"><label>Torsion ω</label><span id="v3-torsion">3.00</span></div>
   <input type="range" class="fx-slider" min="0.5" max="12" step="0.1" value="3" oninput="fx3dSet('torsion',this.value,'v3-torsion')">
   <div class="pan3d-row"><label>Vitesse</label><span id="v3-speed">1.00</span></div>
@@ -1521,145 +1589,6 @@ input.param-input{
     <input type="checkbox" checked onchange="V.autoRot=this.checked"></div>
   <div class="pan3d-row"><label>Mandala fond</label>
     <input type="checkbox" checked onchange="HP.ma=this.checked"></div>
-</div>
-
-
-<!-- ── Tab: Aléatoire 🟢 ─────────────────────────────────────────────────── -->
-<div class="tab-panel open" id="panAlea">
-  <div class="tp-title" style="color:#56FFB0">🎲 OmCv432 · Aléatoire</div>
-
-  <div class="tp-freq-display" id="alea-freq-display">— Hz</div>
-  <div class="tp-freq-sub" id="alea-wave-state">Fréquence harmonique aléatoire</div>
-
-  <div class="tp-play-row">
-    <button class="tp-play-btn" id="alea-play-btn" onclick="aleaToggleFlow()">▶ Lancer</button>
-  </div>
-
-  <div class="tp-section">Mode</div>
-  <div class="tp-info-row">
-    <span>Mode harmonique</span>
-    <label class="fx-toggle">
-      <input type="checkbox" id="alea-harmonic-on" checked onchange="_harmonicModeOn=this.checked">
-      <span class="fx-toggle-track"></span>
-    </label>
-  </div>
-  <div class="tp-info-row">
-    <span>FX aléatoires au départ</span>
-    <label class="fx-toggle">
-      <input type="checkbox" id="alea-randomfx-on" checked onchange="_randomFXOn=this.checked">
-      <span class="fx-toggle-track"></span>
-    </label>
-  </div>
-
-  <div class="tp-section">Fréquence active</div>
-  <div class="tp-info-row">
-    <span>Fréquence maître</span>
-    <span class="tp-info-val" id="alea-master-hz">— Hz</span>
-  </div>
-  <div class="tp-info-row">
-    <span>Delta binaural</span>
-    <span class="tp-info-val" id="alea-delta-hz">— Hz</span>
-  </div>
-  <div class="tp-info-row">
-    <span>État cérébral</span>
-    <span class="tp-info-val" id="alea-brain-wave">—</span>
-  </div>
-
-  <div class="tp-play-row" style="margin-top:1.4rem;gap:.7rem;flex-wrap:wrap">
-    <button class="tp-stop-btn" onclick="aleaNewFreq()" style="border-color:rgba(86,255,176,.5);color:#86FFC0">⟳ Fréquence</button>
-    <button class="tp-stop-btn" onclick="aleaApplyRandomFX()" style="border-color:rgba(86,255,176,.4);color:#80FFD0">✦ FX random</button>
-  </div>
-
-  <div class="tp-section">Paires actives</div>
-  <div id="alea-pairs-compact" style="font-size:.65rem;color:rgba(200,180,255,.55);line-height:1.8"></div>
-</div>
-
-<!-- ── Tab: Binaural / Synth Studio 🔵 ────────────────────────────────── -->
-<div class="tab-panel" id="panBina">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem .2rem .2rem">
-    <span style="font-family:'Cinzel Decorative',serif;font-size:.75rem;letter-spacing:.14em;color:#60D8FF">〰 Synth Studio</span>
-    <button class="synth-add-btn" onclick="synthAddOsc()" title="Ajouter oscillateur">＋</button>
-  </div>
-
-  <!-- Hexagonal bubble field -->
-  <div class="synth-bubble-field" id="synth-bubble-field"></div>
-
-  <!-- Delta bar -->
-  <div class="synth-delta-bar">
-    <div style="display:flex;align-items:center;gap:.5rem">
-      <span style="font-size:.6rem;letter-spacing:.12em;color:rgba(200,180,255,.5)">Δ BINAURAL</span>
-      <span class="tp-info-val" id="bina-global-delta" style="color:#60D8FF">— Hz</span>
-    </div>
-    <div style="display:flex;gap:.3rem">
-      <button class="synth-delta-btn" onclick="binaNudge(-9)">−9</button>
-      <button class="synth-delta-btn" onclick="binaNudge(-1.8)">−1.8</button>
-      <button class="synth-delta-btn" onclick="binaNudge(+1.8)">+1.8</button>
-      <button class="synth-delta-btn" onclick="binaNudge(+9)">+9</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Tab: Master 🟡 ─────────────────────────────────────────────────── -->
-<div class="tab-panel" id="panMaster">
-  <div class="tp-title" style="color:#F5D460">★ Master</div>
-
-  <div class="tp-section">Fréquence maître</div>
-  <div class="tp-freq-display" id="master-freq-display">— Hz</div>
-  <div class="tp-play-row" style="gap:.45rem;flex-wrap:wrap">
-    <button class="tp-stop-btn mast-btn" onclick="masterNudge(-54)">−54</button>
-    <button class="tp-stop-btn mast-btn" onclick="masterNudge(-18)">−18</button>
-    <button class="tp-stop-btn mast-btn" onclick="masterNudge(-9)">−9</button>
-    <button class="tp-stop-btn mast-btn" onclick="masterNudge(+9)">+9</button>
-    <button class="tp-stop-btn mast-btn" onclick="masterNudge(+18)">+18</button>
-    <button class="tp-stop-btn mast-btn" onclick="masterNudge(+54)">+54</button>
-  </div>
-
-  <div class="tp-section">Volume maître</div>
-  <div class="tp-info-row">
-    <span>Volume</span>
-    <span class="tp-info-val" id="master-vol-val">80%</span>
-  </div>
-  <input type="range" class="fx-slider" min="0" max="1" step="0.01" value="0.8"
-    oninput="masterVolChange(this.value)">
-
-  <div class="tp-section">Binaural</div>
-  <div class="tp-info-row">
-    <span>FX binaural actif</span>
-    <label class="fx-toggle">
-      <input type="checkbox" id="master-bina-on" checked onchange="masterToggleBinaural(this.checked)">
-      <span class="fx-toggle-track"></span>
-    </label>
-  </div>
-  <div class="tp-info-row">
-    <span>Delta actuel</span>
-    <span class="tp-info-val" id="master-delta-val">— Hz</span>
-  </div>
-
-  <div class="tp-section">Enregistrement WAV</div>
-  <div id="rec-status" style="font-size:.65rem;color:rgba(200,180,255,.5);text-align:center;margin:.4rem 0">
-    Arrêté
-  </div>
-  <div class="tp-play-row" style="gap:.8rem">
-    <button class="tp-play-btn" id="rec-start-btn" onclick="masterStartRecord()"
-      style="border-color:#FF6B6B;color:#FF6B6B;background:rgba(255,80,80,.06)">⏺ Enregistrer</button>
-    <button class="tp-stop-btn" id="rec-stop-btn" onclick="masterStopRecord()" disabled
-      style="opacity:.4">⏹ Stop</button>
-  </div>
-  <div style="font-size:.58rem;color:rgba(200,180,255,.3);text-align:center;margin-top:.3rem">
-    Sauvegarde dans Téléchargements · format WebM
-  </div>
-
-  <div class="tp-section">Samples</div>
-  <div id="sample-cats" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem">
-    <button class="tp-stop-btn" onclick="masterImportSample('Voix')"       style="font-size:.68rem">🎤 Voix</button>
-    <button class="tp-stop-btn" onclick="masterImportSample('Instruments')" style="font-size:.68rem">🎸 Instruments</button>
-    <button class="tp-stop-btn" onclick="masterImportSample('Drone')"       style="font-size:.68rem">〜 Drone</button>
-    <button class="tp-stop-btn" onclick="masterImportSample('Ambiance')"    style="font-size:.68rem">🌿 Ambiance</button>
-    <button class="tp-stop-btn" onclick="masterImportSample('Chakra')"      style="font-size:.68rem">✦ Chakra</button>
-  </div>
-  <input type="file" id="sample-file-input" accept="audio/*" style="display:none"
-    onchange="masterHandleSampleFile(this)">
-  <div id="sample-loaded-list" style="font-size:.65rem;color:rgba(200,180,255,.5);min-height:1rem"></div>
 </div>
 
 <nav id="bottom-nav">
@@ -1684,6 +1613,95 @@ input.param-input{
     <span class="bnav-lbl">Master</span>
   </button>
 </nav>
+
+<!-- ── Panel Aléatoire (onglet Vert) ─────────────────────────────── -->
+<div class="tab-panel" id="panAlea">
+  <div class="tp-handle"></div>
+  <div class="tp-head"><span class="tp-icon" style="color:#56FFB0">🎲</span><span class="tp-title">Aléatoire</span></div>
+  <div class="tp-body" id="panAlea-body">
+    <div class="tp-row">
+      <label class="tp-label">Mode harmonique</label>
+      <button class="tp-toggle on" id="btn-harmonic-mode" onclick="aleaToggleHarmonic(this)">ON</button>
+    </div>
+    <div class="tp-row">
+      <label class="tp-label">Random FX</label>
+      <button class="tp-toggle on" id="btn-random-fx" onclick="aleaToggleRandomFX(this)">ON</button>
+    </div>
+    <div class="tp-freq-display" id="alea-freq-display">— Hz</div>
+    <div class="tp-row" style="gap:0.5rem;justify-content:center;margin-top:0.8rem">
+      <button class="tp-btn-green" onclick="startFlow();aleaUpdateDisplay()">▶ Rayonner</button>
+      <button class="tp-btn-dim" onclick="stopFlow();aleaUpdateDisplay()">■ Dissoudre</button>
+      <button class="tp-btn-dim" onclick="aleaNewFreq()">↺ Nouvelle fréq</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Panel Binaural (onglet Bleu) ──────────────────────────────── -->
+<div class="tab-panel" id="panBina">
+  <div class="tp-handle"></div>
+  <div class="tp-head"><span class="tp-icon" style="color:#60D8FF">〰</span><span class="tp-title">Binaural</span></div>
+  <div class="tp-body" id="panBina-body">
+    <!-- Rempli dynamiquement par buildBinaPanel() -->
+  </div>
+</div>
+
+<!-- ── Panel Master (onglet Jaune) ───────────────────────────────── -->
+<div class="tab-panel" id="panMaster">
+  <div class="tp-handle"></div>
+  <div class="tp-head"><span class="tp-icon" style="color:#FFD060">★</span><span class="tp-title">Master</span></div>
+  <div class="tp-body">
+    <div class="tp-freq-display" id="master-freq-display">— Hz</div>
+    <div class="tp-nudge-row">
+      <button class="tp-nudge" onclick="masterNudge(-54)">−54</button>
+      <button class="tp-nudge" onclick="masterNudge(-36)">−36</button>
+      <button class="tp-nudge" onclick="masterNudge(-18)">−18</button>
+      <button class="tp-nudge" onclick="masterNudge(-9)">−9</button>
+      <button class="tp-nudge" onclick="masterNudge(9)">+9</button>
+      <button class="tp-nudge" onclick="masterNudge(18)">+18</button>
+      <button class="tp-nudge" onclick="masterNudge(36)">+36</button>
+      <button class="tp-nudge" onclick="masterNudge(54)">+54</button>
+    </div>
+    <div class="tp-section">Enregistrement</div>
+    <div class="tp-row" style="justify-content:center">
+      <button class="tp-btn-rec" id="btn-record" onclick="recToggle()">⏺ Enregistrer</button>
+    </div>
+    <div class="tp-section">Samples</div>
+    <div class="tp-row" style="flex-wrap:wrap;gap:0.4rem" id="master-sample-cats">
+      <button class="tp-cat-btn" onclick="sampleOpenCat('voix')">🎤 Voix</button>
+      <button class="tp-cat-btn" onclick="sampleOpenCat('instruments')">🎸 Instruments</button>
+      <button class="tp-cat-btn" onclick="sampleOpenCat('drone')">🌊 Drone</button>
+      <button class="tp-cat-btn" onclick="sampleOpenCat('ambiance')">🌿 Ambiance</button>
+      <button class="tp-cat-btn" onclick="sampleOpenCat('chakra')">☯ Chakra</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Synth Studio : feuille oscillateur + menu rapide ─────────────── -->
+<div id="osc-sheet" class="osc-sheet">
+  <div class="osc-sheet-handle"></div>
+  <div class="osc-sheet-head">
+    <span class="osc-sheet-title" id="osc-sheet-title">Oscillateur</span>
+    <button class="osc-sheet-close" onclick="closeOscSheet()">✕</button>
+  </div>
+  <div class="osc-sheet-body" id="osc-sheet-body"></div>
+</div>
+<div id="osc-sheet-bd" class="osc-sheet-bd" onclick="closeOscSheet()"></div>
+
+<div id="synth-qm" class="synth-qm">
+  <div class="synth-qm-title" id="qm-title">Oscillateur</div>
+  <div class="synth-qm-grid">
+    <button class="synth-qm-btn" onclick="qmAction('rand')">🎲 Random</button>
+    <button class="synth-qm-btn" onclick="qmAction('randfx')">✦ Random FX</button>
+    <button class="synth-qm-btn" onclick="qmAction('mute')">🔇 Mute</button>
+    <button class="synth-qm-btn" onclick="qmAction('m9')">−9 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('m18')">−18 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('m36')">−36 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('p9')">+9 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('p18')">+18 Hz</button>
+    <button class="synth-qm-btn" onclick="qmAction('p36')">+36 Hz</button>
+  </div>
+</div>
+<div id="synth-qm-bd" class="synth-qm-bd" onclick="closeQuickMenu()"></div>
 
 <div id="drop-menu">
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
@@ -1710,116 +1728,6 @@ input.param-input{
   </div>
   <iframe id="screen-frame" title="Module" allow="fullscreen"></iframe>
 </div>
-
-
-<!-- ══ Oscillateur Sheet (bottom drawer) ══════════════════════════════════ -->
-<div id="osc-sheet" class="osc-sheet">
-  <div class="osc-sheet-handle"></div>
-  <div class="osc-sheet-head">
-    <span class="osc-sheet-title" id="osc-sheet-title">Oscillateur</span>
-    <button class="osc-sheet-close" onclick="closeOscSheet()">✕</button>
-  </div>
-  <div class="osc-sheet-body">
-
-    <!-- Waveform selector -->
-    <div class="osc-sec-lbl">Forme d'onde</div>
-    <div class="osc-wave-row" id="osc-wave-row"></div>
-
-    <!-- Frequency -->
-    <div class="osc-sec-lbl" style="margin-top:.9rem">Fréquence</div>
-    <div class="osc-freq-big" id="osc-freq-big">— Hz</div>
-    <div class="osc-nudge-row">
-      <button class="osc-nudge-btn" onclick="oscNudge(-54)">−54</button>
-      <button class="osc-nudge-btn" onclick="oscNudge(-18)">−18</button>
-      <button class="osc-nudge-btn" onclick="oscNudge(-9)">−9</button>
-      <button class="osc-nudge-btn" onclick="oscNudge(+9)">+9</button>
-      <button class="osc-nudge-btn" onclick="oscNudge(+18)">+18</button>
-      <button class="osc-nudge-btn" onclick="oscNudge(+54)">+54</button>
-    </div>
-
-    <!-- Volume / Pan / Delta -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.8rem">
-      <div>
-        <div class="osc-sec-lbl">Volume</div>
-        <input type="range" class="fx-slider" id="osc-vol-sl" min="0" max="0.4" step="0.005" value="0.12"
-          oninput="oscSetVol(this.value)">
-        <span class="tp-info-val" id="osc-vol-val" style="font-size:.62rem">30%</span>
-      </div>
-      <div>
-        <div class="osc-sec-lbl">Pan L/R</div>
-        <input type="range" class="fx-slider" id="osc-pan-sl" min="-1" max="1" step="0.02" value="-0.7"
-          oninput="oscSetPan(this.value)">
-        <span class="tp-info-val" id="osc-pan-val" style="font-size:.62rem">−70%</span>
-      </div>
-    </div>
-
-    <!-- Detune / Attack -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.6rem">
-      <div>
-        <div class="osc-sec-lbl">Δ Binaural</div>
-        <input type="range" class="fx-slider" id="osc-delta-sl" min="0" max="36" step="0.1" value="1.8"
-          oninput="oscSetDelta(this.value)">
-        <span class="tp-info-val" id="osc-delta-val" style="font-size:.62rem">1.8 Hz</span>
-      </div>
-      <div>
-        <div class="osc-sec-lbl">Attaque</div>
-        <input type="range" class="fx-slider" id="osc-att-sl" min="0.05" max="4" step="0.05" value="0.5"
-          oninput="oscSetAttack(this.value)">
-        <span class="tp-info-val" id="osc-att-val" style="font-size:.62rem">0.5 s</span>
-      </div>
-    </div>
-
-    <!-- Filtre -->
-    <div style="margin-top:.8rem">
-      <div class="osc-sec-lbl">Filtre</div>
-      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-        <select id="osc-filter-type" onchange="oscSetFilter()" class="osc-select">
-          <option value="none">Aucun</option>
-          <option value="lowpass">Low-pass</option>
-          <option value="highpass">High-pass</option>
-          <option value="bandpass">Band-pass</option>
-          <option value="notch">Notch</option>
-        </select>
-        <input type="range" class="fx-slider" id="osc-filter-freq" min="20" max="20000" step="10" value="1000"
-          oninput="oscSetFilter()" style="flex:1">
-        <span class="tp-info-val" id="osc-filter-val" style="font-size:.62rem">1000 Hz</span>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
-      <button class="tp-play-btn" id="osc-mute-btn" onclick="oscToggleMute()"
-        style="flex:1;border-color:rgba(255,100,100,.5);color:#FF8080;background:rgba(255,80,80,.07)">Mute</button>
-      <button class="tp-play-btn" onclick="oscSheetRender()"
-        style="flex:1;border-color:rgba(86,255,176,.4);color:#86FFC0;background:rgba(86,255,176,.07)">⬇ Sample WAV</button>
-    </div>
-    <div style="font-size:.56rem;color:rgba(200,180,255,.3);text-align:center;margin-top:.4rem">
-      Rend 3 s de l'oscillateur en WAV stéréo
-    </div>
-  </div>
-</div>
-<div id="osc-sheet-bd" class="osc-sheet-bd" onclick="closeOscSheet()"></div>
-
-<!-- ══ Quick menu (long tap) ══════════════════════════════════════════════ -->
-<div id="synth-qm" class="synth-qm">
-  <div class="qm-label" id="qm-label">Oscillateur</div>
-  <button class="qm-btn" onclick="qmAction('rand-freq')">⟳ Fréquence aléatoire</button>
-  <button class="qm-btn" onclick="qmAction('rand-fx')">✦ FX aléatoires</button>
-  <div class="qm-sep"></div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem">
-    <button class="qm-btn-sm" onclick="qmAction('n9')">−9 Hz</button>
-    <button class="qm-btn-sm" onclick="qmAction('n18')">−18 Hz</button>
-    <button class="qm-btn-sm" onclick="qmAction('n36')">−36 Hz</button>
-    <button class="qm-btn-sm" onclick="qmAction('p9')">+9 Hz</button>
-    <button class="qm-btn-sm" onclick="qmAction('p18')">+18 Hz</button>
-    <button class="qm-btn-sm" onclick="qmAction('p36')">+36 Hz</button>
-  </div>
-  <div class="qm-sep"></div>
-  <button class="qm-btn" onclick="qmAction('open-sheet')">⚙ Réglages oscillateur</button>
-  <button class="qm-btn qm-del" onclick="qmAction('del')">✕ Supprimer</button>
-  <button class="qm-btn" onclick="closeQuickMenu()" style="color:rgba(200,180,255,.4)">Annuler</button>
-</div>
-<div id="synth-qm-bd" class="synth-qm-bd" onclick="closeQuickMenu()"></div>
 
 
 <div id="osc-modal">
@@ -1901,24 +1809,6 @@ PAIRS.forEach(p => {
 });
 
 let masterFreq  = 252;
-
-// ── Harmonic random init (36–432 Hz) ─────────────────────────────────────────
-const HARMONIC_RATIOS = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 16/9, 2];
-function harmonicRandomInit() {
-  const rootHz = 36 + Math.random() * (108 - 36); // root 36–108 Hz
-  const ratio  = HARMONIC_RATIOS[Math.floor(Math.random() * HARMONIC_RATIOS.length)];
-  const target = Math.min(432, Math.max(36, rootHz * ratio));
-  masterFreq = target;
-  // Scale each pair's baseFreq proportionally
-  const scale = target / 252;
-  PAIRS.forEach((p, i) => {
-    if (i === MASTER_IDX) {
-      p.pingala.baseFreq = target;
-    } else {
-      p.pingala.baseFreq = Math.max(36, Math.min(432, p.pingala.baseFreq * scale));
-    }
-  });
-}
 let globalDelta = 1.8;
 let masterVol   = 0.8;
 
@@ -1934,14 +1824,14 @@ function waveState(hz) {
 
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
-  if (i === MASTER_IDX) return Math.min(486, masterFreq);
-  return Math.max(54, Math.min(486, PAIRS[i].pingala.baseFreq));
+  if (i === MASTER_IDX) return Math.min(432, masterFreq);
+  return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];
-  return Math.max(54, Math.min(486, calcPFreq(i) + ida.polarity * ida.delta));
+  return Math.max(36, Math.min(432, calcPFreq(i) + ida.polarity * ida.delta));
 }
-function safeF(f)    { return Math.max(54, Math.min(486, f)); }
+function safeF(f)    { return Math.max(36, Math.min(432, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
@@ -2428,6 +2318,11 @@ async function startFlow() {
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
+    // ChaVibe démarre en synchrone avec le flow si actif
+    if (typeof ChaVibe !== 'undefined' && ChaVibe.enabled) {
+      ChaVibe.start().catch(() => {});
+      _cvSyncUI(true);
+    }
   } catch(err) {
     flowing = false; nodes = {};
     ui('idle', 'Erreur audio — relancer');
@@ -2451,6 +2346,7 @@ async function stopFlow() {
   const nodesCopy = {...nodes};
   nodes = {};
   flowing = false;
+  if (typeof ChaVibe !== 'undefined') { ChaVibe.stop(); _cvSyncUI(false); }
   Object.values(nodesCopy).forEach(n => {
     if (!n) return;
     try {
@@ -3489,6 +3385,41 @@ function setRandRatioMode(m, btn) {
 function setRandUseFX(v) { RAND_OPTS.useFX = !!v; }
 
 // ── FX aléatoire (mobile-safe) ──────────────────────────────────────
+
+/* ══ OmCv432 — LFO doux sur le volume de CHAQUE oscillateur ════════════ */
+let _oscVolLFOs = [];
+function clearOscVolLFO() {
+  _oscVolLFOs.forEach(x => {
+    try { x.lfo.stop(); x.lfo.disconnect(); } catch(e) {}
+    try { x.depth.disconnect(); } catch(e) {}
+  });
+  _oscVolLFOs = [];
+}
+function attachOscVolLFO(rate, depth) {
+  if (!AC) return;
+  clearOscVolLFO();
+  PAIRS.forEach(p => {
+    [p.pingala.id, p.ida.id].forEach(id => {
+      const n = nodes[id]; if (!n || !n.g) return;
+      const lfo = AC.createOscillator(); lfo.type = 'sine';
+      lfo.frequency.value = Math.max(0.02, rate * (0.8 + Math.random() * 0.4));
+      const dg = AC.createGain();
+      // profondeur relative au volume courant de l'oscillateur (modulation douce)
+      dg.gain.value = depth * Math.max(0.02, n.g.gain.value || 0.1);
+      lfo.connect(dg); dg.connect(n.g.gain); lfo.start();
+      _oscVolLFOs.push({ lfo, depth: dg });
+    });
+  });
+}
+let _oscLFOActive = false;
+function toggleOscVolLFO() {
+  _oscLFOActive = !_oscLFOActive;
+  if (_oscLFOActive) attachOscVolLFO(0.12, 0.04); else clearOscVolLFO();
+  const b = document.getElementById('btn-osc-lfo');
+  if (b) { b.classList.toggle('on', _oscLFOActive); b.textContent = _oscLFOActive ? '〜 LFO doux ON' : '〜 LFO doux'; }
+}
+
+function aleaApplyRandomFX() { randomizeFX(); }
 function randomizeFX() {
   // Tout sur mobile (APK) : pas de reverb, delay léger, EQ doux (chorus retiré)
   const delT  = +(0.15 + Math.random() * .5).toFixed(2);
@@ -3521,6 +3452,11 @@ function randomizeFX() {
   if (brEl) { brEl.value = breathRate;  if (typeof breathSet==='function') breathSet('rate', breathRate); }
   if (bdEl) { bdEl.value = breathDepth; if (typeof breathSet==='function') breathSet('depth', breathDepth); }
   if (boEl) { boEl.checked = breathOn;  if (typeof breathToggle==='function') breathToggle(breathOn); }
+  // Nouveau FX : LFO doux sur le volume de chaque oscillateur (60% chance)
+  if (Math.random() < 0.6 && AC) { _oscLFOActive = true; attachOscVolLFO(0.08 + Math.random()*0.2, 0.025 + Math.random()*0.04); }
+  else { _oscLFOActive = false; clearOscVolLFO(); }
+  const _lb = document.getElementById('btn-osc-lfo');
+  if (_lb) { _lb.classList.toggle('on', _oscLFOActive); _lb.textContent = _oscLFOActive ? '〜 LFO doux ON' : '〜 LFO doux'; }
 }
 
 // ── Contrôles individuels oscillateurs ─────────────────────────────
@@ -3589,7 +3525,7 @@ function setMasterVol(v) {
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(54, Math.min(486, f));
+  masterFreq = Math.max(36, Math.min(432, f));
   updateDisplay();
   if (typeof flowing !== 'undefined' && flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -3926,16 +3862,6 @@ function buildMasterFXHTML() {
       <button class="fx-preset-btn del"  id="ps-del-${s}"  onclick="delPreset(${s})"  disabled>✕</button>
     </div>`).join('');
   return `<div class="fx-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
-      <button onclick="aleaApplyRandomFX()"
-        style="padding:.35rem .85rem;border-radius:12px;border:1px solid rgba(86,255,176,.4);
-               background:rgba(86,255,176,.07);color:#80FFD0;font-size:.68rem;cursor:pointer;
-               font-family:inherit;letter-spacing:.06em">✦ FX aléatoires</button>
-      <button onclick="resetAllFX()"
-        style="padding:.35rem .85rem;border-radius:12px;border:1px solid rgba(200,100,255,.25);
-               background:rgba(200,100,255,.05);color:rgba(200,180,255,.65);font-size:.68rem;cursor:pointer;
-               font-family:inherit;letter-spacing:.06em">↺ Reset FX</button>
-    </div>
     <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem;">
       <div class="dot" id="dot"></div>
       <span id="stxt" style="font-size:.9rem;font-style:italic;letter-spacing:.1em;color:rgba(200,170,255,.7);">Initialisation...</span>
@@ -4320,7 +4246,7 @@ function updateDisplay() {
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = masterFreq;
   const mi  = document.getElementById('master-input');
   if (mi && document.activeElement!==mi) mi.value = masterFreq;
-  document.title = 'OmCv432 · ' + masterFreq.toFixed(1) + ' Hz';
+  document.title = 'OmCv432 · ' + masterFreq + ' Hz';
   PAIRS.forEach((_,i) => updatePairUI(i));
   updateMasterState();
   patchRandomTable();
@@ -4621,959 +4547,85 @@ function closeMenu() {
   if (btn) btn.classList.remove('on');
 }
 
+// ── Modules en surimpression (iframe) — le binaural d'Omcha396 continue ──
+// ── Exclusivité audio : un module qui joue coupe le binaural d'accueil ──
+let _moduleAudioActive = false;
+let _moduleScreenTitle = '';
+function _resumeAudioSafe(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='suspended')AC.resume(); }catch(e){} }
+function _suspendHomeAudio(){ try{ if(typeof AC!=='undefined'&&AC&&AC.state==='running')AC.suspend(); }catch(e){} }
+// Le module (iframe) signale qu'il lance un son → on coupe le son maison.
+// 'stop-ack' : le module confirme que son audio est stoppé.
+window.addEventListener('message', function(e){
+  const d = e.data || {};
+  if (d.fbf === 'audio-claim') { _moduleAudioActive = true; _suspendHomeAudio(); }
+  if (d.fbf === 'stop-ack')    { _finalizeModuleDestroy(); }
+});
+
+function _showModuleMiniPlayer(title) {
+  const mp = document.getElementById('module-mini-player'); if (!mp) return;
+  const t = document.getElementById('mmp-title'); if (t) t.textContent = title || 'Module';
+  mp.classList.add('visible');
+}
+function _hideMiniPlayer() {
+  const mp = document.getElementById('module-mini-player'); if (mp) mp.classList.remove('visible');
+}
+function _finalizeModuleDestroy() {
+  const fr = document.getElementById('screen-frame');
+  setTimeout(() => { if (fr) fr.src = 'about:blank'; }, 600);
+  _moduleAudioActive = false; _resumeAudioSafe(); _hideMiniPlayer();
+}
+
 function openScreen(src, title){
   const ov=document.getElementById('screen-overlay'),
         fr=document.getElementById('screen-frame'),
         tt=document.getElementById('screen-overlay-title');
   if(!ov||!fr) return;
-  fr.src = src;
+  // Si un autre module tourne en fond, on l'arrête d'abord
+  if (fr.src && fr.src !== 'about:blank' && !ov.classList.contains('open')) {
+    try { fr.contentWindow.postMessage({fbf:'stop-flow'}, '*'); } catch(e) {}
+    setTimeout(() => { if (fr) fr.src = src; }, 700);
+  } else {
+    fr.src = src;
+  }
+  _moduleScreenTitle = title || '';
   if(tt) tt.textContent = title || 'Module';
-  ov.classList.add('open');
+  ov.classList.add('open'); _hideMiniPlayer(); _resumeAudioSafe();
   try{ history.pushState({omchaScreen:true},''); }catch(e){}
 }
 function closeScreen(){
   const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
   if(!ov||!ov.classList.contains('open')) return;
   ov.classList.remove('open');
-  if(fr) fr.src='about:blank';
+  if (_moduleAudioActive) {
+    // Audio en cours → garder l'iframe vivante, afficher le mini-player
+    _showModuleMiniPlayer(_moduleScreenTitle);
+  } else {
+    if(fr) fr.src='about:blank';
+    _resumeAudioSafe();
+  }
   if(history.state&&history.state.omchaScreen){ try{ history.back(); }catch(e){} }
+}
+function reopenModule(){
+  const ov=document.getElementById('screen-overlay'), fr=document.getElementById('screen-frame');
+  if(!ov||!fr||!fr.src||fr.src==='about:blank') return;
+  ov.classList.add('open'); _hideMiniPlayer();
+  try{ history.pushState({omchaScreen:true},''); }catch(e){}
+}
+function stopModuleForReal(){
+  const fr=document.getElementById('screen-frame');
+  try { fr.contentWindow.postMessage({fbf:'stop-flow'}, '*'); } catch(e) {}
+  // Fallback si le module ne répond pas (stop-ack) : détruire après 1.5 s
+  setTimeout(() => _finalizeModuleDestroy(), 1500);
 }
 window.addEventListener('popstate', function(){
   const ov=document.getElementById('screen-overlay');
   if(ov&&ov.classList.contains('open')){
     ov.classList.remove('open');
-    const fr=document.getElementById('screen-frame'); if(fr) fr.src='about:blank';
+    if (_moduleAudioActive) { _showModuleMiniPlayer(_moduleScreenTitle); }
+    else { const fr=document.getElementById('screen-frame'); if(fr) fr.src='about:blank'; _resumeAudioSafe(); }
   }
 });
 window.addEventListener('keydown', function(e){ if(e.key==='Escape') closeScreen(); });
-
-// ── 5-tab navigation ──────────────────────────────────────────────
-// Tab panel IDs and their panel type
-const TAB_PANELS = { alea:'panAlea', bina:'panBina', '3d':'pan3D', fx:'panFX', master:'panMaster' };
-const TAB_FULLSCREEN = { alea:true, bina:true, master:true }; // full-screen tab-panel class
-const TAB_SIDE = { '3d':'pan3D', fx:'panFX' };               // slide-in pan-right class
-
-function showTab(tabId, btn) {
-  document.querySelectorAll('#bottom-nav .bnav').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  // Close all full-screen tab panels
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('open'));
-  // Close all side panels
-  Object.values(TAB_SIDE).forEach(pid => {
-    const p = document.getElementById(pid); if (p) p.classList.remove('open');
-  });
-  if (TAB_FULLSCREEN[tabId]) {
-    const p = document.getElementById(TAB_PANELS[tabId]);
-    if (p) p.classList.add('open');
-  } else if (TAB_SIDE[tabId]) {
-    const p = document.getElementById(TAB_SIDE[tabId]);
-    if (p) p.classList.add('open');
-  }
-  if (tabId === 'alea')   _updateAleaPanel();
-  if (tabId === 'bina')   _updateBinaPanel();
-  if (tabId === 'master') _updateAleaPanel();
-}
-
-
-
-
-// ══════════════════════════════════════════════════════════════════════════
-// OmCv432 · Synth Studio — bubbles, waveforms, sheet, quick menu
-// ══════════════════════════════════════════════════════════════════════════
-
-const WAVEFORMS = [
-  { id:'sine',      label:'SINE'     },
-  { id:'sawtooth',  label:'SAW'      },
-  { id:'square',    label:'SQUARE'   },
-  { id:'triangle',  label:'TRI'      },
-  { id:'supersaw',  label:'SUPERSAW' },
-  { id:'sawsaw',    label:'SAW+SAW'  },
-  { id:'pulse',     label:'PULSE'    },
-  { id:'sawsquare', label:'SAW+SQR'  },
-  { id:'sqrsqr',    label:'SQR+SQR'  },
-  { id:'bell',      label:'BELL'     },
-  { id:'deafsaw',   label:'DEAF SAW' },
-  { id:'spreadoct', label:'SPRD OCT' },
-  { id:'spread5th', label:'SPRD 5th' },
-];
-const SUPERSAW_DETUNE = [-20, -12, -5, 5, 12, 20]; // cents for detuned saws
-
-// Extend PAIRS with synth fields
-PAIRS.forEach((p, i) => {
-  if (!p.waveform) p.waveform = 'sine';
-  if (!p.attack)   p.attack   = 0.5;
-  if (!p.filterType) p.filterType = 'none';
-  if (!p.filterFreq) p.filterFreq = 1000;
-});
-
-let _oscSheetIdx = -1;  // which pair is open in the sheet
-let _qmIdx       = -1;  // which pair has the quick menu open
-let _longTapTimer = null;
-
-// ── USER OSCILLATORS (beyond the 7 built-in pairs) ───────────────────────
-const USER_OSCS = [];
-
-// ─── Bubble layout ────────────────────────────────────────────────────────
-function buildBubbles() {
-  const field = document.getElementById('synth-bubble-field');
-  if (!field) return;
-  field.innerHTML = '';
-  const W  = field.offsetWidth  || 340;
-  const H  = field.offsetHeight || 310;
-  const cx = W / 2, cy = H / 2;
-  const rOuter = Math.min(W, H) * 0.36;
-  const rInner = 0;
-
-  // Helper: create one bubble div
-  function makeBubble(p, idx, x, y, size, isMaster) {
-    const div = document.createElement('div');
-    div.className = 'synth-bubble' + (isMaster ? ' master' : '');
-    if (p.muted) div.classList.add('muted');
-    if (flowing && nodes[p.pingala.id]) div.classList.add('playing');
-    const col = p.color || '#86FFC0';
-    div.style.cssText =
-      'left:'+(x-size/2).toFixed(1)+'px;top:'+(y-size/2).toFixed(1)+'px;' +
-      'width:'+size+'px;height:'+size+'px;' +
-      '--bc:'+col+'44;' +
-      'background:radial-gradient(circle at 38% 35%,'+col+'28,'+col+'0e);' +
-      'border-color:'+col+'60;color:'+col+';';
-    div.id = 'bubble-' + idx;
-    const wave = (p.waveform||'sine').toUpperCase().slice(0,5);
-    const fhz  = isMaster ? masterFreq.toFixed(0) : (p.pingala.baseFreq||calcPFreq(idx)).toFixed(0);
-    div.innerHTML =
-      '<div class="bubble-lbl">'+(isMaster?'★ MASTER':p.label)+'</div>'+
-      '<div class="bubble-hz" id="bubble-hz-'+idx+'">'+fhz+'</div>'+
-      '<div class="bubble-wave" id="bubble-wave-'+idx+'">'+wave+'</div>';
-
-    // Touch interaction: tap vs long-tap
-    let _lt = null;
-    const clear = () => { if (_lt) { clearTimeout(_lt); _lt = null; } };
-    div.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      _lt = setTimeout(() => { _lt = null; openQuickMenu(idx); }, 420);
-    }, { passive: false });
-    div.addEventListener('pointerup', (e) => {
-      if (_lt) { clear(); openOscSheet(idx); }
-    });
-    div.addEventListener('pointercancel', clear);
-    div.addEventListener('pointermove', (e) => {
-      if (_lt && (Math.abs(e.movementX)+Math.abs(e.movementY) > 8)) clear();
-    });
-    field.appendChild(div);
-  }
-
-  // 6 satellites at hex positions (top = pair 0, clockwise)
-  PAIRS.slice(0, MASTER_IDX).forEach((p, i) => {
-    const angle = (i * 60 - 90) * Math.PI / 180;
-    makeBubble(p, i, cx + rOuter * Math.cos(angle), cy + rOuter * Math.sin(angle), 70, false);
-  });
-  // Master center
-  makeBubble(PAIRS[MASTER_IDX], MASTER_IDX, cx, cy, 92, true);
-
-  // User oscillators (extra ring)
-  USER_OSCS.forEach((p, j) => {
-    const angle = (j * 60 - 60) * Math.PI / 180;
-    const r2 = rOuter * 1.72;
-    makeBubble(p, MASTER_IDX + 1 + j, cx + r2 * Math.cos(angle), cy + r2 * Math.sin(angle), 52, false);
-  });
-}
-
-function updateBubbleUI(idx) {
-  const p = idx <= MASTER_IDX ? PAIRS[idx] : USER_OSCS[idx - MASTER_IDX - 1];
-  if (!p) return;
-  const hzEl   = document.getElementById('bubble-hz-' + idx);
-  const waveEl = document.getElementById('bubble-wave-' + idx);
-  const bEl    = document.getElementById('bubble-' + idx);
-  if (hzEl)   hzEl.textContent = (idx === MASTER_IDX ? masterFreq : p.pingala.baseFreq).toFixed(0);
-  if (waveEl) waveEl.textContent = (p.waveform||'sine').toUpperCase().slice(0,5);
-  if (bEl) {
-    bEl.classList.toggle('playing', !!(flowing && nodes[p.pingala.id]));
-    bEl.classList.toggle('muted',   !!p.muted);
-  }
-}
-
-function updateAllBubbles() {
-  PAIRS.forEach((_, i) => updateBubbleUI(i));
-}
-
-// ─── Oscillateur Sheet ────────────────────────────────────────────────────
-function openOscSheet(idx) {
-  _oscSheetIdx = idx;
-  const p = idx < MASTER_IDX ? PAIRS[idx] : PAIRS[MASTER_IDX];
-  const sheet = document.getElementById('osc-sheet');
-  const bd    = document.getElementById('osc-sheet-bd');
-  if (!sheet) return;
-
-  // Title
-  document.getElementById('osc-sheet-title').textContent =
-    idx === MASTER_IDX ? '★ Oscillateur Maître' : (p.label + ' — Oscillateur');
-
-  // Freq display
-  const fhz = idx === MASTER_IDX ? masterFreq : p.pingala.baseFreq;
-  const el = document.getElementById('osc-freq-big');
-  if (el) el.textContent = fhz.toFixed(1) + ' Hz';
-
-  // Waveform buttons
-  const wr = document.getElementById('osc-wave-row');
-  if (wr) {
-    wr.innerHTML = WAVEFORMS.map(w =>
-      '<button class="osc-wave-btn' + (p.waveform===w.id?' active':'') + '" ' +
-      'onclick="oscSetWaveform(''+w.id+'')" data-w="'+w.id+'">'+w.label+'</button>'
-    ).join('');
-  }
-
-  // Volume / pan / delta
-  const vsl = document.getElementById('osc-vol-sl');
-  const vvl = document.getElementById('osc-vol-val');
-  if (vsl) { vsl.value = p.pingala.vol || 0.12; }
-  if (vvl) vvl.textContent = Math.round((p.pingala.vol||0.12)*100/0.4)+'%';
-
-  const psl = document.getElementById('osc-pan-sl');
-  const pvl = document.getElementById('osc-pan-val');
-  if (psl) { const pan = idx===MASTER_IDX ? 0 : -0.7; psl.value = pan; if(pvl) pvl.textContent = (pan>0?'+':'')+(pan*100).toFixed(0)+'%'; }
-
-  const dsl = document.getElementById('osc-delta-sl');
-  const dvl = document.getElementById('osc-delta-val');
-  if (dsl) { dsl.value = globalDelta.toFixed(1); if(dvl) dvl.textContent = globalDelta.toFixed(1)+' Hz'; }
-
-  const asl = document.getElementById('osc-att-sl');
-  const avl = document.getElementById('osc-att-val');
-  if (asl) { asl.value = p.attack||0.5; if(avl) avl.textContent = (p.attack||0.5).toFixed(2)+' s'; }
-
-  // Filter
-  const ft = document.getElementById('osc-filter-type');
-  if (ft) ft.value = p.filterType || 'none';
-  const ff = document.getElementById('osc-filter-freq');
-  if (ff) { ff.value = p.filterFreq || 1000; document.getElementById('osc-filter-val').textContent = (p.filterFreq||1000)+' Hz'; }
-
-  // Mute button
-  const mb = document.getElementById('osc-mute-btn');
-  if (mb) { mb.textContent = p.muted ? '▶ Activer' : 'Mute'; mb.style.borderColor = p.muted ? 'rgba(86,255,176,.5)' : 'rgba(255,100,100,.5)'; mb.style.color = p.muted ? '#86FFC0' : '#FF8080'; }
-
-  sheet.classList.add('open');
-  if (bd) bd.classList.add('on');
-}
-
-function closeOscSheet() {
-  document.getElementById('osc-sheet')?.classList.remove('open');
-  document.getElementById('osc-sheet-bd')?.classList.remove('on');
-}
-
-function _curPair() {
-  return _oscSheetIdx < MASTER_IDX ? PAIRS[_oscSheetIdx] : PAIRS[MASTER_IDX];
-}
-
-function oscNudge(dHz) {
-  const p = _curPair();
-  if (_oscSheetIdx === MASTER_IDX) {
-    masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
-  } else {
-    p.pingala.baseFreq = Math.max(36, Math.min(432, (p.pingala.baseFreq||calcPFreq(_oscSheetIdx)) + dHz));
-  }
-  const fhz = _oscSheetIdx === MASTER_IDX ? masterFreq : p.pingala.baseFreq;
-  const el = document.getElementById('osc-freq-big'); if (el) el.textContent = fhz.toFixed(1)+' Hz';
-  binaShiftPair(_oscSheetIdx, 0); // retune if flowing (uses calcPFreq)
-  updateBubbleUI(_oscSheetIdx);
-  _updateAleaPanel();
-}
-
-function oscSetWaveform(wave) {
-  if (_oscSheetIdx < 0) return;
-  const p = _curPair();
-  p.waveform = wave;
-  // Update button states
-  document.querySelectorAll('#osc-wave-row .osc-wave-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.w === wave));
-  _applyWaveform(_oscSheetIdx, wave);
-  updateBubbleUI(_oscSheetIdx);
-}
-
-function _cleanOscExtras(n) {
-  if (!n) return;
-  if (n._supers) {
-    n._supers.forEach(s => { try{s.o.stop();s.o.disconnect();}catch(e){} try{s.g.disconnect();}catch(e){} });
-    n._supers = [];
-  }
-  if (n._modOsc) {
-    try{n._modOsc.stop();n._modOsc.disconnect();}catch(e){}
-    if (n._modGain) { try{n._modGain.disconnect();}catch(e){} n._modGain=null; }
-    n._modOsc = null;
-  }
-  if (n._filter) {
-    try{n.o.disconnect(n._filter);n._filter.disconnect(n.g);}catch(e){}
-    try{n.o.connect(n.g);}catch(e){}
-    n._filter = null;
-  }
-  try { n.o.detune.value = 0; } catch(e) {}
-}
-
-function _applyWaveform(idx, wave) {
-  const p = idx <= MASTER_IDX ? PAIRS[idx] : USER_OSCS[idx - MASTER_IDX - 1];
-  if (!p) return;
-  [p.pingala.id, p.ida.id].forEach(id => {
-    const n = nodes[id]; if (!n) return;
-    _cleanOscExtras(n);
-    switch (wave) {
-      case 'sine': case 'sawtooth': case 'square': case 'triangle':
-        n.o.type = wave; break;
-      case 'supersaw':  _buildSupersaw(n);  break;
-      case 'sawsaw':    _buildSawSaw(n);    break;
-      case 'pulse':     _buildPulse(n);     break;
-      case 'sawsquare': _buildSawSquare(n); break;
-      case 'sqrsqr':    _buildSqrSqr(n);   break;
-      case 'bell':      _buildBell(n);      break;
-      case 'deafsaw':   _buildDeafSaw(n);   break;
-      case 'spreadoct': _buildSpreadOct(n); break;
-      case 'spread5th': _buildSpread5th(n); break;
-      default: try { n.o.type = wave; } catch(e) { n.o.type = 'sine'; }
-    }
-  });
-}
-
-function _buildSupersaw(n) {
-  if (!n) return;
-  n.o.type = 'sawtooth';
-  const c = audioCtx();
-  n._supers = SUPERSAW_DETUNE.map(dt => {
-    const o = c.createOscillator(); o.type = 'sawtooth';
-    o.frequency.value = n.o.frequency.value; o.detune.value = dt;
-    const g = c.createGain(); g.gain.value = 0.55 / SUPERSAW_DETUNE.length;
-    o.connect(g); g.connect(n.g); o.start();
-    return {o, g};
-  });
-}
-
-function _buildSawSaw(n) {
-  n.o.type = 'sawtooth'; n.o.detune.value = -6;
-  const c = audioCtx();
-  const o = c.createOscillator(); o.type = 'sawtooth';
-  o.frequency.value = n.o.frequency.value; o.detune.value = 6;
-  const g = c.createGain(); g.gain.value = 0.65;
-  o.connect(g); g.connect(n.g); o.start();
-  n._supers = [{o, g}];
-}
-
-function _buildPulse(n) {
-  const c = audioCtx(); const nH = 32; const d = 0.25;
-  const real = new Float32Array(nH); const imag = new Float32Array(nH);
-  for (let k = 1; k < nH; k++) real[k] = (2/(k*Math.PI)) * Math.sin(k*Math.PI*d);
-  n.o.setPeriodicWave(c.createPeriodicWave(real, imag, {disableNormalization: false}));
-  n._supers = [];
-}
-
-function _buildSawSquare(n) {
-  n.o.type = 'sawtooth';
-  const c = audioCtx();
-  const o = c.createOscillator(); o.type = 'square';
-  o.frequency.value = n.o.frequency.value;
-  const g = c.createGain(); g.gain.value = 0.40;
-  o.connect(g); g.connect(n.g); o.start();
-  n._supers = [{o, g}];
-}
-
-function _buildSqrSqr(n) {
-  n.o.type = 'square'; n.o.detune.value = -5;
-  const c = audioCtx();
-  const o = c.createOscillator(); o.type = 'square';
-  o.frequency.value = n.o.frequency.value; o.detune.value = 5;
-  const g = c.createGain(); g.gain.value = 0.65;
-  o.connect(g); g.connect(n.g); o.start();
-  n._supers = [{o, g}];
-}
-
-function _buildBell(n) {
-  n.o.type = 'sine';
-  const c = audioCtx(); const freq = n.o.frequency.value;
-  const mod = c.createOscillator(); mod.type = 'sine';
-  mod.frequency.value = freq * 2.8;
-  const mg = c.createGain(); mg.gain.value = freq * 2.0;
-  mod.connect(mg); mg.connect(n.o.frequency); mod.start();
-  n._modOsc = mod; n._modGain = mg; n._supers = [];
-}
-
-function _buildDeafSaw(n) {
-  n.o.type = 'sawtooth';
-  const c = audioCtx();
-  try { n.o.disconnect(n.g); } catch(e) {}
-  const f = c.createBiquadFilter();
-  f.type = 'lowpass'; f.frequency.value = 600; f.Q.value = 3;
-  n.o.connect(f); f.connect(n.g);
-  n._filter = f; n._supers = [];
-}
-
-function _buildSpreadOct(n) {
-  n.o.type = 'sine';
-  const c = audioCtx(); const freq = n.o.frequency.value;
-  const o = c.createOscillator(); o.type = 'sine';
-  o.frequency.value = freq * 2;
-  const g = c.createGain(); g.gain.value = 0.5;
-  o.connect(g); g.connect(n.g); o.start();
-  n._supers = [{o, g}];
-}
-
-function _buildSpread5th(n) {
-  n.o.type = 'sine';
-  const c = audioCtx(); const freq = n.o.frequency.value;
-  const o = c.createOscillator(); o.type = 'sine';
-  o.frequency.value = freq * 1.5;
-  const g = c.createGain(); g.gain.value = 0.6;
-  o.connect(g); g.connect(n.g); o.start();
-  n._supers = [{o, g}];
-}
-
-function oscSetVol(v) {
-  const p = _curPair();
-  p.pingala.vol = parseFloat(v);
-  document.getElementById('osc-vol-val').textContent = Math.round(v/0.4*100)+'%';
-  // Apply to live node
-  const n = nodes[p.pingala.id];
-  if (n) n.g.gain.setTargetAtTime(parseFloat(v) * (p.muted?0:1), aNow(), 0.05);
-}
-
-function oscSetPan(v) {
-  document.getElementById('osc-pan-val').textContent = (v>0?'+':'')+(parseFloat(v)*100).toFixed(0)+'%';
-  const p = _curPair();
-  const n = nodes[p.pingala.id];
-  if (n && n.p) n.p.pan.setTargetAtTime(parseFloat(v), aNow(), 0.05);
-}
-
-function oscSetDelta(v) {
-  globalDelta = parseFloat(v);
-  _prevDelta  = globalDelta;
-  document.getElementById('osc-delta-val').textContent = parseFloat(v).toFixed(1)+' Hz';
-  binaNudge(0);
-  _updateAleaPanel();
-}
-
-function oscSetAttack(v) {
-  _curPair().attack = parseFloat(v);
-  document.getElementById('osc-att-val').textContent = parseFloat(v).toFixed(2)+' s';
-}
-
-function oscSetFilter() {
-  const p    = _curPair();
-  const type = document.getElementById('osc-filter-type').value;
-  const freq = parseFloat(document.getElementById('osc-filter-freq').value);
-  p.filterType = type; p.filterFreq = freq;
-  document.getElementById('osc-filter-val').textContent = Math.round(freq)+' Hz';
-}
-
-function oscToggleMute() {
-  if (_oscSheetIdx < 0) return;
-  const p = _curPair();
-  p.muted = !p.muted;
-  const n = nodes[p.pingala.id];
-  if (n) n.g.gain.setTargetAtTime(p.muted ? 0 : p.pingala.vol, aNow(), 0.08);
-  const ni = nodes[p.ida.id];
-  if (ni) ni.g.gain.setTargetAtTime(p.muted ? 0 : p.ida.vol, aNow(), 0.08);
-  const mb = document.getElementById('osc-mute-btn');
-  if (mb) { mb.textContent = p.muted?'▶ Activer':'Mute'; mb.style.color=p.muted?'#86FFC0':'#FF8080'; }
-  updateBubbleUI(_oscSheetIdx);
-}
-
-function _renderOscVoice(oc, waveform, freq, pan, vol, dur) {
-  const g = oc.createGain(); g.gain.setValueAtTime(0,0); g.gain.linearRampToValueAtTime(vol,0.05); g.gain.setTargetAtTime(0,dur-0.3,0.1);
-  const pp = oc.createStereoPanner(); pp.pan.value = pan;
-  g.connect(pp); pp.connect(oc.destination);
-
-  function mkOsc(type, f, dt) {
-    const o = oc.createOscillator(); o.type = type; o.frequency.value = f; if (dt) o.detune.value = dt;
-    return o;
-  }
-
-  switch (waveform) {
-    case 'supersaw': {
-      const main = mkOsc('sawtooth', freq); main.connect(g); main.start(0); main.stop(dur);
-      SUPERSAW_DETUNE.forEach(dt => {
-        const gs = oc.createGain(); gs.gain.value = vol*0.45/SUPERSAW_DETUNE.length;
-        const os = mkOsc('sawtooth', freq, dt); os.connect(gs); gs.connect(pp); os.start(0); os.stop(dur);
-      }); break;
-    }
-    case 'sawsaw': {
-      const a = mkOsc('sawtooth',freq); a.detune.value=-6; a.connect(g); a.start(0); a.stop(dur);
-      const gs = oc.createGain(); gs.gain.value = vol*0.65;
-      const b = mkOsc('sawtooth',freq); b.detune.value=6; b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
-    }
-    case 'pulse': {
-      const nH=32; const d=0.25;
-      const real=new Float32Array(nH); const imag=new Float32Array(nH);
-      for(let k=1;k<nH;k++) real[k]=(2/(k*Math.PI))*Math.sin(k*Math.PI*d);
-      const pw = oc.createPeriodicWave(real,imag,{disableNormalization:false});
-      const o = oc.createOscillator(); o.setPeriodicWave(pw); o.frequency.value=freq;
-      o.connect(g); o.start(0); o.stop(dur); break;
-    }
-    case 'sawsquare': {
-      const a = mkOsc('sawtooth',freq); a.connect(g); a.start(0); a.stop(dur);
-      const gs = oc.createGain(); gs.gain.value = vol*0.40;
-      const b = mkOsc('square',freq); b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
-    }
-    case 'sqrsqr': {
-      const a = mkOsc('square',freq); a.detune.value=-5; a.connect(g); a.start(0); a.stop(dur);
-      const gs = oc.createGain(); gs.gain.value = vol*0.65;
-      const b = mkOsc('square',freq); b.detune.value=5; b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
-    }
-    case 'bell': {
-      const carrier = mkOsc('sine',freq); carrier.connect(g); carrier.start(0); carrier.stop(dur);
-      const mg = oc.createGain(); mg.gain.value = freq*2.0;
-      const mod = mkOsc('sine',freq*2.8); mod.connect(mg); mg.connect(carrier.frequency); mod.start(0); mod.stop(dur); break;
-    }
-    case 'deafsaw': {
-      const f = oc.createBiquadFilter(); f.type='lowpass'; f.frequency.value=600; f.Q.value=3;
-      f.connect(g);
-      const a = mkOsc('sawtooth',freq); a.connect(f); a.start(0); a.stop(dur); break;
-    }
-    case 'spreadoct': {
-      const a = mkOsc('sine',freq); a.connect(g); a.start(0); a.stop(dur);
-      const gs = oc.createGain(); gs.gain.value = vol*0.5;
-      const b = mkOsc('sine',freq*2); b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
-    }
-    case 'spread5th': {
-      const a = mkOsc('sine',freq); a.connect(g); a.start(0); a.stop(dur);
-      const gs = oc.createGain(); gs.gain.value = vol*0.6;
-      const b = mkOsc('sine',freq*1.5); b.connect(gs); gs.connect(pp); b.start(0); b.stop(dur); break;
-    }
-    default: {
-      const o = mkOsc(waveform||'sine', freq); o.connect(g); o.start(0); o.stop(dur);
-    }
-  }
-}
-
-async function oscSheetRender() {
-  const idx = _oscSheetIdx; if (idx < 0) return;
-  const p   = _curPair();
-  const dur = 3.0;
-  try {
-    const ctx = new OfflineAudioContext(2, Math.round(44100 * dur), 44100);
-    const wv  = p.waveform || 'sine';
-    [[calcPFreq(idx), -0.7, p.pingala.vol], [calcIFreq(idx), 0.7, p.ida.vol]].forEach(([freq, pan, vol]) => {
-      _renderOscVoice(ctx, wv, freq, pan, vol, dur);
-    });
-    const buf = await ctx.startRendering();
-    const blob = _audioBufferToWav(buf);
-    const name = 'OmCv432-'+p.label.replace(/[^a-z0-9]/gi,'-')+'-'+calcPFreq(idx).toFixed(0)+'Hz.wav';
-    _downloadBlob(blob, name);
-  } catch(e) { alert('Erreur rendu : '+e.message); }
-}
-
-function _audioBufferToWav(buf) {
-  const nc=buf.numberOfChannels, sr=buf.sampleRate, len=buf.length;
-  const interleaved = new Float32Array(len * nc);
-  for (let c=0;c<nc;c++) { const ch=buf.getChannelData(c); for(let s=0;s<len;s++) interleaved[s*nc+c]=ch[s]; }
-  const pcm = new Int16Array(interleaved.length);
-  for (let i=0;i<interleaved.length;i++) pcm[i]=Math.max(-32768,Math.min(32767,interleaved[i]*32767));
-  const dv = new DataView(new ArrayBuffer(44 + pcm.byteLength));
-  const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
-  ws(0,'RIFF'); dv.setUint32(4,36+pcm.byteLength,true); ws(8,'WAVE'); ws(12,'fmt ');
-  dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,nc,true);
-  dv.setUint32(24,sr,true); dv.setUint32(28,sr*nc*2,true);
-  dv.setUint16(32,nc*2,true); dv.setUint16(34,16,true); ws(36,'data');
-  dv.setUint32(40,pcm.byteLength,true); new Int16Array(dv.buffer,44).set(pcm);
-  return new Blob([dv.buffer],{type:'audio/wav'});
-}
-
-function _downloadBlob(blob, name) {
-  const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=name; document.body.appendChild(a); a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},2000);
-}
-
-// ─── Quick Menu ────────────────────────────────────────────────────────────
-function openQuickMenu(idx) {
-  _qmIdx = idx;
-  const p = idx < MASTER_IDX ? PAIRS[idx] : PAIRS[MASTER_IDX];
-  const lbl = document.getElementById('qm-label');
-  if (lbl) lbl.textContent = idx===MASTER_IDX ? '★ Maître' : p.label;
-  const delBtn = document.querySelector('.qm-btn.qm-del');
-  if (delBtn) delBtn.style.display = idx < MASTER_IDX && idx >= 6 ? 'block' : 'none'; // only user oscs
-  document.getElementById('synth-qm')?.classList.add('open');
-  document.getElementById('synth-qm-bd')?.classList.add('on');
-}
-
-function closeQuickMenu() {
-  document.getElementById('synth-qm')?.classList.remove('open');
-  document.getElementById('synth-qm-bd')?.classList.remove('on');
-}
-
-function qmAction(act) {
-  closeQuickMenu();
-  const dHz = { n9:-9, n18:-18, n36:-36, p9:9, p18:18, p36:36 };
-  if (dHz[act] !== undefined) { binaShiftPair(_qmIdx, dHz[act]); updateBubbleUI(_qmIdx); }
-  else if (act === 'rand-freq') { harmonicRandomInit(); _updateAleaPanel(); _updateBinaPanel(); updateAllBubbles(); }
-  else if (act === 'rand-fx')   { aleaApplyRandomFX(); }
-  else if (act === 'open-sheet') { openOscSheet(_qmIdx); }
-  else if (act === 'del') { synthRemoveOsc(_qmIdx); }
-}
-
-// ─── Add / Remove oscillators ─────────────────────────────────────────────
-const _OSC_COLORS = ['#FF6B6B','#FFB347','#E8FF60','#56FFB0','#60D8FF','#C080FF','#FF80D0','#FFD060'];
-
-function synthAddOsc() {
-  const n   = USER_OSCS.length;
-  const col = _OSC_COLORS[n % _OSC_COLORS.length];
-  const hz  = Math.max(54, Math.min(432, masterFreq * (0.5 + Math.random())));
-  USER_OSCS.push({
-    label:'Osc '+(MASTER_IDX+n+1), color:col, waveform:'sine', muted:false,
-    attack:0.5, filterType:'none', filterFreq:1000,
-    pingala:{id:'u'+(n*2),   ri:0, n:1, baseFreq:hz, vol:.10},
-    ida:    {id:'u'+(n*2+1), delta:globalDelta, polarity:1, vol:.10},
-  });
-  buildBubbles();
-  if (flowing && masterGain) {
-    const up = USER_OSCS[n];
-    nodes[up.pingala.id] = buildOsc(up.pingala.id, hz, up.pingala.vol, -0.6);
-    nodes[up.ida.id]     = buildOsc(up.ida.id, hz+globalDelta, up.ida.vol, 0.6);
-  }
-}
-
-function synthRemoveOsc(globalIdx) {
-  if (globalIdx <= MASTER_IDX) return; // can't remove built-in pairs
-  const uIdx = globalIdx - MASTER_IDX - 1;
-  if (uIdx < 0 || uIdx >= USER_OSCS.length) return;
-  const p = USER_OSCS[uIdx];
-  [p.pingala.id, p.ida.id].forEach(id => {
-    const n = nodes[id]; if (!n) return;
-    if (n._supers) n._supers.forEach(s=>{try{s.o.stop();s.o.disconnect();s.g.disconnect();}catch(e){}});
-    try { n.o.stop(); n.o.disconnect(); n.g.disconnect(); } catch(e) {}
-    delete nodes[id];
-  });
-  USER_OSCS.splice(uIdx, 1);
-  buildBubbles();
-}
-
-// ─── _updateBinaPanel: now just refreshes bubble UI ─────────────────────
-function _updateBinaPanel() {
-  const gd = document.getElementById('bina-global-delta');
-  if (gd) gd.textContent = globalDelta.toFixed(2)+' Hz';
-  buildBubbles();
-}
-
-// Wire bubbles when tab is shown + on flow start/stop
-const _origShowTab = window.showTab;
-window.showTab = function(tabId, btn) {
-  _origShowTab && _origShowTab(tabId, btn);
-  if (tabId === 'bina') setTimeout(buildBubbles, 60);
-};
-
-// Rebuild bubbles after flow start/stop (state change)
-const _origStartFlow = window.startFlow;
-window.startFlow = async function() {
-  await _origStartFlow.apply(this, arguments);
-  setTimeout(updateAllBubbles, 800);
-};
-
-// ══════════════════════════════════════════════════════════════════════════
-// OmCv432 — Steps 2-6 : helpers Aléatoire / Binaural / Master
-// ══════════════════════════════════════════════════════════════════════════
-
-// ── State ─────────────────────────────────────────────────────────────────
-let _harmonicModeOn = true;
-let _randomFXOn     = true;
-let _prevDelta      = 1.8;    // sauvegarde pour toggle binaural on/off
-let _binauralActive = true;
-
-// ── Step 2 · Aléatoire helpers ────────────────────────────────────────────
-
-function _updateAleaPanel() {
-  const f  = masterFreq.toFixed(1);
-  const d  = globalDelta.toFixed(2);
-  const ws = waveState(globalDelta);
-  const set = (id, v, c) => { const e = document.getElementById(id); if(e){e.textContent=v; if(c)e.style.color=c;} };
-  set('alea-freq-display', f + ' Hz');
-  set('alea-master-hz',    f + ' Hz');
-  set('alea-delta-hz',     d + ' Hz');
-  set('alea-brain-wave',   ws.s, ws.c);
-  set('alea-wave-state',   'Ratio harmonique — ' + ws.s);
-  set('master-freq-display', f + ' Hz');
-  set('master-delta-val',  d + ' Hz');
-  // Compact pairs for Aléatoire tab
-  const cp = document.getElementById('alea-pairs-compact');
-  if (cp) {
-    cp.innerHTML = PAIRS.slice(0, MASTER_IDX).map((p, i) =>
-      p.label + ' · <b style="color:#86FFC0">' + calcPFreq(i).toFixed(0) + '</b> / ' +
-      (calcPFreq(i) + p.ida.polarity * globalDelta).toFixed(0) + ' Hz'
-    ).join('<br>');
-  }
-}
-
-function aleaToggleFlow() {
-  const btn = document.getElementById('alea-play-btn');
-  if (flowing) {
-    stopFlow();
-    if (btn) { btn.textContent = '▶ Lancer'; btn.classList.remove('active'); }
-  } else {
-    if (_randomFXOn) aleaApplyRandomFX();
-    startFlow();
-    if (btn) { btn.textContent = '■ Stop'; btn.classList.add('active'); }
-    _updateAleaPanel();
-  }
-}
-
-function aleaNewFreq() {
-  harmonicRandomInit();
-  _updateAleaPanel();
-  _updateBinaPanel();
-  if (flowing) {
-    PAIRS.forEach((p, i) => {
-      const np = nodes[p.pingala.id]; if (np) np.o.frequency.setTargetAtTime(calcPFreq(i), aNow()+TUNE_T, TUNE_T);
-      if (i < MASTER_IDX) {
-        const ni = nodes[p.ida.id]; if (ni) ni.o.frequency.setTargetAtTime(calcIFreq(i), aNow()+TUNE_T, TUNE_T);
-      }
-    });
-  }
-}
-
-const _FX_SPACES  = ['sec','grotte','cathedrale','cosmos'];
-const _FX_SPACE_WET = {sec:0, grotte:0.25, cathedrale:0.45, cosmos:0.65};
-
-function aleaApplyRandomFX() {
-  if (!eqLow) return; // FX chain not initialized yet
-  const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
-
-  // Reverb
-  const space = _FX_SPACES[Math.floor(Math.random() * _FX_SPACES.length)];
-  const rvbWet = _FX_SPACE_WET[space] + rnd(-0.05, 0.05);
-  setReverbSpace(space).catch(()=>{});
-  const rwEl = document.getElementById('reverbWet');
-  if (rwEl) { rwEl.value = rvbWet.toFixed(2); updateFX('reverbWet', rvbWet); }
-
-  // Delay
-  const dTime = rnd(0.12, 0.45), dFb = rnd(0.2, 0.5), dWet = rnd(0.0, 0.3);
-  [['delayTime', dTime], ['delayFeedback', dFb], ['delayWet', dWet]].forEach(([id, v]) => {
-    const el = document.getElementById(id); if (el) { el.value = v; updateFX(id, v); }
-  });
-
-  // Ping-pong
-  const ppT = rnd(0.1, 0.35), ppF = rnd(0.2, 0.45), ppW = rnd(0.0, 0.25);
-  [['ppTime', ppT], ['ppFeedback', ppF], ['ppWet', ppW]].forEach(([id, v]) => {
-    const el = document.getElementById(id); if (el) { el.value = v; updateFX(id, v); }
-  });
-
-  // LFO tremolo ON, rate/depth random
-  const lfoRate = rnd(0.04, 0.4), lfoDepth = rnd(0.03, 0.12);
-  const lfoOnEl = document.getElementById('lfo-on');
-  if (lfoOnEl && !lfoOnEl.checked) { lfoOnEl.checked = true; if(typeof lfoToggle==='function') lfoToggle(true); }
-  const lrEl = document.getElementById('lfo-rate'), ldEl = document.getElementById('lfo-depth');
-  if (lrEl) { lrEl.value = lfoRate; if(typeof lfoSetRate==='function') lfoSetRate(lfoRate); }
-  if (ldEl) { ldEl.value = lfoDepth; if(typeof lfoSetDepth==='function') lfoSetDepth(lfoDepth); }
-
-  // EQ subtle randomization
-  const mEqLowGain  = rnd(-3, 3), mEqMidGain = rnd(-4, 4), mEqHighGain = rnd(-3, 3);
-  [['m-eq-low', mEqLowGain], ['m-eq-mid', mEqMidGain], ['m-eq-high', mEqHighGain]].forEach(([id, v]) => {
-    const el = document.getElementById(id);
-    if (el) { el.value = v.toFixed(1); el.dispatchEvent(new Event('input')); }
-  });
-}
-
-function resetAllFX() {
-  // Reset sliders to neutral
-  const resets = [
-    ['reverbWet',0],['delayWet',0],['ppWet',0],
-    ['m-eq-low',0],['m-eq-mid',0],['m-eq-high',0],
-    ['m-trim',1],['m-fader',1],['m-glue',0],
-  ];
-  resets.forEach(([id, v]) => {
-    const el = document.getElementById(id);
-    if (el) { el.value = v; el.dispatchEvent(new Event('input')); }
-  });
-  const lfoOnEl = document.getElementById('lfo-on');
-  if (lfoOnEl && lfoOnEl.checked) { lfoOnEl.checked = false; if(typeof lfoToggle==='function') lfoToggle(false); }
-}
-
-// ── Step 3 · Binaural helpers ─────────────────────────────────────────────
-
-function _updateBinaPanel() {
-  const list = document.getElementById('bina-pairs-list');
-  const gd   = document.getElementById('bina-global-delta');
-  if (gd) gd.textContent = globalDelta.toFixed(2) + ' Hz';
-  if (!list) return;
-  list.innerHTML = PAIRS.map((p, i) => {
-    const pf  = calcPFreq(i).toFixed(1);
-    const idf = (calcPFreq(i) + p.ida.polarity * globalDelta).toFixed(1);
-    const col = p.color || '#86FFC0';
-    return `<div style="border-bottom:1px solid rgba(200,100,255,.1);padding:.55rem .2rem">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.3rem">
-        <span style="color:${col};font-weight:600">${p.label}</span>
-        <span style="font-family:'Share Tech Mono',monospace;color:rgba(220,200,255,.8)">${pf} / ${idf} Hz</span>
-      </div>
-      <div style="display:flex;gap:.3rem;flex-wrap:wrap">
-        ${[−54,−18,−9,9,18,54].map(d =>
-          `<button onclick="binaShiftPair(${i},${d})"
-            style="flex:1;min-width:36px;padding:.25rem .1rem;border-radius:8px;
-                   border:1px solid rgba(96,216,255,.28);background:rgba(96,216,255,.06);
-                   color:#60D8FF;font-size:.64rem;cursor:pointer;font-family:inherit">
-            ${d>0?'+':''}${d}</button>`
-        ).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function binaShiftPair(idx, dHz) {
-  const p = PAIRS[idx]; if (!p) return;
-  if (idx === MASTER_IDX) {
-    masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
-  } else {
-    p.pingala.baseFreq = Math.max(36, Math.min(432, p.pingala.baseFreq + dHz));
-  }
-  _updateBinaPanel();
-  _updateAleaPanel();
-  if (flowing) {
-    const np = nodes[p.pingala.id];
-    if (np) np.o.frequency.setTargetAtTime(calcPFreq(idx), aNow()+TUNE_T, TUNE_T);
-    if (idx < MASTER_IDX) {
-      const ni = nodes[p.ida.id];
-      if (ni) ni.o.frequency.setTargetAtTime(calcIFreq(idx), aNow()+TUNE_T, TUNE_T);
-    }
-  }
-}
-
-function binaNudge(dHz) {
-  globalDelta = Math.max(0.1, Math.min(54, globalDelta + dHz));
-  _prevDelta  = globalDelta;
-  _updateBinaPanel();
-  _updateAleaPanel();
-  if (flowing) {
-    PAIRS.forEach((p, i) => {
-      if (i === MASTER_IDX) return;
-      const ni = nodes[p.ida.id];
-      if (ni) ni.o.frequency.setTargetAtTime(calcIFreq(i), aNow()+TUNE_T, TUNE_T);
-    });
-  }
-}
-
-// ── Master helpers ─────────────────────────────────────────────────────────
-
-function masterNudge(dHz) {
-  masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
-  _updateAleaPanel();
-  _updateBinaPanel();
-  if (flowing) {
-    const np = nodes[PAIRS[MASTER_IDX].pingala.id];
-    if (np) np.o.frequency.setTargetAtTime(calcPFreq(MASTER_IDX), aNow()+TUNE_T, TUNE_T);
-  }
-}
-
-function masterVolChange(v) {
-  masterVol = parseFloat(v);
-  const el = document.getElementById('master-vol-val');
-  if (el) el.textContent = Math.round(masterVol * 100) + '%';
-  if (masterGain) masterGain.gain.setTargetAtTime(masterVol, aNow(), 0.05);
-}
-
-function masterToggleBinaural(on) {
-  _binauralActive = on;
-  if (on) {
-    globalDelta = _prevDelta || 1.8;
-  } else {
-    _prevDelta  = globalDelta;
-    globalDelta = 0;
-  }
-  _updateAleaPanel();
-  _updateBinaPanel();
-  if (flowing) binaNudge(0); // retune with new delta
-}
-
-// ── Step 6 · WAV Record ───────────────────────────────────────────────────
-
-let _mediaRecorder   = null;
-let _recordChunks    = [];
-let _recStreamDest   = null;
-
-function masterStartRecord() {
-  if (_mediaRecorder && _mediaRecorder.state !== 'inactive') return;
-  if (!flowing) {
-    const st = document.getElementById('rec-status');
-    if (st) st.textContent = '▲ Lancez le binaural d'abord !';
-    return;
-  }
-  try {
-    const c = audioCtx();
-    _recStreamDest = c.createMediaStreamDestination();
-    // Connect after limiter (post-FX capture)
-    if (limiter) limiter.connect(_recStreamDest);
-    else if (masterGain) masterGain.connect(_recStreamDest);
-
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus' : 'audio/webm';
-    _mediaRecorder = new MediaRecorder(_recStreamDest.stream, { mimeType });
-    _recordChunks  = [];
-    _mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _recordChunks.push(e.data); };
-    _mediaRecorder.onstop = () => {
-      const blob = new Blob(_recordChunks, { type: 'audio/webm' });
-      _downloadRecording(blob);
-      if (limiter && _recStreamDest) try { limiter.disconnect(_recStreamDest); } catch(e) {}
-      _recStreamDest = null;
-    };
-    _mediaRecorder.start(1000); // chunk toutes les 1 s
-
-    const st   = document.getElementById('rec-status');
-    const btnS = document.getElementById('rec-start-btn');
-    const btnP = document.getElementById('rec-stop-btn');
-    if (st)   st.textContent = '⏺ En cours…';
-    if (btnS) btnS.disabled = true;
-    if (btnP) { btnP.disabled = false; btnP.style.opacity = '1'; }
-  } catch(err) {
-    const st = document.getElementById('rec-status');
-    if (st) st.textContent = '✕ ' + (err.message || 'Erreur MediaRecorder');
-  }
-}
-
-function masterStopRecord() {
-  if (!_mediaRecorder || _mediaRecorder.state === 'inactive') return;
-  _mediaRecorder.stop();
-  const st   = document.getElementById('rec-status');
-  const btnS = document.getElementById('rec-start-btn');
-  const btnP = document.getElementById('rec-stop-btn');
-  if (st)   st.textContent = '✓ Sauvegardé';
-  if (btnS) btnS.disabled = false;
-  if (btnP) { btnP.disabled = true; btnP.style.opacity = '.4'; }
-}
-
-function _downloadRecording(blob) {
-  const d   = new Date();
-  const dd  = String(d.getDate()).padStart(2,'0');
-  const mm  = String(d.getMonth()+1).padStart(2,'0');
-  const yy  = String(d.getFullYear()).slice(-2);
-  const name = 'Record-binaural-' + dd + '-' + mm + '-' + yy + '.webm';
-  const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href = url; a.download = name;
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 2000);
-}
-
-// ── Step 6 · Sample import by category ───────────────────────────────────
-
-let _currentSampleCat = 'Voix';
-const _sampleStore = { Voix:[], Instruments:[], Drone:[], Ambiance:[], Chakra:[] };
-
-function masterImportSample(category) {
-  _currentSampleCat = category;
-  const fi = document.getElementById('sample-file-input');
-  if (fi) fi.click();
-}
-
-function masterHandleSampleFile(input) {
-  const files = Array.from(input.files || []);
-  if (!files.length) return;
-  const cat = _currentSampleCat;
-  files.forEach(f => {
-    const url = URL.createObjectURL(f);
-    _sampleStore[cat].push({ name: f.name, url, cat });
-  });
-  _renderSampleList();
-  input.value = '';
-}
-
-function _renderSampleList() {
-  const el = document.getElementById('sample-loaded-list');
-  if (!el) return;
-  const all = Object.entries(_sampleStore).flatMap(([cat, arr]) =>
-    arr.map(s => `<span style="color:rgba(200,180,255,.6)">[${cat}]</span> ${s.name}`)
-  );
-  el.innerHTML = all.length ? all.join('<br>') : '<em>Aucun sample chargé</em>';
-}
-
 
 // ── Panel navigation (tab-nav centré) ────────────────────────────
 let _openPanel = null;
@@ -5826,11 +4878,495 @@ function cosmicMasterFreq(){
   return Math.max(54,Math.min(486,Math.round(ut)));
 }
 
+/* ══ OmCv432 — Navigation 5 onglets + init harmonique ═══════════════════ */
+
+const HARMONIC_RATIOS = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 16/9, 2];
+let _aleaHarmonicMode = true;
+let _aleaRandomFX    = true;
+let _activeTab       = 'alea';
+let _mediaRecorder   = null;
+let _recChunks       = [];
+let _recActive       = false;
+
+// ── Init fréquence harmonique aléatoire (36–432 Hz) ──────────────────
+function harmonicRandomInit() {
+  const rootHz = 36 + Math.random() * (108 - 36);
+  const ratio  = HARMONIC_RATIOS[Math.floor(Math.random() * HARMONIC_RATIOS.length)];
+  const target = Math.min(432, Math.max(36, rootHz * ratio));
+  const scale  = target / (masterFreq || 252);
+  masterFreq   = target;
+  PAIRS.forEach((p, i) => {
+    if (i === MASTER_IDX) return;
+    p.pingala.baseFreq = Math.max(36, Math.min(432, p.pingala.baseFreq * scale));
+  });
+}
+
+// ── Gestion onglets ────────────────────────────────────────────────────
+function showTab(tabId, btn) {
+  // Désactiver tous les boutons nav
+  document.querySelectorAll('#bottom-nav .bnav').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  // Fermer les anciens panels d'onglets et les pan-right
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('open'));
+  closePanel(); // ferme panFX / pan3D existants
+
+  _activeTab = tabId;
+
+  if (tabId === 'alea') {
+    document.getElementById('panAlea').classList.add('open');
+    aleaUpdateDisplay();
+  } else if (tabId === 'bina') {
+    document.getElementById('panBina').classList.add('open');
+    buildBinaPanel();
+  } else if (tabId === '3d') {
+    // Ouvre le panel 3D existant (pan-right)
+    tPanel('pan3D', null);
+  } else if (tabId === 'fx') {
+    tPanel('panFX', null);
+  } else if (tabId === 'master') {
+    document.getElementById('panMaster').classList.add('open');
+    masterUpdateDisplay();
+  }
+}
+
+// ── Onglet Aléatoire ──────────────────────────────────────────────────
+function aleaUpdateDisplay() {
+  const el = document.getElementById('alea-freq-display');
+  if (el) el.textContent = masterFreq.toFixed(1) + ' Hz';
+}
+
+function aleaToggleHarmonic(btn) {
+  _aleaHarmonicMode = !_aleaHarmonicMode;
+  btn.textContent = _aleaHarmonicMode ? 'ON' : 'OFF';
+  btn.className   = 'tp-toggle' + (_aleaHarmonicMode ? ' on' : '');
+}
+
+function aleaToggleRandomFX(btn) {
+  _aleaRandomFX = !_aleaRandomFX;
+  btn.textContent = _aleaRandomFX ? 'ON' : 'OFF';
+  btn.className   = 'tp-toggle' + (_aleaRandomFX ? ' on' : '');
+}
+
+function aleaNewFreq() {
+  harmonicRandomInit();
+  if (typeof applyRandomFreqRatios === 'function') applyRandomFreqRatios();
+  if (flowing) {
+    PAIRS.forEach((p, i) => {
+      const n = nodes[p.pingala.id];
+      const m = nodes[p.ida.id];
+      if (n) n.o.frequency.setTargetAtTime(calcPFreq(i), aNow() + TUNE_T, TUNE_T);
+      if (m) m.o.frequency.setTargetAtTime(calcIFreq(i), aNow() + TUNE_T, TUNE_T);
+    });
+  }
+  if (_aleaRandomFX && typeof aleaApplyRandomFX === 'function') aleaApplyRandomFX();
+  aleaUpdateDisplay();
+  masterUpdateDisplay();
+}
+
+// ── Onglet Binaural — Synth Studio (bulles) + liste fréquences ────────
+function buildBinaPanel() {
+  const body = document.getElementById('panBina-body');
+  if (!body) return;
+  body.innerHTML =
+    '<div class="synth-field" id="synth-field"></div>' +
+    '<button class="synth-add-btn" onclick="synthAddOsc()">＋ Ajouter un oscillateur</button>' +
+    PAIRS.map((p, i) => `
+    <div class="bina-pair">
+      <div class="bina-dot" style="background:${p.color}"></div>
+      <span class="bina-label">${i === MASTER_IDX ? 'Maître' : p.label}</span>
+      <span class="bina-freqs">${calcPFreq(i).toFixed(1)} / ${calcIFreq(i).toFixed(1)} Hz</span>
+      <div class="bina-btns">
+        <button class="bina-btn" onclick="binaShift(${i},-9)">−9</button>
+        <button class="bina-btn" onclick="binaShift(${i},-18)">−18</button>
+        <button class="bina-btn" onclick="binaRand(${i})">↺</button>
+        <button class="bina-btn" onclick="binaShift(${i},18)">+18</button>
+        <button class="bina-btn" onclick="binaShift(${i},9)">+9</button>
+      </div>
+    </div>`).join('');
+  requestAnimationFrame(buildBubbles);
+}
+
+/* ══ OmCv432 — Synth Studio : moteur bulles + formes d'onde ════════════ */
+const WAVEFORMS = [
+  { id:'sine',     label:'SINE'     },
+  { id:'sawtooth', label:'SAW'      },
+  { id:'square',   label:'SQUARE'   },
+  { id:'triangle', label:'TRI'      },
+  { id:'supersaw', label:'SUPERSAW' },
+  { id:'pulse',    label:'PULSE'    },
+  { id:'bell',     label:'BELL'     },
+  { id:'spreadoct',label:'SPRD OCT' },
+];
+const SUPERSAW_DETUNE = [-20,-12,-5,5,12,20];
+PAIRS.forEach(p => { if(!p.waveform) p.waveform='sine'; });
+
+let _sheetIdx = -1, _qmIdx = -1, _longTapTimer = null, _longTapped = false;
+
+function buildBubbles() {
+  const field = document.getElementById('synth-field');
+  if (!field) return;
+  field.innerHTML = '';
+  const W = field.offsetWidth || 320, H = field.offsetHeight || 264;
+  const cx = W/2, cy = H/2;
+  const R  = Math.min(W,H) * 0.37;
+  PAIRS.forEach((p, i) => {
+    let x, y, size;
+    if (i === MASTER_IDX) { x = cx; y = cy; size = 74; }
+    else {
+      const ang = (i*60 - 90) * Math.PI/180;
+      x = cx + R*Math.cos(ang); y = cy + R*Math.sin(ang); size = 58;
+    }
+    const col = p.color || '#86FFC0';
+    const div = document.createElement('div');
+    div.className = 'synth-bubble' + (i===MASTER_IDX?' master':'')
+      + (flowing && nodes[p.pingala.id] ? ' playing':'')
+      + (mutedOscs[p.pingala.id] ? ' muted':'');
+    div.style.cssText =
+      'left:'+(x-size/2).toFixed(1)+'px;top:'+(y-size/2).toFixed(1)+'px;'+
+      'width:'+size+'px;height:'+size+'px;--bc:'+col+';'+
+      'background:radial-gradient(circle at 38% 33%,'+col+'33,'+col+'0d);'+
+      'border-color:'+col+';color:'+col+';';
+    const wave = (p.waveform||'sine').toUpperCase().slice(0,5);
+    div.innerHTML = '<span class="sb-wave">'+wave+'</span>'+
+                    '<span class="sb-freq">'+calcPFreq(i).toFixed(0)+'</span>';
+    // tap court → feuille | long tap → menu rapide
+    div.addEventListener('pointerdown', ev => {
+      _longTapped = false;
+      _longTapTimer = setTimeout(() => { _longTapped = true; openQuickMenu(i); }, 420);
+    });
+    const cancel = () => { if(_longTapTimer){clearTimeout(_longTapTimer);_longTapTimer=null;} };
+    div.addEventListener('pointerup', ev => {
+      cancel(); if (!_longTapped) openOscSheet(i);
+    });
+    div.addEventListener('pointercancel', cancel);
+    div.addEventListener('pointermove', cancel);
+    field.appendChild(div);
+  });
+}
+
+// ── Feuille oscillateur ──────────────────────────────────────────────
+function openOscSheet(i) {
+  _sheetIdx = i;
+  const p = PAIRS[i];
+  document.getElementById('osc-sheet-title').textContent =
+    (i===MASTER_IDX ? '★ Maître' : '〰 ' + p.label) + ' — ' + calcPFreq(i).toFixed(1) + ' Hz';
+  const body = document.getElementById('osc-sheet-body');
+  const wave = p.waveform || 'sine';
+  body.innerHTML =
+    '<div class="osc-wave-grid">' +
+      WAVEFORMS.map(w => '<button class="osc-wave-btn'+(w.id===wave?' on':'')+
+        '" onclick="oscSetWave('+i+',\''+w.id+'\')">'+w.label+'</button>').join('') +
+    '</div>' +
+    '<div class="osc-slider-row"><label>Volume <span id="osc-vv">'+(p.pingala.vol*100).toFixed(0)+'%</span></label>' +
+      '<input type="range" min="0" max="0.4" step="0.005" value="'+p.pingala.vol+'" oninput="oscSetVol('+i+',this.value)"></div>' +
+    '<div class="osc-slider-row"><label>Delta binaural <span id="osc-dv">'+p.ida.delta.toFixed(1)+' Hz</span></label>' +
+      '<input type="range" min="0.1" max="36" step="0.1" value="'+p.ida.delta+'" oninput="oscSetDelta('+i+',this.value)"></div>' +
+    '<div class="osc-sheet-btns">' +
+      '<button class="osc-act-btn" onclick="binaShift('+i+',-9);openOscSheet('+i+')">−9 Hz</button>' +
+      '<button class="osc-act-btn" onclick="binaShift('+i+',9);openOscSheet('+i+')">+9 Hz</button>' +
+      '<button class="osc-act-btn" onclick="binaRand('+i+');openOscSheet('+i+')">🎲 Random</button>' +
+    '</div>' +
+    '<div class="osc-sheet-btns">' +
+      '<button class="osc-act-btn mute" onclick="oscToggleMute('+i+')">'+(mutedOscs[p.pingala.id]?'▶ Activer':'🔇 Mute')+'</button>' +
+      '<button class="osc-act-btn render" onclick="oscRenderSample('+i+')">⬇ Créer sample WAV</button>' +
+    '</div>';
+  document.getElementById('osc-sheet').classList.add('open');
+  document.getElementById('osc-sheet-bd').classList.add('on');
+}
+function closeOscSheet() {
+  document.getElementById('osc-sheet').classList.remove('open');
+  document.getElementById('osc-sheet-bd').classList.remove('on');
+  _sheetIdx = -1;
+}
+
+function oscSetVol(i, v) {
+  v = parseFloat(v); PAIRS[i].pingala.vol = v; PAIRS[i].ida.vol = v;
+  const el = document.getElementById('osc-vv'); if (el) el.textContent = (v*100).toFixed(0)+'%';
+  if (flowing) {
+    const np = nodes[PAIRS[i].pingala.id], ni = nodes[PAIRS[i].ida.id];
+    if (np && !mutedOscs[PAIRS[i].pingala.id]) safeRamp(np.g.gain, v, 0.2);
+    if (ni && !mutedOscs[PAIRS[i].ida.id])     safeRamp(ni.g.gain, v, 0.2);
+  }
+}
+function oscSetDelta(i, v) {
+  v = parseFloat(v); PAIRS[i].ida.delta = v;
+  const el = document.getElementById('osc-dv'); if (el) el.textContent = v.toFixed(1)+' Hz';
+  if (flowing) tuneOsc(PAIRS[i].ida.id, calcIFreq(i));
+  buildBubbles();
+}
+function oscToggleMute(i) {
+  const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+  const m = !mutedOscs[pid]; mutedOscs[pid] = m; mutedOscs[iid] = m;
+  const np = nodes[pid], ni = nodes[iid];
+  if (np) safeRamp(np.g.gain, m?0:PAIRS[i].pingala.vol, 0.3);
+  if (ni) safeRamp(ni.g.gain, m?0:PAIRS[i].ida.vol, 0.3);
+  openOscSheet(i); buildBubbles();
+}
+
+// ── Formes d'onde (vrai synthé) ──────────────────────────────────────
+function _clearSupers(n){ if(n && n._supers){ n._supers.forEach(s=>{try{s.o.stop();s.o.disconnect();}catch(e){}}); n._supers=[]; } }
+function oscSetWave(i, wave) {
+  PAIRS[i].waveform = wave;
+  [PAIRS[i].pingala.id, PAIRS[i].ida.id].forEach(id => {
+    const n = nodes[id]; if (!n) return;
+    _clearSupers(n);
+    if (wave === 'supersaw') {
+      n.o.type = 'sawtooth';
+      n._supers = SUPERSAW_DETUNE.map(dt => {
+        const o = AC.createOscillator(); o.type='sawtooth';
+        o.frequency.value = n.o.frequency.value; o.detune.value = dt;
+        const g = AC.createGain(); g.gain.value = 0.5/SUPERSAW_DETUNE.length;
+        o.connect(g); g.connect(n.g); o.start(); return {o,g};
+      });
+    } else if (wave === 'pulse') {
+      const nH=24, d=0.25, real=new Float32Array(nH), imag=new Float32Array(nH);
+      for(let k=1;k<nH;k++) real[k]=(2/(k*Math.PI))*Math.sin(k*Math.PI*d);
+      try { n.o.setPeriodicWave(AC.createPeriodicWave(real,imag)); } catch(e){ n.o.type='square'; }
+    } else if (wave === 'bell') {
+      n.o.type='sine';
+      const mod=AC.createOscillator(); mod.type='sine'; mod.frequency.value=n.o.frequency.value*2.76;
+      const mg=AC.createGain(); mg.gain.value=n.o.frequency.value*1.4;
+      mod.connect(mg); mg.connect(n.o.frequency); mod.start();
+      n._supers=[{o:mod,g:mg}];
+    } else if (wave === 'spreadoct') {
+      n.o.type='sine';
+      const o=AC.createOscillator(); o.type='sine'; o.frequency.value=n.o.frequency.value*2;
+      const g=AC.createGain(); g.gain.value=0.45; o.connect(g); g.connect(n.g); o.start();
+      n._supers=[{o,g}];
+    } else {
+      try { n.o.type = wave; } catch(e) {}
+    }
+  });
+  openOscSheet(i); buildBubbles();
+}
+
+// ── Render oscillateur → sample WAV ──────────────────────────────────
+async function oscRenderSample(i) {
+  const p = PAIRS[i], dur = 3.0;
+  try {
+    const oc = new OfflineAudioContext(2, Math.round(44100*dur), 44100);
+    const wave = p.waveform || 'sine';
+    [[calcPFreq(i), -0.6, p.pingala.vol],[calcIFreq(i), 0.6, p.ida.vol]].forEach(([f,pan,vol]) => {
+      const g = oc.createGain();
+      g.gain.setValueAtTime(0,0); g.gain.linearRampToValueAtTime(vol*2.2,0.05); g.gain.setTargetAtTime(0,dur-0.4,0.12);
+      const pp = oc.createStereoPanner(); pp.pan.value = pan; g.connect(pp); pp.connect(oc.destination);
+      const t = (wave==='supersaw'||wave==='pulse'||wave==='bell'||wave==='spreadoct') ? 'sawtooth' : wave;
+      const o = oc.createOscillator(); o.type = (wave==='pulse'?'square':(wave==='bell'||wave==='spreadoct'?'sine':t));
+      o.frequency.value = f; o.connect(g); o.start(0); o.stop(dur);
+      if (wave==='supersaw') SUPERSAW_DETUNE.forEach(dt=>{ const os=oc.createOscillator();os.type='sawtooth';os.frequency.value=f;os.detune.value=dt;const gs=oc.createGain();gs.gain.value=vol*1.1/SUPERSAW_DETUNE.length;os.connect(gs);gs.connect(pp);os.start(0);os.stop(dur);});
+      if (wave==='spreadoct'){ const o2=oc.createOscillator();o2.type='sine';o2.frequency.value=f*2;const g2=oc.createGain();g2.gain.value=vol;o2.connect(g2);g2.connect(pp);o2.start(0);o2.stop(dur);}
+    });
+    const buf = await oc.startRendering();
+    _downloadWav(_bufToWav(buf), 'OmCv432-'+(p.label||'osc').replace(/[^a-z0-9]/gi,'-')+'-'+calcPFreq(i).toFixed(0)+'Hz.wav');
+    ui('info', 'Sample WAV créé');
+  } catch(e) { ui('error', 'Render impossible : '+e.message); }
+}
+function _bufToWav(buf) {
+  const nc=buf.numberOfChannels, sr=buf.sampleRate, len=buf.length;
+  const il=new Float32Array(len*nc);
+  for(let c=0;c<nc;c++){const ch=buf.getChannelData(c);for(let s=0;s<len;s++)il[s*nc+c]=ch[s];}
+  const pcm=new Int16Array(il.length);
+  for(let i=0;i<il.length;i++)pcm[i]=Math.max(-32768,Math.min(32767,il[i]*32767));
+  const dv=new DataView(new ArrayBuffer(44+pcm.byteLength));
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');dv.setUint32(4,36+pcm.byteLength,true);ws(8,'WAVE');ws(12,'fmt ');
+  dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,nc,true);
+  dv.setUint32(24,sr,true);dv.setUint32(28,sr*nc*2,true);dv.setUint16(32,nc*2,true);
+  dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,pcm.byteLength,true);
+  new Int16Array(dv.buffer,44).set(pcm);
+  return new Blob([dv.buffer],{type:'audio/wav'});
+}
+function _downloadWav(blob, name) {
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},3000);
+}
+
+// ── Menu rapide (long tap) ───────────────────────────────────────────
+function openQuickMenu(i) {
+  _qmIdx = i;
+  document.getElementById('qm-title').textContent = i===MASTER_IDX ? '★ Maître' : PAIRS[i].label;
+  document.getElementById('synth-qm').classList.add('open');
+  document.getElementById('synth-qm-bd').classList.add('on');
+}
+function closeQuickMenu() {
+  document.getElementById('synth-qm').classList.remove('open');
+  document.getElementById('synth-qm-bd').classList.remove('on');
+}
+function qmAction(act) {
+  const i = _qmIdx; closeQuickMenu(); if (i < 0) return;
+  const d = { m9:-9, m18:-18, m36:-36, p9:9, p18:18, p36:36 };
+  if (d[act] !== undefined) binaShift(i, d[act]);
+  else if (act === 'rand')   binaRand(i);
+  else if (act === 'randfx') aleaApplyRandomFX();
+  else if (act === 'mute')   oscToggleMute(i);
+  buildBubbles();
+}
+
+// ── Ajout d'oscillateur (placeholder évolutif) ───────────────────────
+function synthAddOsc() {
+  ui('info', 'Ajout d\'oscillateur — module synthé étendu à venir');
+}
+
+function binaShift(i, dHz) {
+  if (i === MASTER_IDX) {
+    masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
+  } else {
+    PAIRS[i].pingala.baseFreq = Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq + dHz));
+  }
+  if (flowing) {
+    const n = nodes[PAIRS[i].pingala.id];
+    const m = nodes[PAIRS[i].ida.id];
+    if (n) n.o.frequency.setTargetAtTime(calcPFreq(i), aNow() + TUNE_T, TUNE_T);
+    if (m) m.o.frequency.setTargetAtTime(calcIFreq(i), aNow() + TUNE_T, TUNE_T);
+  }
+  buildBinaPanel();
+}
+
+function binaRand(i) {
+  const r = RATIO_OPTS[Math.floor(Math.random() * RATIO_OPTS.length)];
+  if (i === MASTER_IDX) {
+    masterFreq = Math.max(36, Math.min(432, masterFreq * r.r));
+  } else {
+    PAIRS[i].pingala.baseFreq = Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq * r.r));
+  }
+  if (flowing) {
+    const n = nodes[PAIRS[i].pingala.id];
+    const m = nodes[PAIRS[i].ida.id];
+    if (n) n.o.frequency.setTargetAtTime(calcPFreq(i), aNow() + TUNE_T, TUNE_T);
+    if (m) m.o.frequency.setTargetAtTime(calcIFreq(i), aNow() + TUNE_T, TUNE_T);
+  }
+  buildBinaPanel();
+}
+
+// ── Onglet Master ─────────────────────────────────────────────────────
+function masterUpdateDisplay() {
+  const el = document.getElementById('master-freq-display');
+  if (el) el.textContent = masterFreq.toFixed(1) + ' Hz';
+}
+
+function masterNudge(dHz) {
+  masterFreq = Math.max(36, Math.min(432, masterFreq + dHz));
+  if (flowing) {
+    const n = nodes[PAIRS[MASTER_IDX].pingala.id];
+    const m = nodes[PAIRS[MASTER_IDX].ida.id];
+    if (n) n.o.frequency.setTargetAtTime(calcPFreq(MASTER_IDX), aNow() + TUNE_T, TUNE_T);
+    if (m) m.o.frequency.setTargetAtTime(calcIFreq(MASTER_IDX), aNow() + TUNE_T, TUNE_T);
+  }
+  masterUpdateDisplay();
+  updateInfobar();
+}
+
+/* ══ OmCv432 — Banque de samples (5 catégories) ═══════════════════════ */
+const SAMPLE_CATS = {
+  voix:        { label:'🎤 Voix',        items:[] },
+  instruments: { label:'🎸 Instruments', items:[] },
+  drone:       { label:'🌊 Drone',       items:[] },
+  ambiance:    { label:'🌿 Ambiance',    items:[] },
+  chakra:      { label:'☯ Chakra',       items:[] },
+};
+let _sampleSource = null, _sampleGain = null, _sampleCurCat = null;
+
+function sampleOpenCat(cat) {
+  _sampleCurCat = cat;
+  const c = SAMPLE_CATS[cat]; if (!c) return;
+  document.getElementById('osc-sheet-title').textContent = c.label + ' — samples';
+  const body = document.getElementById('osc-sheet-body');
+  const list = c.items.length
+    ? c.items.map((it,k)=>'<button class="osc-act-btn" style="flex:1 1 100%" onclick="samplePlay(\''+cat+'\','+k+')">▶ '+it.name+'</button>').join('')
+    : '<div style="text-align:center;color:rgba(200,190,255,.4);font-size:.72rem;padding:.6rem">Aucun sample — importez un fichier audio</div>';
+  body.innerHTML =
+    '<div class="osc-sheet-btns" style="flex-direction:column">'+ list +'</div>'+
+    '<div class="osc-sheet-btns">'+
+      '<button class="osc-act-btn render" onclick="document.getElementById(\'sample-import\').click()">⬆ Importer un audio</button>'+
+      '<button class="osc-act-btn mute" onclick="sampleStop()">■ Stop sample</button>'+
+    '</div>'+
+    '<input type="file" id="sample-import" accept="audio/*" style="display:none" onchange="sampleImport(event)">'+
+    '<div class="osc-slider-row" style="margin-top:.7rem"><label>Volume sample <span id="smp-vv">70%</span></label>'+
+      '<input type="range" min="0" max="1" step="0.01" value="0.7" oninput="sampleSetVol(this.value)"></div>';
+  document.getElementById('osc-sheet').classList.add('open');
+  document.getElementById('osc-sheet-bd').classList.add('on');
+}
+
+function sampleImport(ev) {
+  const f = ev.target.files && ev.target.files[0]; if (!f || !_sampleCurCat) return;
+  const url = URL.createObjectURL(f);
+  SAMPLE_CATS[_sampleCurCat].items.push({ name: f.name.slice(0,24), url });
+  sampleOpenCat(_sampleCurCat);
+}
+
+async function samplePlay(cat, k) {
+  const it = SAMPLE_CATS[cat] && SAMPLE_CATS[cat].items[k]; if (!it) return;
+  try {
+    sampleStop();
+    const c = audioCtx();
+    const resp = await fetch(it.url); const ab = await resp.arrayBuffer();
+    const buf = await c.decodeAudioData(ab);
+    _sampleSource = c.createBufferSource(); _sampleSource.buffer = buf; _sampleSource.loop = true;
+    _sampleGain = c.createGain(); _sampleGain.gain.value = 0.7;
+    _sampleSource.connect(_sampleGain);
+    // post-master : passe par le limiteur si dispo, sinon destination
+    if (typeof limiter !== 'undefined' && limiter) _sampleGain.connect(limiter);
+    else _sampleGain.connect(c.destination);
+    _sampleSource.start();
+    ui('info', 'Sample en lecture (loop)');
+  } catch(e) { ui('error', 'Lecture impossible : '+e.message); }
+}
+function sampleStop() {
+  if (_sampleSource) { try{_sampleSource.stop();_sampleSource.disconnect();}catch(e){} _sampleSource=null; }
+  if (_sampleGain)   { try{_sampleGain.disconnect();}catch(e){} _sampleGain=null; }
+}
+function sampleSetVol(v) {
+  v = parseFloat(v);
+  const el = document.getElementById('smp-vv'); if (el) el.textContent = Math.round(v*100)+'%';
+  if (_sampleGain) _sampleGain.gain.setTargetAtTime(v, aNow(), 0.1);
+}
+
+// ── Enregistrement WAV (APK) ──────────────────────────────────────────
+async function recToggle() {
+  if (_recActive) {
+    _recActive = false;
+    if (_mediaRecorder && _mediaRecorder.state !== 'inactive') _mediaRecorder.stop();
+    const btn = document.getElementById('btn-record');
+    if (btn) { btn.textContent = '⏺ Enregistrer'; btn.style.borderColor = ''; btn.style.color = ''; }
+    return;
+  }
+  try {
+    if (!AC) { ui('error', 'Audio non démarré'); return; }
+    const dest = AC.createMediaStreamDestination();
+    limiter.connect(dest);
+    _recChunks = [];
+    _mediaRecorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+    _mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _recChunks.push(e.data); };
+    _mediaRecorder.onstop = () => {
+      limiter.disconnect(dest);
+      const blob = new Blob(_recChunks, { type: 'audio/webm' });
+      const now  = new Date();
+      const dd   = String(now.getDate()).padStart(2,'0');
+      const mm   = String(now.getMonth()+1).padStart(2,'0');
+      const yy   = String(now.getFullYear()).slice(-2);
+      const name = `Record binaural ${dd}-${mm}-${yy}.webm`;
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 3000);
+    };
+    _mediaRecorder.start(200);
+    _recActive = true;
+    const btn = document.getElementById('btn-record');
+    if (btn) { btn.textContent = '⏹ Stop REC'; btn.style.borderColor = '#FF6B6B'; btn.style.color = '#FF6B6B'; }
+  } catch(e) {
+    ui('error', 'Enregistrement impossible : ' + e.message);
+  }
+}
+
 function init() {
   loadState();
-  // Fréquence initiale aléatoire par ratio harmonique (36–432 Hz)
+  // Horloge cosmique (base) puis fréquence harmonique aléatoire (prioritaire à chaque ouverture)
+  try { masterFreq = cosmicMasterFreq(); } catch(e) {}
   harmonicRandomInit();
-  setTimeout(_updateAleaPanel, 100);
 
   // Inject FX panel
   const fxBody = document.getElementById('panel-fx-body');
@@ -5858,15 +5394,6 @@ function init() {
   // Init 3D geometry engine
   animMetatron();
   setGeometry(0); // Cube Métatron par défaut, taille max
-  // 3D defaults OmCv432 : Torus, densité 75%, rotation auto ON
-  setTimeout(() => {
-    fx3dSetForm('torus');
-    fx3dSet('density', 265, 'v3-density');
-    const ds = document.querySelector('input[oninput*="density"]');
-    if (ds) ds.value = 265;
-    const ck = document.querySelector('input[onchange*="autoRot"]');
-    if (ck) { ck.checked = true; if(typeof V!=='undefined') V.autoRot = true; }
-  }, 200);
 
   // Sync global delta
   setGlobalDelta(globalDelta);
@@ -5879,9 +5406,11 @@ function init() {
   // Infobar tick indépendant (1s)
   setInterval(updateInfobar, 1000);
 
-  // Build synth bubbles (Binaural tab)
-  setTimeout(buildBubbles, 150);
+  // 3D : rotation automatique aléatoire (sens + vitesse)
+  try { V.autoRot = true; V.spd = 0.6 + Math.random() * 1.0; V.try_ = (Math.random() < 0.5 ? 1 : -1) * 0.002; } catch(e) {}
   ui('idle', 'Prêt · Touchez la sphère pour rayonner');
+  // Ouvrir onglet Aléatoire par défaut
+  setTimeout(() => { const btn = document.getElementById('tab-alea'); showTab('alea', btn); }, 120);
 }
 
 // ── Patch affichage sphère — hooks updateDisplay / patchFBFState ──
@@ -6248,6 +5777,7 @@ if (typeof window !== 'undefined') window.Bowl = Bowl;
 </script>
 <script>
 window.FBF_MODULES = window.FBF_MODULES || [
+  {file:'fbf432/index.html', title:'FBF 432 \u2014 Binaural',         ico:'\u25c9'},
   {file:'theme432.html',     title:'Th\u00e8me 432 \u2014 Sph\u00e8re Omcha',   ico:'\u25cd'},
   {file:'utc432project.html',title:'UTC432 \u00b7 Project',            ico:'\u23e3'},
   {file:'omcha432flux.html', title:'Omcha 432 \u2014 Flux H\u00e9lico\u00efdal', ico:'\u223f'},
