@@ -22,34 +22,24 @@ function setRandRatioMode(m,btn){
 }
 function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
 
-// FX aléatoire — randomise delay, reverb, chorus, EQ
+// FX aléatoire — randomise delay, reverb, EQ
 function randomizeFX(){
-  // Sur mobile (WebView), la réverbe à convolution = le tueur de CPU → craquement.
-  // On la coupe et on modère delay/chorus. Desktop : palette FX complète.
-  const _mob = window.innerWidth<=900 || window.innerHeight<=500;
-  const delT=+(0.08+Math.random()*.9).toFixed(2);
-  const delFB=+(Math.random()*(_mob?.4:.65)).toFixed(2);
-  const delW=+(Math.random()*(_mob?.2:.4)).toFixed(2);
-  const revW=_mob?0:+(Math.random()*.6).toFixed(2);
-  const chrD=+(Math.random()*(_mob?.4:.7)).toFixed(2);
-  const eqLF=Math.round(50+Math.random()*300);
-  const eqLG=Math.round((Math.random()*16-8)*10)/10;
-  const eqMF=Math.round(300+Math.random()*3000);
-  const eqMG=Math.round((Math.random()*16-8)*10)/10;
-  const eqHF=Math.round(3000+Math.random()*9000);
-  const eqHG=Math.round((Math.random()*16-8)*10)/10;
+  const delT  = +(0.08 + Math.random() * 0.9).toFixed(2);
+  const delFB = +(Math.random() * 0.5).toFixed(2);
+  const delW  = +(Math.random() * 0.3).toFixed(2);
+  const revW  = +(Math.random() * 0.45).toFixed(2);
+  const eqLF  = Math.round(50  + Math.random() * 300);
+  const eqLG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  const eqMF  = Math.round(300 + Math.random() * 3000);
+  const eqMG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  const eqHF  = Math.round(3000 + Math.random() * 9000);
+  const eqHG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
   [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
    ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
    ['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
-    const sl=document.getElementById(id);if(sl)sl.value=val;
-    if(typeof updateFX==='function')updateFX(id,val);
+    const sl = document.getElementById(id); if (sl) sl.value = val;
+    if (typeof updateFX === 'function') updateFX(id, val);
   });
-  if(typeof chorus!=='undefined'&&chorus){
-    try{chorus.depth=chrD;}catch(e){}
-    const sl=document.getElementById('chorus-depth');if(sl)sl.value=chrD;
-    const vd=document.getElementById('chd-val');if(vd)vd.textContent=chrD.toFixed(2);
-    const ck=document.getElementById('chorus-on');if(ck&&!ck.checked)ck.checked=true;
-  }
 }
 
 function setN(i, raw) {

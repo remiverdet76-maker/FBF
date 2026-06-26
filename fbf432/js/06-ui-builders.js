@@ -353,22 +353,24 @@ function buildMasterFXHTML() {
       </div>
     </div>
 
-    <!-- ⑥ Chorus -->
+    <!-- ⑥ Ping-Pong Delay -->
     <div class="fx-block">
-      <div class="fx-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>⑥ Chorus / Ensemble</span>
-        <label class="fx-toggle"><input type="checkbox" id="chorus-on" onchange="setChorusDepth(this.checked?parseFloat(document.getElementById('chorus-depth').value):0)"><span class="fx-tog-track"></span></label>
-      </div>
+      <div class="fx-title">⑥ Ping-Pong Stéréo</div>
       <div class="fx-row">
         <div class="fx-control-group">
-          <span class="fx-label">Profond.</span>
-          <input type="range" class="fx-slider" id="chorus-depth" min="0" max="1" step="0.01" value="0.35" oninput="if(document.getElementById('chorus-on').checked)setChorusDepth(this.value);document.getElementById('chd-val').textContent=parseFloat(this.value).toFixed(2)">
-          <span class="fx-val-disp" id="chd-val">0.35</span>
+          <span class="fx-label">Temps</span>
+          <input type="range" class="fx-slider" id="ppTime" min="0.04" max="1.5" step="0.01" value="0.25" oninput="setPingPongTime(this.value);document.getElementById('ppTime-val').textContent=parseFloat(this.value).toFixed(2)+'s'">
+          <span class="fx-val-disp" id="ppTime-val">0.25s</span>
         </div>
         <div class="fx-control-group">
-          <span class="fx-label">Rythme</span>
-          <input type="range" class="fx-slider" id="chorus-rate" min="0.1" max="8" step="0.1" value="0.8" oninput="setChorusRate(this.value);document.getElementById('chr-val').textContent=parseFloat(this.value).toFixed(1)+'Hz'">
-          <span class="fx-val-disp" id="chr-val">0.8Hz</span>
+          <span class="fx-label">Feedback</span>
+          <input type="range" class="fx-slider" id="ppFb" min="0" max="0.85" step="0.01" value="0.35" oninput="setPingPongFb(this.value);document.getElementById('ppFb-val').textContent=Math.round(this.value*100)+'%'">
+          <span class="fx-val-disp" id="ppFb-val">35%</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Mix</span>
+          <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongWet(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
+          <span class="fx-val-disp" id="ppWet-val">0%</span>
         </div>
       </div>
     </div>
@@ -501,9 +503,9 @@ function updateFX(paramId, value) {
   else if(paramId==='eqHighFreq') { if(valDisp)valDisp.textContent=Math.round(v)+' Hz'; if(eqHigh)eqHigh.frequency.value=v; EQ_BANDS[2].freq=v; }
   else if(paramId==='eqHighGain') { if(valDisp)valDisp.textContent=v.toFixed(1)+' dB'; if(eqHigh)eqHigh.gain.value=v; EQ_BANDS[2].gain=v; }
   else if(paramId==='delayTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(masterDelay)masterDelay.delayTime.value=v;}catch(e){} }
-  else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelay)masterDelay.feedback.value=v;}catch(e){} }
-  else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterDelay)masterDelay.wet.value=v; }
-  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
+  else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelayFb)masterDelayFb.gain.setTargetAtTime(v,aNow(),.05);}catch(e){} }
+  else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(_fxRefs?.delayWet)_fxRefs.delayWet.gain.setTargetAtTime(v,aNow(),.05);}catch(e){} }
+  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(reverbWetGain)reverbWetGain.gain.setTargetAtTime(v,aNow(),.08); }
 }
 
 // ── updateMasterState ─────────────────────────────────────────────
@@ -672,6 +674,51 @@ function buildPairHTML(pair, i) {
       <span style="font-size:.7rem;color:rgba(200,170,255,.55);letter-spacing:.06em;">LFO doux</span>
       <button id="btn-lfo-${i}" onclick="toggleOscVolLFO(${i})"
         style="font-size:.68rem;padding:.18rem .5rem;background:transparent;border:1px solid ${c}44;color:${c}88;border-radius:6px;cursor:pointer;">〜 Activer</button>
+    </div>
+
+    <!-- Mini-synth : Waveform + Filter + FX Sends -->
+    <div style="margin-top:.55rem;padding:.5rem .55rem;background:rgba(0,0,0,.2);border-radius:8px;border:1px solid ${c}22;">
+      <div style="font-size:.64rem;letter-spacing:.12em;color:${c}88;text-transform:uppercase;margin-bottom:.4rem;">Forme d'onde</div>
+      <div style="display:flex;gap:.25rem;flex-wrap:wrap;">
+        ${['sine','sine2','triangle','square','sawtooth'].map(wt=>`<button
+          id="wbtn-p${i}-${wt}" onclick="(function(){setOscWave('${PAIRS[i].pingala.id}','${wt}');setOscWave('${PAIRS[i].ida.id}','${wt}');['sine','sine2','triangle','square','sawtooth'].forEach(w=>{const b=document.getElementById('wbtn-p${i}-'+w);if(b)b.style.background='';});this.style.background='${c}33';})()"
+          style="font-size:.65rem;padding:.2rem .45rem;background:${(OSC_WAVES[PAIRS[i].pingala.id]||'sine')===wt?c+'33':'transparent'};border:1px solid ${c}33;color:${c}aa;border-radius:5px;cursor:pointer;white-space:nowrap;">
+          ${{sine:'≈ Sin',sine2:'≈≈ Sin+',triangle:'△ Tri',square:'⊓ Sqr',sawtooth:'/ Saw'}[wt]}</button>`).join('')}
+      </div>
+      <div style="margin-top:.45rem;">
+        <div style="font-size:.64rem;letter-spacing:.12em;color:${c}88;text-transform:uppercase;margin-bottom:.3rem;">Filtre Passe-bas</div>
+        <div style="display:flex;align-items:center;gap:.4rem;">
+          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">Coupe</span>
+          <input type="range" class="brange" min="200" max="20000" step="100" value="${(OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff}"
+            style="flex:1;accent-color:${c};"
+            oninput="setOscFilter('${PAIRS[i].pingala.id}',this.value,null);setOscFilter('${PAIRS[i].ida.id}',this.value,null);this.nextElementSibling.textContent=Math.round(this.value)+'Hz'">
+          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:48px;text-align:right;">${(OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff >= 19900 ? '20k Hz' : Math.round((OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff)+'Hz'}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem;">
+          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">Rés.</span>
+          <input type="range" class="brange" min="0" max="20" step="0.5" value="${(OSC_FILTER[PAIRS[i].pingala.id]||{res:0}).res}"
+            style="flex:1;accent-color:${c}88;"
+            oninput="setOscFilter('${PAIRS[i].pingala.id}',null,this.value);setOscFilter('${PAIRS[i].ida.id}',null,this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(1)">
+          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:48px;text-align:right;">${(OSC_FILTER[PAIRS[i].pingala.id]||{res:0}).res.toFixed(1)}</span>
+        </div>
+      </div>
+      <div style="margin-top:.45rem;">
+        <div style="font-size:.64rem;letter-spacing:.12em;color:${c}88;text-transform:uppercase;margin-bottom:.3rem;">Envoi FX (DB4)</div>
+        <div style="display:flex;align-items:center;gap:.4rem;">
+          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">Rev</span>
+          <input type="range" class="brange" min="0" max="1" step="0.02" value="0"
+            style="flex:1;accent-color:${c};"
+            oninput="setOscReverbSend('${PAIRS[i].pingala.id}',this.value);setOscReverbSend('${PAIRS[i].ida.id}',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:32px;text-align:right;">0%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem;">
+          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">P-P</span>
+          <input type="range" class="brange" min="0" max="1" step="0.02" value="0"
+            style="flex:1;accent-color:${c}88;"
+            oninput="setOscPPSend('${PAIRS[i].pingala.id}',this.value);setOscPPSend('${PAIRS[i].ida.id}',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:32px;text-align:right;">0%</span>
+        </div>
+      </div>
     </div>
   </div>`;
 }

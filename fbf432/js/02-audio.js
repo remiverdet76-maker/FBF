@@ -22,9 +22,21 @@ let eqLow = null, eqMid = null, eqHigh = null;
 let masterDelay = null, masterDelayFb = null;
 let masterReverb = null, reverbWetGain = null, reverbDryGain = null;
 let pingPongDelay = null, ppL = null, ppR = null, ppFb = null, ppWet = null;
+let ppSendBus = null, reverbSendBus = null;
 let compressor = null;
 let busTrim = null, mEqLow = null, mEqMid = null, mEqHigh = null, masterGlue = null, masterFader = null;
 let _fxInput = null;
+let _stereo3D = false;
+// Positions 3D hexagonales [x, y, z] — listener au centre regardant +z
+const HEX_3D_POS = [
+  [ 0.9, 0, -0.4],  // Paire 1 → droite avant
+  [ 0.5, 0,  0.9],  // Paire 2 → droite arrière
+  [-0.5, 0,  0.9],  // Paire 3 → gauche arrière
+  [-0.9, 0, -0.4],  // Paire 4 → gauche avant
+  [-0.5, 0, -0.9],  // Paire 5 → gauche avant-proche
+  [ 0.5, 0, -0.9],  // Paire 6 → droite avant-proche
+  [ 0.0, 0,  0.0],  // Maître  → centre
+];
 const LFO_STATE    = {on:false, rate:.25,  depth:.08};
 const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
 let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
@@ -34,6 +46,8 @@ let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 let _waveBuf = null;
 let _spectroidBuf = null;
+const OSC_WAVES  = {}; // id → 'sine'|'triangle'|'square'|'sawtooth'|'sine2'
+const OSC_FILTER = {}; // id → {cutoff:Hz, res:Q}
 
 /* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
 let hiDelayBus = null;
@@ -69,17 +83,50 @@ function applyHiBand(node, freq) {
 }
 
 function buildOsc(id, freq, vol, pan) {
-  const c = audioCtx();
-  const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = safeF(freq);
-  const p = c.createStereoPanner(); p.pan.value = pan;
+  const c       = audioCtx();
+  const wType   = OSC_WAVES[id]  || 'sine';
+  const isSine2 = wType === 'sine2';
+  const fs      = OSC_FILTER[id] || { cutoff: 20000, res: 0 };
+
+  const o = c.createOscillator();
+  o.type = isSine2 ? 'sine' : wType;
+  o.frequency.value = safeF(freq);
+  if (isSine2) o.detune.value = -7;
+
+  const signalIn = c.createGain(); signalIn.gain.value = isSine2 ? 0.65 : 1;
+  o.connect(signalIn);
+
+  let o2 = null;
+  if (isSine2) {
+    o2 = c.createOscillator(); o2.type = 'sine';
+    o2.frequency.value = safeF(freq); o2.detune.value = +7;
+    const o2g = c.createGain(); o2g.gain.value = 0.65;
+    o2.connect(o2g); o2g.connect(signalIn);
+    o2.start();
+  }
+
+  const p   = c.createStereoPanner(); p.pan.value = pan;
   const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
-  const g = c.createGain(); g.gain.value = 0;
+  const flt = c.createBiquadFilter(); flt.type = 'lowpass';
+  flt.frequency.value = Math.max(20, Math.min(20000, fs.cutoff));
+  flt.Q.value = Math.max(0, Math.min(30, fs.res));
+  const g      = c.createGain(); g.gain.value = 0;
   const hiTrim = c.createGain(); hiTrim.gain.value = 1;
-  o.connect(p); p.connect(hpf); hpf.connect(g); g.connect(hiTrim); hiTrim.connect(masterGain);
-  const dSend = c.createGain(); dSend.gain.value = 0; hiTrim.connect(dSend);
+
+  signalIn.connect(p); p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
+  hiTrim.connect(masterGain);
+
+  const dSend = c.createGain(); dSend.gain.value = 0;
+  hiTrim.connect(dSend);
   const bus = ensureHiDelay(); if (bus) dSend.connect(bus);
+
+  const rSend  = c.createGain(); rSend.gain.value  = 0; hiTrim.connect(rSend);
+  const ppSend = c.createGain(); ppSend.gain.value = 0; hiTrim.connect(ppSend);
+  if (reverbSendBus) rSend.connect(reverbSendBus);
+  if (ppSendBus)     ppSend.connect(ppSendBus);
+
   o.start();
-  const node = { o, g, p, hpf, hiTrim, dSend };
+  const node = { o, o2, signalIn, g, p, hpf, flt, hiTrim, dSend, rSend, ppSend };
   applyHiBand(node, safeF(freq));
   if (!mutedOscs[id] && vol > 0) {
     const now = c.currentTime;
@@ -97,6 +144,11 @@ function tuneOsc(id, freq) {
     node.o.frequency.cancelScheduledValues(now);
     node.o.frequency.setValueAtTime(node.o.frequency.value, now);
     node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
+    if (node.o2) {
+      node.o2.frequency.cancelScheduledValues(now);
+      node.o2.frequency.setValueAtTime(node.o2.frequency.value, now);
+      node.o2.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
+    }
     applyHiBand(node, f);
   } catch(e) {}
 }
@@ -108,13 +160,19 @@ function releaseOsc(node) {
     node.g.gain.setValueAtTime(node.g.gain.value, now);
     node.g.gain.setTargetAtTime(0, now, FADE / 5);
     node.o.stop(now + FADE + 0.1);
+    if (node.o2) try { node.o2.stop(now + FADE + 0.1); } catch(e) {}
   } catch(e) {}
   setTimeout(() => {
     try {
       node.o.disconnect(); node.g.disconnect(); node.p.disconnect();
-      if (node.hpf)    node.hpf.disconnect();
-      if (node.hiTrim) node.hiTrim.disconnect();
-      if (node.dSend)  node.dSend.disconnect();
+      if (node.o2)      node.o2.disconnect();
+      if (node.signalIn) node.signalIn.disconnect();
+      if (node.hpf)     node.hpf.disconnect();
+      if (node.flt)     node.flt.disconnect();
+      if (node.hiTrim)  node.hiTrim.disconnect();
+      if (node.dSend)   node.dSend.disconnect();
+      if (node.rSend)   node.rSend.disconnect();
+      if (node.ppSend)  node.ppSend.disconnect();
     } catch(e){}
   }, (FADE + 0.4) * 1000);
 }
@@ -167,15 +225,29 @@ function _applyAntiCrack() {
 /* ---------- 2.3 · IR DE RÉVERBE GÉNÉRÉE PAR CODE ---------- */
 function _makeIR(decay, preDelay) {
   const c = audioCtx(), sr = c.sampleRate;
-  const len = Math.max(1, Math.floor(sr * (preDelay + decay)));
+  const decayCap = Math.min(decay, 8.0); // mobile CPU cap
+  const len = Math.max(1, Math.floor(sr * (preDelay + decayCap)));
   const pd  = Math.floor(sr * preDelay);
+  const onset = Math.max(1, Math.floor(sr * 0.008)); // 8ms soft onset → no transient crack
   const ir  = c.createBuffer(2, len, sr);
   for (let ch = 0; ch < 2; ch++) {
     const d = ir.getChannelData(ch);
+    let maxAmp = 0;
     for (let i = 0; i < len; i++) {
       if (i < pd) { d[i] = 0; continue; }
-      const t = (i - pd) / (sr * decay);
-      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.4);
+      const rel = i - pd;
+      const t   = rel / (sr * decayCap);
+      const env = Math.exp(-t * (2.8 + decayCap * 0.3));
+      const fade = Math.min(1, rel / onset);
+      const noise = ch === 0
+        ? (Math.random() * 2 - 1)
+        : (Math.random() * 2 - 1) * 0.78 + Math.sin(rel * 0.0031) * 0.22; // L/R decorrel
+      d[i] = noise * env * fade;
+      if (Math.abs(d[i]) > maxAmp) maxAmp = Math.abs(d[i]);
+    }
+    if (maxAmp > 0.001) {
+      const scale = 0.82 / maxAmp;
+      for (let i = pd; i < len; i++) d[i] *= scale;
     }
   }
   return ir;
@@ -198,19 +270,35 @@ function initFXChain() {
   masterDelay.connect(masterDelayFb); masterDelayFb.connect(masterDelay);
   const delayWet = c.createGain(); delayWet.gain.value=0; masterDelay.connect(delayWet);
 
-  masterReverb = c.createConvolver();
+  // Reverb — always connected; reverbWetGain.gain controls wet (starts at 0 → no crack)
+  masterReverb  = c.createConvolver();
   masterReverb.buffer = _makeIR(1.5, 0.05);
-  reverbWetGain = c.createGain(); reverbWetGain.gain.value=0;
-  reverbDryGain = c.createGain(); reverbDryGain.gain.value=1;
+  reverbWetGain = c.createGain(); reverbWetGain.gain.value = 0;
+  reverbDryGain = c.createGain(); reverbDryGain.gain.value = 1; // kept for compat
+  reverbSendBus = c.createGain(); reverbSendBus.gain.value = 1; // per-osc reverb sends
 
-  ppL = c.createDelay(1.0); ppL.delayTime.value=0.25;
-  ppR = c.createDelay(1.0); ppR.delayTime.value=0.25;
-  ppFb = c.createGain(); ppFb.gain.value=0.3;
-  ppL.connect(ppR); ppR.connect(ppFb); ppFb.connect(ppL);
-  const splitMerge = c.createChannelMerger(2);
-  ppL.connect(splitMerge, 0, 0); ppR.connect(splitMerge, 0, 1);
-  ppWet = c.createGain(); ppWet.gain.value=0; splitMerge.connect(ppWet);
-  pingPongDelay = { delayTime: ppL.delayTime, _fb: ppFb, _wet: ppWet };
+  // True stereo ping-pong — cross-feedback (L→R→L cross-bounce)
+  const ppDelL = c.createDelay(2.0); ppDelL.delayTime.value = 0.25;
+  const ppDelR = c.createDelay(2.0); ppDelR.delayTime.value = 0.375;
+  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.35;  // L→R cross
+  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.35;  // R→L cross
+  const ppPanL = c.createStereoPanner(); ppPanL.pan.value = -1;
+  const ppPanR = c.createStereoPanner(); ppPanR.pan.value =  1;
+  ppWet    = c.createGain(); ppWet.gain.value = 0;
+  ppSendBus = c.createGain(); ppSendBus.gain.value = 1; // per-osc PP sends
+
+  // Master PP send (controlled by ppMasterSend gain, starts silent)
+  const ppMasterSend = c.createGain(); ppMasterSend.gain.value = 0;
+  compressor.connect(ppMasterSend); ppMasterSend.connect(ppSendBus);
+
+  // Ping-pong routing
+  ppSendBus.connect(ppDelL);
+  ppDelL.connect(ppFbLR); ppFbLR.connect(ppDelR);
+  ppDelR.connect(ppFbRL); ppFbRL.connect(ppDelL);
+  ppDelL.connect(ppPanL); ppDelR.connect(ppPanR);
+  ppPanL.connect(ppWet); ppPanR.connect(ppWet);
+  pingPongDelay = { delayL: ppDelL, delayR: ppDelR, _fbLR: ppFbLR, _fbRL: ppFbRL, _wet: ppWet };
+  ppL = ppDelL; ppR = ppDelR; // keep legacy refs
 
   busTrim = c.createGain(); busTrim.gain.value = 1;
 
@@ -228,32 +316,33 @@ function initFXChain() {
   limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
   limiter.attack.value=0.002; limiter.release.value=0.18;
 
+  // Master bus chain
   busTrim.connect(mEqLow); mEqLow.connect(mEqMid); mEqMid.connect(mEqHigh);
   mEqHigh.connect(masterGlue); masterGlue.connect(masterFader);
   masterFader.connect(limiter); limiter.connect(c.destination);
 
-  eqLow.connect(eqMid); eqMid.connect(eqHigh);
-  eqHigh.connect(compressor);
-  compressor.connect(busTrim);
-  compressor.connect(masterDelay);  delayWet.connect(busTrim);
-  compressor.connect(reverbDryGain); reverbDryGain.connect(busTrim);
-  compressor.connect(ppL);          ppWet.connect(busTrim);
-  reverbWetGain.connect(masterReverb); masterReverb.connect(busTrim);
+  // Channel insert → compressor
+  eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(compressor);
+
+  // Compressor parallel sends (all permanent connections)
+  compressor.connect(busTrim);                          // dry path
+  compressor.connect(masterDelay); delayWet.connect(busTrim);  // delay
+  compressor.connect(reverbWetGain);                    // reverb (always on, gain=0 by default)
+  reverbWetGain.connect(masterReverb);
+  reverbSendBus.connect(masterReverb);                  // per-osc reverb input
+  masterReverb.connect(busTrim);
+  ppWet.connect(busTrim);                               // ping-pong output
 
   _fxInput = eqLow;
-  _fxRefs = { delayWet };
+  _fxRefs = { delayWet, ppMasterSend };
 }
 let _fxRefs = {};
 
-/* ---------- 2.5 · REVERB ON/OFF ---------- */
+/* ---------- 2.5 · REVERB ---------- */
 let _reverbActive = false;
 function _setReverbActive(on) {
-  if (!compressor || !reverbWetGain || on === _reverbActive) return;
-  try {
-    if (on) compressor.connect(reverbWetGain);
-    else    compressor.disconnect(reverbWetGain);
-    _reverbActive = on;
-  } catch(e) {}
+  // no-op: reverb always connected — reverbWetGain.gain controls wet level (no crackling)
+  _reverbActive = on;
 }
 
 const REVERB_SPACES = {
@@ -327,10 +416,82 @@ function _startBTKeepalive() {
   } catch(e) {}
 }
 
-function setChorusDepth(v) { /* no-op : chorus supprimé (ScriptProcessor = craquements BT) */ }
+function setChorusDepth(v) { /* no-op : chorus supprimé */ }
 function setChorusRate(v)  { /* no-op */ }
 function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
 function setCompRatio(v)   { if (compressor) try { compressor.ratio.value = parseFloat(v); } catch(e) {} }
+
+/* ---------- 2.6c · OSCILLATEUR — WAVEFORM & FILTRE ---------- */
+const OSC_WAVE_TYPES = ['sine','sine2','triangle','square','sawtooth'];
+const OSC_WAVE_LABELS = { sine:'≈ Sin', sine2:'≈≈ Sin+', triangle:'△ Tri', square:'⊓ Sqr', sawtooth:'/ Saw' };
+
+function setOscWave(id, type) {
+  OSC_WAVES[id] = type;
+  // Rebuild only if flowing — find pair index
+  if (!flowing) return;
+  PAIRS.forEach((p, i) => {
+    if (p.pingala.id === id) swapPingala(i);
+    else if (p.ida.id === id) swapIda(i);
+  });
+}
+
+function cycleOscWave(id) {
+  const cur = OSC_WAVES[id] || 'sine';
+  const idx = OSC_WAVE_TYPES.indexOf(cur);
+  const next = OSC_WAVE_TYPES[(idx + 1) % OSC_WAVE_TYPES.length];
+  setOscWave(id, next);
+  // Update button label if present
+  const btn = document.getElementById('wbtn-' + id);
+  if (btn) btn.textContent = OSC_WAVE_LABELS[next] || next;
+  return next;
+}
+
+function setOscFilter(id, cutoff, res) {
+  const cur = OSC_FILTER[id] || { cutoff: 20000, res: 0 };
+  if (cutoff !== null && cutoff !== undefined) cur.cutoff = Math.max(20, Math.min(20000, parseFloat(cutoff)));
+  if (res    !== null && res    !== undefined) cur.res    = Math.max(0,  Math.min(30,    parseFloat(res)));
+  OSC_FILTER[id] = cur;
+  const node = nodes[id]; if (!node?.flt) return;
+  const now = aNow();
+  node.flt.frequency.setTargetAtTime(cur.cutoff, now, 0.05);
+  node.flt.Q.setTargetAtTime(cur.res, now, 0.05);
+}
+
+function setOscReverbSend(id, v) {
+  const node = nodes[id]; if (!node?.rSend) return;
+  node.rSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+}
+
+function setOscPPSend(id, v) {
+  const node = nodes[id]; if (!node?.ppSend) return;
+  node.ppSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+}
+
+function setPingPongTime(t) {
+  if (!pingPongDelay) return;
+  const time = Math.max(0.04, Math.min(1.5, parseFloat(t)));
+  try {
+    pingPongDelay.delayL.delayTime.setTargetAtTime(time, aNow(), 0.05);
+    pingPongDelay.delayR.delayTime.setTargetAtTime(time * 1.5, aNow(), 0.05);
+  } catch(e) {}
+}
+
+function setPingPongFb(v) {
+  if (!pingPongDelay) return;
+  const fb = Math.max(0, Math.min(0.85, parseFloat(v)));
+  try {
+    pingPongDelay._fbLR.gain.setTargetAtTime(fb, aNow(), 0.05);
+    pingPongDelay._fbRL.gain.setTargetAtTime(fb, aNow(), 0.05);
+  } catch(e) {}
+}
+
+function setPingPongWet(v) {
+  if (ppWet) ppWet.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+}
+
+function setPingPongMasterSend(v) {
+  if (_fxRefs.ppMasterSend) _fxRefs.ppMasterSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+}
 
 /* ---------- 2.6b · CONTRÔLES RACK MASTER ---------- */
 function setMasterTrim(v) {
@@ -480,9 +641,14 @@ async function stopFlow() {
     setTimeout(() => {
       try {
         n.o.disconnect(); n.g.disconnect(); n.p.disconnect();
-        if (n.hpf)    n.hpf.disconnect();
-        if (n.hiTrim) n.hiTrim.disconnect();
-        if (n.dSend)  n.dSend.disconnect();
+        if (n.o2)      n.o2.disconnect();
+        if (n.signalIn) n.signalIn.disconnect();
+        if (n.hpf)     n.hpf.disconnect();
+        if (n.flt)     n.flt.disconnect();
+        if (n.hiTrim)  n.hiTrim.disconnect();
+        if (n.dSend)   n.dSend.disconnect();
+        if (n.rSend)   n.rSend.disconnect();
+        if (n.ppSend)  n.ppSend.disconnect();
       } catch(e){}
     }, 500);
   });
