@@ -247,10 +247,10 @@ function buildMasterFXHTML() {
       <div class="mfreq-label">Fréquence maître</div>
       <div class="mfreq-row">
         <button class="mfreq-btn sm" onclick="masterStep(-1)">−</button>
-        <input type="number" id="master-input" class="mfreq-input" min="36" max="864" value="432" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
+        <input type="number" id="master-input" class="mfreq-input" min="54" max="432" value="252" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
         <button class="mfreq-btn" onclick="masterStep(1)">+</button>
       </div>
-      <div class="mfreq-range">36 — 864 Hz</div>
+      <div class="mfreq-range">54 — 432 Hz</div>
     </div>
     <div class="delta-sphere-wrap" style="margin-top:.5rem;">
       <div class="delta-sphere-label">Battement Binaural Global</div>

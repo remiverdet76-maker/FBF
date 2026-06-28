@@ -49,6 +49,30 @@ let _spectroidBuf = null;
 const OSC_WAVES  = {}; // id → 'sine'|'triangle'|'square'|'sawtooth'|'sine2'
 const OSC_FILTER = {}; // id → {cutoff:Hz, res:Q}
 
+// ── Grain analogique (waveshaper doux + drift de pitch) ───────────
+const GRAIN_STATE = { on: true, drive: 0.18, drift: 0.3 };
+let _driftLFO = null, _driftDepth = null;
+function _grainCurve(drive) {
+  const n = 1024, c = new Float32Array(n);
+  const k = drive * 30;
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    c[i] = k > 0.0001 ? Math.tanh(k * x) / Math.tanh(k) : x;
+  }
+  return c;
+}
+function setGrainDrive(v) {
+  GRAIN_STATE.drive = Math.max(0, Math.min(1, parseFloat(v)));
+  const curve = GRAIN_STATE.drive > 0.001 ? _grainCurve(GRAIN_STATE.drive) : null;
+  Object.values(nodes).forEach(n => { if (n && n.shaper) n.shaper.curve = curve; });
+  const el = document.getElementById('sv-grain-drive'); if (el) el.textContent = GRAIN_STATE.drive.toFixed(2);
+}
+function setGrainDrift(v) {
+  GRAIN_STATE.drift = Math.max(0, Math.min(1, parseFloat(v)));
+  if (_driftDepth) _driftDepth.gain.setTargetAtTime(GRAIN_STATE.drift * 5, aNow(), 0.1);
+  const el = document.getElementById('sv-grain-drift'); if (el) el.textContent = GRAIN_STATE.drift.toFixed(2);
+}
+
 /* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
 let hiDelayBus = null;
 function ensureHiDelay() {
@@ -105,6 +129,11 @@ function buildOsc(id, freq, vol, pan) {
     o2.start();
   }
 
+  // Grain analogique : saturation douce (waveshaper tanh) pré-filtre
+  const shaper = c.createWaveShaper();
+  shaper.oversample = '2x';
+  shaper.curve = (GRAIN_STATE.on && GRAIN_STATE.drive > 0.001) ? _grainCurve(GRAIN_STATE.drive) : null;
+
   const p   = c.createStereoPanner(); p.pan.value = pan;
   const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
   const flt = c.createBiquadFilter(); flt.type = 'lowpass';
@@ -113,8 +142,14 @@ function buildOsc(id, freq, vol, pan) {
   const g      = c.createGain(); g.gain.value = 0;
   const hiTrim = c.createGain(); hiTrim.gain.value = 1;
 
-  signalIn.connect(p); p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
+  signalIn.connect(shaper); shaper.connect(p);
+  p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
   hiTrim.connect(masterGain);
+
+  // Drift de pitch analogique (LFO lent partagé → detune)
+  if (_driftDepth) {
+    try { _driftDepth.connect(o.detune); if (o2) _driftDepth.connect(o2.detune); } catch(e) {}
+  }
 
   const dSend = c.createGain(); dSend.gain.value = 0;
   hiTrim.connect(dSend);
@@ -126,7 +161,7 @@ function buildOsc(id, freq, vol, pan) {
   if (ppSendBus)     ppSend.connect(ppSendBus);
 
   o.start();
-  const node = { o, o2, signalIn, g, p, hpf, flt, hiTrim, dSend, rSend, ppSend };
+  const node = { o, o2, signalIn, shaper, g, p, hpf, flt, hiTrim, dSend, rSend, ppSend };
   applyHiBand(node, safeF(freq));
   if (!mutedOscs[id] && vol > 0) {
     const now = c.currentTime;
@@ -167,6 +202,7 @@ function releaseOsc(node) {
       node.o.disconnect(); node.g.disconnect(); node.p.disconnect();
       if (node.o2)      node.o2.disconnect();
       if (node.signalIn) node.signalIn.disconnect();
+      if (node.shaper)  node.shaper.disconnect();
       if (node.hpf)     node.hpf.disconnect();
       if (node.flt)     node.flt.disconnect();
       if (node.hiTrim)  node.hiTrim.disconnect();
@@ -189,6 +225,7 @@ function swapPingala(i) {
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   _applyAntiCrack();
+  _applySeuilProtect(i);
   updatePairUI(i);
 }
 function swapIda(i) {
@@ -202,6 +239,7 @@ function swapIda(i) {
     nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), vol, pan);
   }
   _applyAntiCrack();
+  _applySeuilProtect(i);
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
@@ -220,6 +258,30 @@ function _applyAntiCrack() {
   if (!masterGain) return;
   const active = Object.keys(nodes).length || 1;
   _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+}
+
+/* ---------- 2.2b · PROTECTION SEUIL 360 Hz (point 9) ----------
+   Au-dessus de 360 Hz : HPF imposé + envoi reverb/delay (spatialisation)
+   + pan élargi (LFO 3D). Le −50% volume est appliqué côté data (vol). */
+function _applySeuilProtect(i) {
+  if (i === MASTER_IDX || typeof isAboveSeuil !== 'function') return;
+  const above = isAboveSeuil(i);
+  const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+  const now = aNow();
+  [[pid, -1], [iid, 1]].forEach(([id, side]) => {
+    const node = nodes[id]; if (!node) return;
+    try {
+      if (node.hpf)    node.hpf.frequency.setTargetAtTime(above ? 120 : 20, now, 0.12);
+      if (node.rSend)  node.rSend.gain.setTargetAtTime(above ? 0.30 : 0, now, 0.12);
+      if (node.ppSend) node.ppSend.gain.setTargetAtTime(above ? 0.22 : 0, now, 0.12);
+      if (node.p && above) node.p.pan.setTargetAtTime(side * 0.92, now, 0.12);
+    } catch(e) {}
+  });
+  // Réveille le bus ping-pong / reverb si protection active
+  if (above) {
+    if (ppWet)        ppWet.gain.setTargetAtTime(Math.max(ppWet.gain.value, 0.18), now, 0.2);
+    if (reverbWetGain)reverbWetGain.gain.setTargetAtTime(Math.max(reverbWetGain.gain.value, 0.16), now, 0.2);
+  }
 }
 
 /* ---------- 2.3 · IR DE RÉVERBE GÉNÉRÉE PAR CODE ---------- */
@@ -602,6 +664,11 @@ async function startFlow() {
     _breathDepthGain = c.createGain(); _breathDepthGain.gain.value = BREATH_STATE.on ? BREATH_STATE.depth : 0;
     _breathLFO.connect(_breathDepthGain); _breathDepthGain.connect(_breathGain.gain); _breathLFO.start();
 
+    // Drift de pitch analogique — LFO lent partagé (cents) vers tous les detune
+    _driftLFO = c.createOscillator(); _driftLFO.type='sine'; _driftLFO.frequency.value = 0.07;
+    _driftDepth = c.createGain(); _driftDepth.gain.value = GRAIN_STATE.on ? GRAIN_STATE.drift * 5 : 0;
+    _driftLFO.connect(_driftDepth); _driftLFO.start();
+
     flowing = true;
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
@@ -643,6 +710,7 @@ async function stopFlow() {
         n.o.disconnect(); n.g.disconnect(); n.p.disconnect();
         if (n.o2)      n.o2.disconnect();
         if (n.signalIn) n.signalIn.disconnect();
+        if (n.shaper)  n.shaper.disconnect();
         if (n.hpf)     n.hpf.disconnect();
         if (n.flt)     n.flt.disconnect();
         if (n.hiTrim)  n.hiTrim.disconnect();
@@ -653,11 +721,11 @@ async function stopFlow() {
     }, 500);
   });
   setTimeout(() => {
-    [_lfoNode, _breathLFO].forEach(x => { try { x?.stop(); } catch(e){} });
-    [_lfoNode, _lfoGain, _lfoDepthGain, _breathLFO, _breathGain, _breathDepthGain, masterGain]
+    [_lfoNode, _breathLFO, _driftLFO].forEach(x => { try { x?.stop(); } catch(e){} });
+    [_lfoNode, _lfoGain, _lfoDepthGain, _breathLFO, _breathGain, _breathDepthGain, _driftLFO, _driftDepth, masterGain]
       .forEach(x => { try { x?.disconnect(); } catch(e){} });
     if (analyser) { try { analyser.disconnect(); } catch(e){} }
-    _lfoNode=_lfoGain=_lfoDepthGain=_breathLFO=_breathGain=_breathDepthGain=masterGain=analyser=null;
+    _lfoNode=_lfoGain=_lfoDepthGain=_breathLFO=_breathGain=_breathDepthGain=_driftLFO=_driftDepth=masterGain=analyser=null;
     hiDelayBus = null;
     PAIRS.forEach((_, i) => updateOrbUI(i));
     const mc = document.getElementById('vpc-p' + MASTER_IDX);
