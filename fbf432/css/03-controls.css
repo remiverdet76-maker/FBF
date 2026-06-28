@@ -366,6 +366,33 @@
   box-shadow:0 0 28px rgba(192,128,255,.5);
 }
 #btn-rand-dock:active{transform:scale(.92);}
+
+/* ─── Bouton ❤️ (sauve jeu complet, FX inclus) ─── */
+#btn-fav-dock{
+  flex-shrink:0;
+  width:42px;height:42px;
+  border-radius:10px;
+  border:2px solid rgba(255,110,150,.5);
+  background:radial-gradient(circle at 40% 35%,rgba(255,110,150,.2),rgba(30,4,16,.85));
+  color:#FF8EB0;
+  font-size:1.15rem;line-height:1;
+  cursor:pointer;transition:all .22s;
+}
+#btn-fav-dock:hover{border-color:#FF9EC0;color:#FFB0CC;box-shadow:0 0 24px rgba(255,110,150,.5);}
+#btn-fav-dock:active{transform:scale(.92);}
+#btn-fav-dock.fav-flash{animation:favPulse .6s ease-out;}
+@keyframes favPulse{0%{transform:scale(1);}40%{transform:scale(1.35);color:#fff;box-shadow:0 0 36px rgba(255,140,180,.8);}100%{transform:scale(1);}}
+
+/* ─── Verrou par fréquence (table aléatoire) ─── */
+.rand-lock{
+  background:transparent;border:1px solid rgba(200,170,255,.22);
+  color:rgba(200,170,255,.55);border-radius:6px;
+  font-size:.8rem;padding:.1rem .3rem;cursor:pointer;margin-left:auto;
+  transition:all .18s;line-height:1;
+}
+.rand-lock:active{transform:scale(.9);}
+.rand-lock.locked{border-color:#FFD060;color:#FFD060;background:rgba(255,208,96,.12);box-shadow:0 0 10px rgba(255,208,96,.25);}
+
 .tnav-rec{
   background:rgba(255,80,80,.1) !important;
   border-color:rgba(255,100,100,.4) !important;

@@ -555,6 +555,61 @@ function setPingPongMasterSend(v) {
   if (_fxRefs.ppMasterSend) _fxRefs.ppMasterSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
 }
 
+/* ---------- 2.6d · SNAPSHOT / RESTORE FX (pour ❤️ presets) ---------- */
+function getFXState() {
+  return {
+    eq: eqLow ? { lf:eqLow.frequency.value, lg:eqLow.gain.value,
+                  mf:eqMid.frequency.value, mg:eqMid.gain.value,
+                  hf:eqHigh.frequency.value, hg:eqHigh.gain.value } : null,
+    delay: masterDelay ? { t:masterDelay.delayTime.value,
+                           fb:masterDelayFb ? masterDelayFb.gain.value : 0,
+                           wet:_fxRefs.delayWet ? _fxRefs.delayWet.gain.value : 0 } : null,
+    reverb: reverbWetGain ? reverbWetGain.gain.value : 0,
+    pp: pingPongDelay ? { t:pingPongDelay.delayL.delayTime.value,
+                          fb:pingPongDelay._fbLR.gain.value,
+                          wet:ppWet ? ppWet.gain.value : 0,
+                          send:_fxRefs.ppMasterSend ? _fxRefs.ppMasterSend.gain.value : 0 } : null,
+    lfo: { ...LFO_STATE }, breath: { ...BREATH_STATE }, grain: { ...GRAIN_STATE },
+    comp: compressor ? { th:compressor.threshold.value, ra:compressor.ratio.value } : null,
+    waves: { ...OSC_WAVES },
+    filters: JSON.parse(JSON.stringify(OSC_FILTER))
+  };
+}
+
+function applyFXState(s) {
+  if (!s) return;
+  initFXChain();
+  const setSl = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  if (s.eq) {
+    [['eqLowFreq',s.eq.lf],['eqLowGain',s.eq.lg],['eqMidFreq',s.eq.mf],['eqMidGain',s.eq.mg],
+     ['eqHighFreq',s.eq.hf],['eqHighGain',s.eq.hg]].forEach(([id,v]) => { setSl(id,v); if (typeof updateFX==='function') updateFX(id,v); });
+  }
+  if (s.delay) { [['delayTime',s.delay.t],['delayFeedback',s.delay.fb],['delayWet',s.delay.wet]]
+    .forEach(([id,v]) => { setSl(id,v); if (typeof updateFX==='function') updateFX(id,v); }); }
+  if (s.reverb != null) { setSl('reverbWet',s.reverb); if (typeof updateFX==='function') updateFX('reverbWet',s.reverb); }
+  if (s.pp) {
+    setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb); setPingPongWet(s.pp.wet); setPingPongMasterSend(s.pp.send);
+    setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider',s.pp.wet);
+  }
+  if (s.lfo)    { LFO_STATE.rate=s.lfo.rate; LFO_STATE.depth=s.lfo.depth; lfoToggle(!!s.lfo.on);
+                  const c=document.getElementById('lfo-on'); if (c) c.checked=!!s.lfo.on; }
+  if (s.breath) { BREATH_STATE.rate=s.breath.rate; BREATH_STATE.depth=s.breath.depth; breathToggle(!!s.breath.on); }
+  if (s.grain)  { GRAIN_STATE.on=s.grain.on!==false; setGrainDrive(s.grain.drive); setGrainDrift(s.grain.drift); }
+  if (s.comp)   { setCompThresh(s.comp.th); setCompRatio(s.comp.ra); }
+  let wavesChanged = false;
+  if (s.waves)   { if (JSON.stringify(OSC_WAVES) !== JSON.stringify(s.waves)) wavesChanged = true; Object.assign(OSC_WAVES, s.waves); }
+  if (s.filters) { Object.keys(s.filters).forEach(id => { OSC_FILTER[id] = s.filters[id]; if (nodes[id]) setOscFilter(id, s.filters[id].cutoff, s.filters[id].res); }); }
+  if (wavesChanged) rebuildAllOscs();
+}
+
+function rebuildAllOscs() {
+  if (!flowing) return;
+  const old = { ...nodes };
+  nodes = {};
+  Object.values(old).forEach(n => { try { releaseOsc(n); } catch(e) {} });
+  PAIRS.forEach((_, i) => setTimeout(() => { if (flowing && masterGain) swapPingala(i); }, 50 + i * 50));
+}
+
 /* ---------- 2.6b · CONTRÔLES RACK MASTER ---------- */
 function setMasterTrim(v) {
   if (busTrim) busTrim.gain.setTargetAtTime(Math.max(0, Math.min(1.5, parseFloat(v))), aNow(), 0.05);

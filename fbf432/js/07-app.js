@@ -448,19 +448,42 @@ function _loadSessionPresets() {
   _renderPresets();
 }
 
-function savePreset(slot) {
-  const name = window.prompt('Nom du preset :', _sessionPresets[slot]?.name || 'Preset '+(slot+1));
-  if (!name) return;
-  _sessionPresets[slot] = {
+function _snapshotGame(name) {
+  return {
     name, masterFreq, globalDelta, masterVol,
     geo: activeGeometry,
     pairs: PAIRS.map(p => ({
       ri:p.pingala.ri, n:p.pingala.n, vp:p.pingala.vol,
       dt:p.ida.delta, po:p.ida.polarity, vi:p.ida.vol
-    }))
+    })),
+    fx: (typeof getFXState === 'function') ? getFXState() : null  // ❤️ FX inclus
   };
+}
+
+function savePreset(slot) {
+  const name = window.prompt('Nom du preset :', _sessionPresets[slot]?.name || 'Preset '+(slot+1));
+  if (!name) return;
+  _sessionPresets[slot] = _snapshotGame(name);
   try { localStorage.setItem(PS_KEY, JSON.stringify(_sessionPresets)); } catch(e) {}
   _renderPresets();
+}
+
+// ❤️ — sauve le jeu complet (FX inclus) dans le premier slot libre
+function favGame() {
+  let slot = _sessionPresets.findIndex(p => !p);
+  if (slot < 0) {
+    if (!window.confirm('Banque pleine — écraser le 1er preset ?')) return;
+    slot = 0;
+  }
+  const def = 'FBF ' + masterFreq + 'Hz';
+  const name = window.prompt('❤️ Nom du jeu :', def) || def;
+  _sessionPresets[slot] = _snapshotGame(name);
+  try { localStorage.setItem(PS_KEY, JSON.stringify(_sessionPresets)); } catch(e) {}
+  _renderPresets();
+  const b = document.getElementById('btn-fav-dock');
+  if (b) { b.classList.add('fav-flash'); setTimeout(()=>b.classList.remove('fav-flash'), 600); }
+  const s = document.getElementById('stxt');
+  if (s) { const prev=s.textContent; s.textContent='❤️ Jeu sauvé : '+name; setTimeout(()=>{ if(s) s.textContent=prev; }, 2200); }
 }
 
 function loadPreset(slot) {
@@ -478,6 +501,7 @@ function loadPreset(slot) {
     if (sp.po===1||sp.po===-1) PAIRS[i].ida.polarity = sp.po;
     if (sp.vi>=0) PAIRS[i].ida.vol = sp.vi;
   });
+  if (p.fx && typeof applyFXState === 'function') applyFXState(p.fx);
   updateDisplay();
   if (flowing) PAIRS.forEach((_,i) => { tuneOsc(PAIRS[i].pingala.id,calcPFreq(i)); tuneOsc(PAIRS[i].ida.id,calcIFreq(i)); });
   saveState();

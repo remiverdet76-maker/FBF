@@ -134,11 +134,13 @@ function buildRandomTable() {
   if (!wrap) return;
   wrap.innerHTML = PAIRS.map((pair, i) => {
     const pF = calcPFreq(i);
+    const lk = (typeof isLocked === 'function' && isLocked(i));
     return `<div class="rand-row" style="background:${pair.color}11;border:1px solid ${pair.color}33;">
       <span class="rand-dot" style="background:${pair.color}"></span>
       <span class="rand-freq"  id="rt-f-${i}" style="color:${pair.color}">${pF.toFixed(1)} Hz</span>
       <span class="rand-ratio" id="rt-r-${i}" style="color:${pair.color}bb">${RATIO_OPTS[pair.pingala.ri].l}</span>
       <span class="rand-n"     id="rt-n-${i}" style="color:${pair.color}88">×${pair.pingala.n}</span>
+      <button class="rand-lock${lk?' locked':''}" id="lock-${i}" onclick="toggleLock(${i})" title="Verrouiller la fréquence">${lk?'🔒':'🔓'}</button>
     </div>`;
   }).join('');
 }
@@ -149,6 +151,8 @@ function patchRandomTable() {
     const f = document.getElementById('rt-f-'+i); if (f) f.textContent = pF.toFixed(1)+' Hz';
     const r = document.getElementById('rt-r-'+i); if (r) r.textContent = RATIO_OPTS[pair.pingala.ri].l;
     const n = document.getElementById('rt-n-'+i); if (n) n.textContent = '×'+pair.pingala.n;
+    const lk = document.getElementById('lock-'+i);
+    if (lk && typeof isLocked === 'function') { const on = isLocked(i); lk.textContent = on?'🔒':'🔓'; lk.classList.toggle('locked', on); }
   });
 }
 

@@ -2,6 +2,18 @@
    05-controls.js — Contrôles oscillateurs & UI
    ═══════════════════════════════════════════ */
 
+// ── Verrouillage par paire (lock) ─────────────────────────────────
+// Le random ne touche QUE les paires non verrouillées. Master = index 6.
+let lockedPairs = {};
+function isLocked(i) { return !!lockedPairs[i]; }
+function toggleLock(i) {
+  lockedPairs[i] = !lockedPairs[i];
+  updatePairUI(i);
+  patchRandomTable();
+  const b = document.getElementById('lock-' + i);
+  if (b) { b.textContent = lockedPairs[i] ? '🔒' : '🔓'; b.classList.toggle('locked', lockedPairs[i]); }
+}
+
 // ── Options mode aléatoire ────────────────────────────────────────
 const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false};
 function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
