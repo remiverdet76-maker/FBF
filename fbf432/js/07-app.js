@@ -532,6 +532,9 @@ function init() {
   // Build random table
   buildRandomTable();
 
+  // Restaure les samples persistés (IndexedDB)
+  if (typeof sampleRestoreAll === 'function') sampleRestoreAll();
+
   // Init 3D geometry engine
   animMetatron();
 

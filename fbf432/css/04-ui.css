@@ -121,3 +121,9 @@ input.param-input{
   cursor:pointer;transition:all .3s;margin:0 auto;display:block;font-weight:bold;
 }
 .btn-preset-launch:hover{background:rgba(200,100,255,.24);box-shadow:0 0 28px rgba(200,100,255,.32);border-color:#F3D9FF;}
+
+/* ── Sample FX rows (moteur dédié) ───────────────────────────────── */
+.sfx-row{display:flex;align-items:center;gap:.45rem;margin:.28rem 0;}
+.sfx-row .sfx-lbl{font-size:.68rem;color:rgba(200,170,255,.6);min-width:64px;white-space:nowrap;}
+.sfx-row input[type=range]{flex:1;accent-color:#C080FF;height:3px;}
+.sfx-row .sfx-val{font-size:.7rem;color:rgba(225,200,255,.8);min-width:42px;text-align:right;font-family:'IM Fell English',serif;}

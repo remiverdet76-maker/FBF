@@ -192,7 +192,8 @@ function fitDensityN(master, ratio, baseN) {
   return Math.min(N_MAX, Math.round(n * 100) / 100);
 }
 
-function triggerMagicAuto() {
+function triggerMagicAuto(opts) {
+  const keepMaster = !!(opts && opts.keepMaster);
   const {freqMin,freqMax,rangeOn,useFX}=RAND_OPTS;
   const lo = rangeOn ? Math.max(F_MIN, freqMin) : F_MIN;
   const hi = rangeOn ? Math.min(432, freqMax)   : 432;
@@ -216,7 +217,7 @@ function triggerMagicAuto() {
   // ── 3. Nouvelle fréquence maître via ratio-graine ─────────────────
   // Lock maître (Phase 3) : on garde la valeur si verrouillée.
   const masterLocked = typeof isLocked === 'function' && isLocked(MASTER_IDX);
-  const newMaster = masterLocked ? masterFreq
+  const newMaster = (masterLocked || keepMaster) ? masterFreq
     : Math.max(lo, Math.min(hi, Math.round(masterFreq * seedR)));
 
   // ── 4. Densités recalculées selon le nouveau maître ──────────────
