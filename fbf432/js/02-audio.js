@@ -281,9 +281,9 @@ function _applySeuilProtect(i) {
   [[pid, -1], [iid, 1]].forEach(([id, side]) => {
     const node = nodes[id]; if (!node) return;
     try {
-      // Au-dessus du seuil : HPF imposé + pan élargi (le −50% volume est géré au random)
-      if (node.hpf)        node.hpf.frequency.setTargetAtTime(above ? 120 : 20, now, 0.12);
-      if (node.p && above) node.p.pan.setTargetAtTime(side * 0.92, now, 0.12);
+      // Au-dessus du seuil : HPF imposé (le −50% volume est géré au random).
+      // On ne touche PLUS au pan → l'éventail stéréo (aération) est préservé.
+      if (node.hpf) node.hpf.frequency.setTargetAtTime(above ? 120 : 20, now, 0.12);
     } catch(e) {}
   });
 }

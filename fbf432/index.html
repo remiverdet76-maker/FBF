@@ -40,16 +40,25 @@
   <button id="btn-rand-dock" onclick="triggerMagicAuto()" title="Aléatoire harmonique">⚄</button>
   <button id="btn-fav-dock" onclick="favGame()" title="Sauver le jeu (FX inclus) ❤️">❤</button>
   <nav id="tab-nav">
-    <button class="tnav-btn tnav-geo"     id="tGeo"     onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
-    <button class="tnav-btn tnav-horloge" id="tUT"      onclick="tPanel('panUT','tUT')">⊙ UT</button>
-    <button class="tnav-btn tnav-fx"      id="tFX"      onclick="tPanel('panFX','tFX')">✦ FX</button>
-    <button class="tnav-btn tnav-notice"  id="tNotice"  onclick="tPanel('panNotice','tNotice')">≡</button>
-    <button class="tnav-btn tnav-samples" id="tSamples" onclick="tPanel('panSamples','tSamples')">◎</button>
+    <button class="tnav-btn tnav-params" id="tParams" onclick="tPanel('panParams','tParams')">⚙ Paramètres</button>
   </nav>
   <button id="btn-rec" class="tnav-btn tnav-rec" onclick="recToggle()">⏺ Rec</button>
   <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
 </div>
 <button id="dock-chevron" onclick="toggleDock()" title="Masquer / afficher le dock">⌄</button>
+
+<!-- Panel : Paramètres (menu déroulant de tous les menus) — droite -->
+<div class="pan-right" id="panParams">
+  <div class="pct">⚙ Paramètres</div>
+  <div class="params-menu">
+    <button class="params-item" style="--ic:#86FFC0;" onclick="openTab('panFX')">✦ <span>FX &amp; Master</span></button>
+    <button class="params-item" style="--ic:#C080FF;" onclick="openTab('panRand')">⚄ <span>Jeu Aléatoire</span></button>
+    <button class="params-item" style="--ic:#60D8FF;" onclick="openTab('panGeo')">⊞ <span>FX3D · Géométrie</span></button>
+    <button class="params-item" style="--ic:#FFD060;" onclick="openTab('panUT')">⊙ <span>Horloge UT432</span></button>
+    <button class="params-item" style="--ic:#FF9A8B;" onclick="openTab('panSamples')">◎ <span>Samples</span></button>
+    <button class="params-item" style="--ic:#FFB0FF;" onclick="openTab('panNotice')">≡ <span>Notice &amp; Thème</span></button>
+  </div>
+</div>
 
 <!-- Panel : FX3D — gauche -->
 <div class="pan-left" id="panGeo">

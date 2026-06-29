@@ -36,8 +36,9 @@ function buildVesicaPairs() {
   document.querySelectorAll('.vp-wrap,.vp-center-wrap').forEach(n => n.remove());
 
   const cx = vw / 2;
-  const cy = (vh - dockH) / 2;
-  const R  = sz * 0.32;
+  const cy = vh / 2;   // centre RÉEL de l'image (et non plus le centre de la zone au-dessus du dock)
+  // Rayon : garde la bulle du bas au-dessus du dock et la bulle du haut sous le bord
+  const R  = Math.max(70, Math.min(sz * 0.32, vh / 2 - dockH - 56, cy - 40));
 
   for (let i = 0; i < 6; i++) {
     const pair = PAIRS[i];
