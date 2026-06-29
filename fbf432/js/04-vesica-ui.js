@@ -21,7 +21,7 @@ function _vpStart(i,e){
 }
 function _vpEnd(i){
   clearTimeout(_vpMbTimer);
-  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;if(!_vpFired&&!_vpMbFired)toggleMuteP(i);}
+  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;if(!_vpFired&&!_vpMbFired)toggleMutePair(i);}
 }
 function _vpCancel(){clearTimeout(_vpTimer);_vpTimer=null;clearTimeout(_vpMbTimer);_vpMbTimer=null;}
 

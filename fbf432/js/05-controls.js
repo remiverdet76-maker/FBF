@@ -93,6 +93,17 @@ function toggleMuteP(i) {
   if (node) safeRamp(node.g.gain, mutedOscs[pid] ? 0 : PAIRS[i].pingala.vol, 0.5);
   updatePairUI(i); saveState();
 }
+// Taper une bulle = couper/activer la PAIRE ENTIÈRE (Pingala + Ida)
+function toggleMutePair(i) {
+  const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+  const newMuted = !(mutedOscs[pid] && mutedOscs[iid]); // si pas déjà tout coupé → on coupe
+  mutedOscs[pid] = newMuted;
+  mutedOscs[iid] = newMuted;
+  const np = nodes[pid], ni = nodes[iid];
+  if (np) safeRamp(np.g.gain, newMuted ? 0 : PAIRS[i].pingala.vol, 0.4);
+  if (ni) safeRamp(ni.g.gain, newMuted ? 0 : PAIRS[i].ida.vol, 0.4);
+  updatePairUI(i); updateMasterState(); saveState();
+}
 function toggleMuteI(i) {
   const iid = PAIRS[i].ida.id;
   mutedOscs[iid] = !mutedOscs[iid];
