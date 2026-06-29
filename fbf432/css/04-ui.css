@@ -121,3 +121,101 @@ input.param-input{
   cursor:pointer;transition:all .3s;margin:0 auto;display:block;font-weight:bold;
 }
 .btn-preset-launch:hover{background:rgba(200,100,255,.24);box-shadow:0 0 28px rgba(200,100,255,.32);border-color:#F3D9FF;}
+
+/* ── Sample FX rows (moteur dédié) ───────────────────────────────── */
+.sfx-row{display:flex;align-items:center;gap:.45rem;margin:.28rem 0;}
+.sfx-row .sfx-lbl{font-size:.68rem;color:rgba(200,170,255,.6);min-width:64px;white-space:nowrap;}
+.sfx-row input[type=range]{flex:1;accent-color:#C080FF;height:3px;}
+.sfx-row .sfx-val{font-size:.7rem;color:rgba(225,200,255,.8);min-width:42px;text-align:right;font-family:'IM Fell English',serif;}
+
+/* ════════ Modal oscillateur — 4 onglets (v2) ════════ */
+.osc-tabs{display:flex;gap:.3rem;margin:.2rem 0 .7rem;position:sticky;top:0;z-index:3;
+  background:linear-gradient(180deg,rgba(8,4,22,.96),rgba(8,4,22,.7));padding:.2rem 0;}
+.osc-tab{flex:1;min-height:42px;border-radius:9px;cursor:pointer;
+  background:rgba(255,255,255,.03);border:1px solid var(--ec,#888)33;
+  color:rgba(225,210,255,.7);font-family:'Cinzel Decorative',serif;font-size:.72rem;
+  letter-spacing:.02em;transition:all .2s;padding:.2rem;}
+.osc-tab.on{background:color-mix(in srgb,var(--ec,#888) 22%,transparent);
+  border-color:var(--ec,#888);color:#fff;box-shadow:0 0 14px color-mix(in srgb,var(--ec,#888) 40%,transparent);}
+.osc-tab:active{transform:scale(.96);}
+.osc-pane.hidden{display:none;}
+.osc-sec-t{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+  margin:.55rem 0 .35rem;font-weight:bold;opacity:.85;}
+.osc-hint{font-size:.62rem;font-style:italic;color:rgba(200,180,255,.42);margin-top:.4rem;text-align:center;}
+
+/* Moteurs d'onde */
+.eng-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;}
+.eng-btn{min-height:42px;border-radius:8px;cursor:pointer;font-size:.64rem;padding:.25rem .2rem;
+  background:rgba(255,255,255,.03);border:1px solid color-mix(in srgb,var(--ec,#888) 30%,transparent);
+  color:color-mix(in srgb,var(--ec,#888) 75%,white);transition:all .18s;
+  white-space:normal;line-height:1.05;text-align:center;}
+.eng-btn.on{background:color-mix(in srgb,var(--ec,#888) 28%,transparent);border-color:var(--ec,#888);color:#fff;
+  box-shadow:0 0 12px color-mix(in srgb,var(--ec,#888) 45%,transparent);}
+.eng-btn:active{transform:scale(.95);}
+
+/* Lignes de contrôle (cutoff/res/eg/lfo/fx) */
+.ctl-row{display:flex;align-items:center;gap:.5rem;margin:.34rem 0;}
+.ctl-row .ctl-l{font-size:.7rem;color:rgba(210,190,255,.7);min-width:62px;white-space:nowrap;}
+.ctl-row input[type=range]{flex:1;height:4px;}
+.ctl-row .ctl-v{font-size:.72rem;font-family:'IM Fell English',serif;color:rgba(225,205,255,.85);
+  min-width:54px;text-align:right;}
+
+/* Tableau ratio → Hz */
+.rt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.28rem;}
+.rt-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:40px;border-radius:7px;cursor:pointer;padding:.15rem;
+  background:rgba(255,255,255,.03);border:1px solid color-mix(in srgb,var(--ec,#888) 26%,transparent);transition:all .16s;}
+.rt-cell .rt-l{font-size:.64rem;color:color-mix(in srgb,var(--ec,#888) 80%,white);line-height:1.1;}
+.rt-cell .rt-hz{font-size:.7rem;font-family:'IM Fell English',serif;color:rgba(225,205,255,.7);}
+.rt-cell.on{background:color-mix(in srgb,var(--ec,#888) 26%,transparent);border-color:var(--ec,#888);
+  box-shadow:0 0 10px color-mix(in srgb,var(--ec,#888) 40%,transparent);}
+.rt-cell.on .rt-l,.rt-cell.on .rt-hz{color:#fff;}
+.rt-cell:active{transform:scale(.94);}
+
+/* Patchbay */
+.patch-grid{display:grid;grid-template-columns:auto repeat(4,1fr);gap:.3rem;align-items:stretch;}
+.patch-cell{display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:7px;font-size:.66rem;}
+.patch-cell.head{color:rgba(210,190,255,.6);font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;min-height:auto;}
+.patch-cell.rowh{color:color-mix(in srgb,var(--ec,#888) 85%,white);font-weight:bold;font-size:.72rem;}
+.patch-cell.jack{cursor:pointer;background:rgba(255,255,255,.03);
+  border:1px solid color-mix(in srgb,var(--ec,#888) 28%,transparent);color:rgba(200,180,255,.5);transition:all .16s;letter-spacing:1px;}
+.patch-cell.jack:active{transform:scale(.92);}
+.patch-cell.jack.lvl1{border-color:var(--ec,#888);color:var(--ec,#888);}
+.patch-cell.jack.lvl2{border-color:var(--ec,#888);color:#fff;background:color-mix(in srgb,var(--ec,#888) 18%,transparent);}
+.patch-cell.jack.lvl3{border-color:var(--ec,#888);color:#fff;background:color-mix(in srgb,var(--ec,#888) 34%,transparent);
+  box-shadow:0 0 12px color-mix(in srgb,var(--ec,#888) 50%,transparent);}
+
+/* Verrou dans l'en-tête du modal */
+.osc-lockbtn{margin-left:auto;background:transparent;border:1px solid rgba(200,170,255,.25);
+  color:rgba(200,170,255,.6);border-radius:7px;font-size:.9rem;padding:.15rem .4rem;cursor:pointer;min-height:34px;}
+.osc-lockbtn.locked{border-color:#FFD060;color:#FFD060;background:rgba(255,208,96,.12);}
+
+/* ════════ Splash 36 Rayons ════════ */
+#splash-36{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.4rem;
+  background:radial-gradient(circle at 50% 45%,#1a1004,#000 70%);
+  transition:opacity .85s ease;}
+#splash-36.hide{opacity:0;pointer-events:none;}
+#splash-36 img{width:min(62vw,300px);height:auto;filter:drop-shadow(0 0 40px rgba(255,190,70,.5));
+  animation:splashGlow 2.4s ease-in-out infinite;}
+@keyframes splashGlow{0%,100%{filter:drop-shadow(0 0 30px rgba(255,190,70,.4));}50%{filter:drop-shadow(0 0 56px rgba(255,210,110,.7));}}
+#splash-36 .splash-title{font-family:'Cinzel Decorative',serif;font-size:1.7rem;font-weight:900;
+  color:#FFD27A;letter-spacing:.22em;text-shadow:0 0 24px rgba(255,200,90,.6);}
+#splash-36 .splash-sub{font-family:'IM Fell English',serif;font-style:italic;font-size:.95rem;color:rgba(255,210,130,.7);letter-spacing:.1em;}
+
+/* ════════ Thèmes visuels ════════ */
+.theme-switch{margin:.2rem 0 .7rem;padding:.5rem;background:rgba(0,0,0,.2);border-radius:9px;border:1px solid rgba(200,170,255,.14);}
+.theme-switch .theme-lbl{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(200,170,255,.55);display:block;margin-bottom:.4rem;}
+.theme-btns{display:flex;gap:.35rem;}
+.theme-b{flex:1;min-height:40px;border-radius:8px;cursor:pointer;font-size:.7rem;
+  background:rgba(255,255,255,.03);border:1px solid rgba(200,170,255,.22);color:rgba(220,200,255,.7);transition:all .18s;}
+.theme-b.on{border-color:#FFD060;color:#fff;background:rgba(255,208,96,.14);box-shadow:0 0 12px rgba(255,208,96,.3);}
+.theme-b:active{transform:scale(.95);}
+
+/* Theme OR (432 doré) — défaut chaud */
+body.theme-or #cosmic-bg{filter:hue-rotate(-18deg) saturate(1.15) brightness(.9);}
+/* Theme SPHÈRE — violet profond, sphères agrandies */
+body.theme-sphere #cosmic-bg{filter:hue-rotate(40deg) saturate(1.25) brightness(.8);}
+body.theme-sphere #sphere-layer{transform:scale(1.08);}
+/* Theme FLUX — cyan/teal mouvant */
+body.theme-flux #cosmic-bg{filter:hue-rotate(150deg) saturate(1.3) brightness(.85);}

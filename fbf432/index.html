@@ -19,6 +19,13 @@
 </head>
 <body>
 
+<!-- Splash 36 Rayons -->
+<div id="splash-36">
+  <img src="assets/logo-36rayons.png" alt="36 Rayons" onerror="this.style.display='none'">
+  <div class="splash-title">FBF 432</div>
+  <div class="splash-sub">✦ 36 Rayons ✦</div>
+</div>
+
 <img id="cosmic-bg" src="img/cosmic-flux.jpg" alt="" onerror="this.style.display='none'">
 <canvas id="meta-canvas"></canvas>
 <div id="sphere-layer"></div>
@@ -30,15 +37,15 @@
     <span class="flux-txt" id="flux-txt">FLUX</span>
     <span class="flux-state" id="flux-state-side">OFF</span>
   </button>
+  <button id="btn-rand-dock" onclick="triggerMagicAuto()" title="Aléatoire harmonique">⚄</button>
+  <button id="btn-fav-dock" onclick="favGame()" title="Sauver le jeu (FX inclus) ❤️">❤</button>
   <nav id="tab-nav">
     <button class="tnav-btn tnav-geo"     id="tGeo"     onclick="tPanel('panGeo','tGeo')">⊞ 3D</button>
-    <button class="tnav-btn tnav-random"  id="tRand"    onclick="tPanel('panRand','tRand')">⚄ Aléa</button>
     <button class="tnav-btn tnav-horloge" id="tUT"      onclick="tPanel('panUT','tUT')">⊙ UT</button>
     <button class="tnav-btn tnav-fx"      id="tFX"      onclick="tPanel('panFX','tFX')">✦ FX</button>
     <button class="tnav-btn tnav-notice"  id="tNotice"  onclick="tPanel('panNotice','tNotice')">≡</button>
     <button class="tnav-btn tnav-samples" id="tSamples" onclick="tPanel('panSamples','tSamples')">◎</button>
   </nav>
-  <button id="btn-harmonic" onclick="globalHarmonicRandom()" title="Randomisation harmonique globale">⚄ ♪</button>
   <button id="btn-rec" class="tnav-btn tnav-rec" onclick="recToggle()">⏺ Rec</button>
   <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
 </div>
@@ -152,6 +159,14 @@
 <!-- Panel : Notice — droite -->
 <div class="pan-right" id="panNotice">
   <div class="pct">FBF 432 — Harmonique Cosmique</div>
+  <div class="theme-switch">
+    <span class="theme-lbl">Thème visuel</span>
+    <div class="theme-btns">
+      <button class="theme-b" id="th-or"     onclick="setTheme('or')">☀ 432 Or</button>
+      <button class="theme-b" id="th-sphere" onclick="setTheme('sphere')">◉ Sphère</button>
+      <button class="theme-b" id="th-flux"   onclick="setTheme('flux')">〜 Flux</button>
+    </div>
+  </div>
   <div class="notice-panel">
     <div class="notice-block">
       <div class="notice-term">FBF — Flux Binaural Fractal</div>
@@ -194,6 +209,38 @@
   <div style="margin-top:.5rem;display:flex;align-items:center;gap:.4rem;">
     <span style="font-size:.7rem;color:rgba(200,170,255,.55);min-width:52px;">Volume</span>
     <input type="range" id="sample-vol-sl" min="0" max="1" step="0.01" value="0.5" style="flex:1;accent-color:#C080FF;" oninput="sampleSetVol(this.value)">
+  </div>
+
+  <!-- Fondamentale détectée → jeu binaural -->
+  <div style="margin-top:.6rem;padding:.5rem;background:rgba(140,255,200,.05);border:1px solid rgba(140,255,200,.18);border-radius:9px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+      <span style="font-size:.7rem;color:rgba(140,255,200,.7);">Fondamentale</span>
+      <span id="sample-fund-disp" style="font-family:'IM Fell English',serif;font-size:.95rem;color:#8CFFC8;">—</span>
+    </div>
+    <div style="display:flex;gap:.4rem;">
+      <button class="fbf-step" style="flex:1;" onclick="sampleAutoGame()">✦ Jeu depuis sample</button>
+      <button class="fbf-step" onclick="sampleRerollGame()" title="Relancer">⚄</button>
+    </div>
+  </div>
+
+  <!-- Moteur FX dédié (indépendant du jeu) -->
+  <div style="margin-top:.6rem;padding:.5rem;background:rgba(0,0,0,.2);border:1px solid rgba(200,170,255,.14);border-radius:9px;">
+    <div style="font-size:.66rem;letter-spacing:.1em;color:rgba(200,170,255,.6);text-transform:uppercase;margin-bottom:.45rem;">FX Sample · indépendant du jeu</div>
+    <div class="sfx-row"><span class="sfx-lbl">EQ Bas</span>
+      <input type="range" min="-18" max="18" step="0.5" value="0" oninput="sampleFX('eqLow',this.value)"><span class="sfx-val" id="sfx-eqLow-val">0 dB</span></div>
+    <div class="sfx-row"><span class="sfx-lbl">EQ Med</span>
+      <input type="range" min="-18" max="18" step="0.5" value="0" oninput="sampleFX('eqMid',this.value)"><span class="sfx-val" id="sfx-eqMid-val">0 dB</span></div>
+    <div class="sfx-row"><span class="sfx-lbl">EQ Haut</span>
+      <input type="range" min="-18" max="18" step="0.5" value="0" oninput="sampleFX('eqHigh',this.value)"><span class="sfx-val" id="sfx-eqHigh-val">0 dB</span></div>
+    <div class="sfx-row"><span class="sfx-lbl">Reverb</span>
+      <input type="range" min="0" max="1" step="0.02" value="0" oninput="sampleFX('reverb',this.value)"><span class="sfx-val" id="sfx-reverb-val">0%</span></div>
+    <div class="sfx-row"><span class="sfx-lbl">Ping-Pong</span>
+      <input type="range" min="0" max="1" step="0.02" value="0" oninput="sampleFX('pp',this.value)"><span class="sfx-val" id="sfx-pp-val">0%</span></div>
+    <div class="sfx-row"><span class="sfx-lbl">P-P Temps</span>
+      <input type="range" min="0.04" max="1.2" step="0.01" value="0.27" oninput="sampleFX('ppTime',this.value)"><span class="sfx-val" id="sfx-ppTime-val">0.27s</span></div>
+    <div class="sfx-row"><span class="sfx-lbl">Sortie</span>
+      <input type="range" min="0" max="1.2" step="0.02" value="1" oninput="sampleFX('out',this.value)"><span class="sfx-val" id="sfx-out-val">100%</span></div>
+    <div style="font-size:.6rem;color:rgba(200,170,255,.4);font-style:italic;margin-top:.3rem;">Limiter intégré · EQ 36–512 Hz</div>
   </div>
 </div>
 

@@ -2,6 +2,20 @@
    05-controls.js — Contrôles oscillateurs & UI
    ═══════════════════════════════════════════ */
 
+// ── Verrouillage par paire (lock) ─────────────────────────────────
+// Le random ne touche QUE les paires non verrouillées. Master = index 6.
+let lockedPairs = {};
+function isLocked(i) { return !!lockedPairs[i]; }
+function toggleLock(i) {
+  lockedPairs[i] = !lockedPairs[i];
+  updatePairUI(i);
+  patchRandomTable();
+  ['lock-' + i, 'lockm-' + i].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) { b.textContent = lockedPairs[i] ? '🔒' : '🔓'; b.classList.toggle('locked', lockedPairs[i]); }
+  });
+}
+
 // ── Options mode aléatoire ────────────────────────────────────────
 const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false};
 function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
@@ -22,34 +36,24 @@ function setRandRatioMode(m,btn){
 }
 function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
 
-// FX aléatoire — randomise delay, reverb, chorus, EQ
+// FX aléatoire — randomise delay, reverb, EQ
 function randomizeFX(){
-  // Sur mobile (WebView), la réverbe à convolution = le tueur de CPU → craquement.
-  // On la coupe et on modère delay/chorus. Desktop : palette FX complète.
-  const _mob = window.innerWidth<=900 || window.innerHeight<=500;
-  const delT=+(0.08+Math.random()*.9).toFixed(2);
-  const delFB=+(Math.random()*(_mob?.4:.65)).toFixed(2);
-  const delW=+(Math.random()*(_mob?.2:.4)).toFixed(2);
-  const revW=_mob?0:+(Math.random()*.6).toFixed(2);
-  const chrD=+(Math.random()*(_mob?.4:.7)).toFixed(2);
-  const eqLF=Math.round(50+Math.random()*300);
-  const eqLG=Math.round((Math.random()*16-8)*10)/10;
-  const eqMF=Math.round(300+Math.random()*3000);
-  const eqMG=Math.round((Math.random()*16-8)*10)/10;
-  const eqHF=Math.round(3000+Math.random()*9000);
-  const eqHG=Math.round((Math.random()*16-8)*10)/10;
+  const delT  = +(0.08 + Math.random() * 0.9).toFixed(2);
+  const delFB = +(Math.random() * 0.5).toFixed(2);
+  const delW  = +(Math.random() * 0.3).toFixed(2);
+  const revW  = +(Math.random() * 0.45).toFixed(2);
+  const eqLF  = Math.round(50  + Math.random() * 300);
+  const eqLG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  const eqMF  = Math.round(300 + Math.random() * 3000);
+  const eqMG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  const eqHF  = Math.round(3000 + Math.random() * 9000);
+  const eqHG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
   [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
    ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
    ['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
-    const sl=document.getElementById(id);if(sl)sl.value=val;
-    if(typeof updateFX==='function')updateFX(id,val);
+    const sl = document.getElementById(id); if (sl) sl.value = val;
+    if (typeof updateFX === 'function') updateFX(id, val);
   });
-  if(typeof chorus!=='undefined'&&chorus){
-    try{chorus.depth=chrD;}catch(e){}
-    const sl=document.getElementById('chorus-depth');if(sl)sl.value=chrD;
-    const vd=document.getElementById('chd-val');if(vd)vd.textContent=chrD.toFixed(2);
-    const ck=document.getElementById('chorus-on');if(ck&&!ck.checked)ck.checked=true;
-  }
 }
 
 function setN(i, raw) {
@@ -118,7 +122,7 @@ function setMasterVol(v) {
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(36, Math.min(864, f));
+  masterFreq = Math.max(F_MIN, Math.min(432, f));
   updateDisplay();
   if (flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
@@ -161,17 +165,17 @@ function nRandom(i) {
 }
 
 function masterStep(delta) {
-  setMasterFreq(Math.max(36, Math.min(864, masterFreq + delta)));
+  setMasterFreq(Math.max(F_MIN, Math.min(432, masterFreq + delta)));
 }
 function onMasterInput(raw) {
   const v = parseInt(raw);
-  if (isNaN(v) || v < 36 || v > 864) return;
+  if (isNaN(v) || v < F_MIN || v > 432) return;
   masterFreq = v;
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
   document.title = 'FBF ' + v;
   PAIRS.forEach((pair, i) => {
-    const pF = Math.max(36, Math.min(864, v * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
-    const iF = Math.max(36, Math.min(864, pF + pair.ida.polarity * pair.ida.delta));
+    const pF = calcPFreq(i);
+    const iF = calcIFreq(i);
     if (flowing) { tuneOsc(pair.pingala.id, pF); tuneOsc(pair.ida.id, iF); }
     const pf  = document.getElementById('pfreq-'+i); if (pf)  pf.textContent  = fmtFreq(pF);
     const iff = document.getElementById('ifreq-'+i); if (iff) iff.textContent = fmtFreq(iF);
@@ -179,7 +183,7 @@ function onMasterInput(raw) {
   });
 }
 function onMasterChange(raw) {
-  const v = Math.max(36, Math.min(864, parseInt(raw)));
+  const v = Math.max(F_MIN, Math.min(432, parseInt(raw)));
   if (!isNaN(v)) setMasterFreq(v);
 }
 
@@ -188,30 +192,91 @@ function fbfToggle() {
   if (flowing) stopFlow(); else startFlow();
 }
 
-function triggerMagicAuto() {
-  const {freqMin,freqMax,ratioMode,useFX,rangeOn}=RAND_OPTS;
-  // Plage active → on confine entre min/max ; sinon plage complète 36–864.
-  const lo = rangeOn ? freqMin : 36;
-  const hi = rangeOn ? freqMax : 864;
-  const newMaster=Math.floor(lo+Math.random()*(hi-lo));
-  const isHigh=newMaster>432;
-  const volBase=isHigh?.024:.12; // 20% si > 432 Hz
-  let ri=Math.floor(Math.random()*RATIO_OPTS.length);
-  let baseN=0.2;
-  PAIRS.forEach((pair,idx)=>{
-    if(ratioMode==='random') ri=Math.floor(Math.random()*RATIO_OPTS.length);
-    else if(ratioMode==='harmonic') ri=idx%RATIO_OPTS.length;
-    pair.pingala.ri=ri;
-    pair.pingala.vol=volBase;
-    pair.ida.vol=volBase;
-    if(idx===MASTER_IDX){pair.pingala.n=1.0;}
-    else{pair.pingala.n=Math.round(baseN*10)/10;baseN+=0.4+Math.random()*.8;}
-    pair.ida.delta=1.8;
+// ── Densité n recalculée selon la fréquence maître (points 8 & 9) ──
+// Palette de densité ; pas plus fins quand le maître est haut (>360 Hz).
+function densityScheme(master) {
+  return master > F_SEUIL
+    ? [0.03, 0.06, 0.09, 0.12, 0.15, 0.18]   // maître haut → granularité fine
+    : [0.09, 0.12, 0.18, 0.24, 0.30, 0.36];  // maître bas/moyen → densité de base
+}
+// Monte n par octaves pour rester audible (≥ F_MIN) sans dépasser N_MAX (=1).
+function fitDensityN(master, ratio, baseN) {
+  let n = baseN, guard = 0;
+  while (master * ratio * n < F_MIN && n < N_MAX && guard++ < 8) n = Math.min(N_MAX, n * 2);
+  return Math.min(N_MAX, Math.round(n * 100) / 100);
+}
+
+function triggerMagicAuto(opts) {
+  const keepMaster = !!(opts && opts.keepMaster);
+  const {freqMin,freqMax,rangeOn,useFX}=RAND_OPTS;
+  const lo = rangeOn ? Math.max(F_MIN, freqMin) : F_MIN;
+  const hi = rangeOn ? Math.min(432, freqMax)   : 432;
+
+  // ── 1. Ratio-graine : UN seul ratio tire tout le champ ───────────
+  const seedRi  = Math.floor(Math.random() * RATIO_OPTS.length);
+  const seedR   = RATIO_OPTS[seedRi].r;
+  const invRi   = RATIO_OPTS.reduce((best,r,i) =>
+    Math.abs(r.r - 1/seedR) < Math.abs(RATIO_OPTS[best].r - 1/seedR) ? i : best, 0);
+  const sq      = seedR * seedR;
+  const sqRi    = RATIO_OPTS.reduce((best,r,i) =>
+    Math.abs(r.r - sq) < Math.abs(RATIO_OPTS[best].r - sq) ? i : best, 0);
+  // Schéma : R / 1/R / R / 1/R / R² / 1/R
+  const RI_SCHEME = [seedRi, invRi, seedRi, invRi, sqRi, invRi];
+
+  // ── 2. Delta-base + multiplicateurs cohérents ─────────────────────
+  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+  const baseDelta   = BASE_DELTAS[Math.floor(Math.random() * BASE_DELTAS.length)];
+  const D_MULT      = [1, 2, 0.5, 3, 1.5, 4];
+
+  // ── 3. Nouvelle fréquence maître via ratio-graine ─────────────────
+  // Lock maître (Phase 3) : on garde la valeur si verrouillée.
+  const masterLocked = typeof isLocked === 'function' && isLocked(MASTER_IDX);
+  const newMaster = (masterLocked || keepMaster) ? masterFreq
+    : Math.max(lo, Math.min(hi, Math.round(masterFreq * seedR)));
+
+  // ── 4. Densités recalculées selon le nouveau maître ──────────────
+  const baseScheme = densityScheme(newMaster);
+
+  PAIRS.forEach((pair, idx) => {
+    // Lock par fréquence (Phase 3) : on ne touche pas une paire verrouillée.
+    if (typeof isLocked === 'function' && isLocked(idx)) return;
+
+    if (idx === MASTER_IDX) {
+      pair.pingala.ri = seedRi;
+      pair.pingala.n  = 1.0;
+      pair.ida.delta  = baseDelta;
+    } else {
+      pair.pingala.ri = RI_SCHEME[idx];
+      pair.pingala.n  = fitDensityN(newMaster, RATIO_OPTS[pair.pingala.ri].r, baseScheme[idx]);
+      pair.ida.delta  = Math.max(0.1, Math.min(36,
+        Math.round(baseDelta * D_MULT[idx] * 10) / 10));
+    }
+    const pf   = idx === MASTER_IDX ? Math.min(432, newMaster)
+      : Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
+    const base = idx === MASTER_IDX ? 0.14 : 0.12;
+    // Point 9 : au-dessus du seuil → −50% de volume (spatialisation gérée côté audio)
+    const volMul = (idx !== MASTER_IDX && pf > F_SEUIL) ? 0.5 : 1.0;
+    pair.pingala.vol  = isosonicVol(pf, base) * volMul;
+    pair.ida.vol      = isosonicVol(pf, base) * volMul;
+    pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
   });
+
   setMasterFreq(newMaster);
-  setGlobalDelta(1.8);
-  if(useFX)randomizeFX();
-  if(!flowing)startFlow();
+  // Applique volumes + protection seuil sur les nœuds vivants
+  if (flowing) PAIRS.forEach((pair, i) => {
+    const pid = pair.pingala.id, iid = pair.ida.id;
+    if (nodes[pid] && !mutedOscs[pid]) safeRamp(nodes[pid].g.gain, pair.pingala.vol, 0.4);
+    if (nodes[iid] && !mutedOscs[iid]) safeRamp(nodes[iid].g.gain, pair.ida.vol, 0.4);
+    if (typeof _applySeuilProtect === 'function') _applySeuilProtect(i);
+  });
+  if (useFX) randomizeFX();
+  if (!flowing) startFlow();
+  buildVesicaPairs();
+  patchRandomTable();
+  saveState();
+
+  const btn = document.getElementById('btn-rand-dock');
+  if (btn) { btn.style.color='#fff'; setTimeout(()=>{if(btn)btn.style.color='';},400); }
 }
 
 function toggleFullscreen() {
