@@ -10,8 +10,10 @@ function toggleLock(i) {
   lockedPairs[i] = !lockedPairs[i];
   updatePairUI(i);
   patchRandomTable();
-  const b = document.getElementById('lock-' + i);
-  if (b) { b.textContent = lockedPairs[i] ? '🔒' : '🔓'; b.classList.toggle('locked', lockedPairs[i]); }
+  ['lock-' + i, 'lockm-' + i].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) { b.textContent = lockedPairs[i] ? '🔒' : '🔓'; b.classList.toggle('locked', lockedPairs[i]); }
+  });
 }
 
 // ── Options mode aléatoire ────────────────────────────────────────

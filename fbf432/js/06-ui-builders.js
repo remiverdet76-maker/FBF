@@ -373,7 +373,7 @@ function buildMasterFXHTML() {
         </div>
         <div class="fx-control-group">
           <span class="fx-label">Mix</span>
-          <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongWet(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
+          <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongMasterSend(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
           <span class="fx-val-disp" id="ppWet-val">0%</span>
         </div>
       </div>

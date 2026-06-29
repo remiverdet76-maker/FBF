@@ -298,11 +298,6 @@ function _applySeuilProtect(i) {
       if (node.p && above) node.p.pan.setTargetAtTime(side * 0.92, now, 0.12);
     } catch(e) {}
   });
-  // Réveille le bus ping-pong / reverb si protection active
-  if (above) {
-    if (ppWet)        ppWet.gain.setTargetAtTime(Math.max(ppWet.gain.value, 0.18), now, 0.2);
-    if (reverbWetGain)reverbWetGain.gain.setTargetAtTime(Math.max(reverbWetGain.gain.value, 0.16), now, 0.2);
-  }
 }
 
 /* ---------- 2.3 · IR DE RÉVERBE GÉNÉRÉE PAR CODE ---------- */
@@ -367,7 +362,7 @@ function initFXChain() {
   const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.35;  // R→L cross
   const ppPanL = c.createStereoPanner(); ppPanL.pan.value = -1;
   const ppPanR = c.createStereoPanner(); ppPanR.pan.value =  1;
-  ppWet    = c.createGain(); ppWet.gain.value = 0;
+  ppWet    = c.createGain(); ppWet.gain.value = 1;  // sortie du tank (toujours passante ; bus parallèle)
   ppSendBus = c.createGain(); ppSendBus.gain.value = 1; // per-osc PP sends
 
   // Master PP send (controlled by ppMasterSend gain, starts silent)
@@ -624,8 +619,9 @@ function applyFXState(s) {
     .forEach(([id,v]) => { setSl(id,v); if (typeof updateFX==='function') updateFX(id,v); }); }
   if (s.reverb != null) { setSl('reverbWet',s.reverb); if (typeof updateFX==='function') updateFX('reverbWet',s.reverb); }
   if (s.pp) {
-    setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb); setPingPongWet(s.pp.wet); setPingPongMasterSend(s.pp.send);
-    setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider',s.pp.wet);
+    setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb);
+    setPingPongWet(s.pp.wet != null ? s.pp.wet : 1); setPingPongMasterSend(s.pp.send || 0);
+    setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider', s.pp.send || 0);
   }
   if (s.lfo)    { LFO_STATE.rate=s.lfo.rate; LFO_STATE.depth=s.lfo.depth; lfoToggle(!!s.lfo.on);
                   const c=document.getElementById('lfo-on'); if (c) c.checked=!!s.lfo.on; }
