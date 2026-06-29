@@ -46,8 +46,32 @@ let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 let _waveBuf = null;
 let _spectroidBuf = null;
-const OSC_WAVES  = {}; // id → 'sine'|'triangle'|'square'|'sawtooth'|'sine2'
+const OSC_WAVES  = {}; // id → clé de OSC_ENGINES
 const OSC_FILTER = {}; // id → {cutoff:Hz, res:Q}
+const OSC_ENV    = {}; // id → {a:attack s, r:release s}
+
+// Moteurs d'oscillateur façon FL MiniSynth / MiniBrute (multi-partiels)
+// partiel : { t:type, d:détune cents, g:gain, r:ratio de fréquence }
+const OSC_ENGINES = {
+  sine:     [{t:'sine',d:0,g:1}],
+  sine2:    [{t:'sine',d:-7,g:.62},{t:'sine',d:7,g:.62}],
+  triangle: [{t:'triangle',d:0,g:1}],
+  square:   [{t:'square',d:0,g:.85}],
+  sawtooth: [{t:'sawtooth',d:0,g:.9}],
+  sawsin:   [{t:'sawtooth',d:0,g:.5},{t:'sine',d:0,g:.65}],
+  sawsqr:   [{t:'sawtooth',d:-4,g:.5},{t:'square',d:4,g:.4}],
+  dualsaw:  [{t:'sawtooth',d:-9,g:.5},{t:'sawtooth',d:9,g:.5}],
+  defsaw:   [{t:'sawtooth',d:-13,g:.42},{t:'sawtooth',d:0,g:.5},{t:'sawtooth',d:13,g:.42}],
+  defsin:   [{t:'sine',d:-13,g:.42},{t:'sine',d:0,g:.5},{t:'sine',d:13,g:.42}],
+  voixduo:  [{t:'sine',d:0,g:.62},{t:'sine',d:0,g:.5,r:3/2}],
+  voixtrio: [{t:'sine',d:0,g:.55},{t:'sine',d:0,g:.42,r:5/4},{t:'sine',d:0,g:.42,r:3/2}],
+  voixquat: [{t:'sine',d:0,g:.5},{t:'sine',d:0,g:.38,r:5/4},{t:'sine',d:0,g:.38,r:3/2},{t:'sine',d:0,g:.32,r:2}],
+};
+const OSC_ENGINE_LABELS = {
+  sine:'≈ Sin', sine2:'≈≈ Sin×2', triangle:'△ Tri', square:'⊓ Carré', sawtooth:'◣ Saw',
+  sawsin:'Saw+Sin', sawsqr:'Saw+Carré', dualsaw:'Saw×2', defsaw:'DefSaw', defsin:'DefSin',
+  voixduo:'Voix Duo', voixtrio:'Voix Trio', voixquat:'Voix Quat',
+};
 
 // ── Grain analogique (waveshaper doux + drift de pitch) ───────────
 const GRAIN_STATE = { on: true, drive: 0.18, drift: 0.3 };
@@ -107,27 +131,28 @@ function applyHiBand(node, freq) {
 }
 
 function buildOsc(id, freq, vol, pan) {
-  const c       = audioCtx();
-  const wType   = OSC_WAVES[id]  || 'sine';
-  const isSine2 = wType === 'sine2';
-  const fs      = OSC_FILTER[id] || { cutoff: 20000, res: 0 };
+  const c      = audioCtx();
+  const engine = OSC_ENGINES[OSC_WAVES[id]] || OSC_ENGINES.sine;
+  const fs     = OSC_FILTER[id] || { cutoff: 20000, res: 0 };
+  const env    = OSC_ENV[id]    || { a: 0, r: 0 };
+  const f0     = safeF(freq);
 
-  const o = c.createOscillator();
-  o.type = isSine2 ? 'sine' : wType;
-  o.frequency.value = safeF(freq);
-  if (isSine2) o.detune.value = -7;
+  const signalIn = c.createGain(); signalIn.gain.value = 1;
 
-  const signalIn = c.createGain(); signalIn.gain.value = isSine2 ? 0.65 : 1;
-  o.connect(signalIn);
-
-  let o2 = null;
-  if (isSine2) {
-    o2 = c.createOscillator(); o2.type = 'sine';
-    o2.frequency.value = safeF(freq); o2.detune.value = +7;
-    const o2g = c.createGain(); o2g.gain.value = 0.65;
-    o2.connect(o2g); o2g.connect(signalIn);
-    o2.start();
-  }
+  // Construit les partiels du moteur
+  const subs = [];
+  engine.forEach(part => {
+    const osc = c.createOscillator();
+    osc.type = part.t;
+    const ratio = part.r || 1;
+    osc.frequency.value = Math.max(1, f0 * ratio);
+    osc.detune.value = part.d || 0;
+    const pg = c.createGain(); pg.gain.value = part.g != null ? part.g : 1;
+    osc.connect(pg); pg.connect(signalIn);
+    if (_driftDepth) { try { _driftDepth.connect(osc.detune); } catch(e) {} }
+    osc.start();
+    subs.push({ osc, ratio });
+  });
 
   // Grain analogique : saturation douce (waveshaper tanh) pré-filtre
   const shaper = c.createWaveShaper();
@@ -146,11 +171,6 @@ function buildOsc(id, freq, vol, pan) {
   p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
   hiTrim.connect(masterGain);
 
-  // Drift de pitch analogique (LFO lent partagé → detune)
-  if (_driftDepth) {
-    try { _driftDepth.connect(o.detune); if (o2) _driftDepth.connect(o2.detune); } catch(e) {}
-  }
-
   const dSend = c.createGain(); dSend.gain.value = 0;
   hiTrim.connect(dSend);
   const bus = ensureHiDelay(); if (bus) dSend.connect(bus);
@@ -160,14 +180,15 @@ function buildOsc(id, freq, vol, pan) {
   if (reverbSendBus) rSend.connect(reverbSendBus);
   if (ppSendBus)     ppSend.connect(ppSendBus);
 
-  o.start();
-  const node = { o, o2, signalIn, shaper, g, p, hpf, flt, hiTrim, dSend, rSend, ppSend };
-  applyHiBand(node, safeF(freq));
+  const node = { _id: id, o: subs[0].osc, subs, signalIn, shaper, g, p, hpf, flt, hiTrim, dSend, rSend, ppSend };
+  applyHiBand(node, f0);
+  if (OSC_PATCH[id]) setTimeout(() => _reapplyOscPatch(id), 20);
   if (!mutedOscs[id] && vol > 0) {
     const now = c.currentTime;
+    const atk = Math.max(FADE / 5, env.a || 0);
     g.gain.cancelScheduledValues(now);
     g.gain.setValueAtTime(0, now);
-    g.gain.setTargetAtTime(vol, now, FADE / 5);
+    g.gain.setTargetAtTime(vol, now, atk);
   }
   return node;
 }
@@ -176,31 +197,31 @@ function tuneOsc(id, freq) {
   const node = nodes[id]; if (!node) return;
   try {
     const f = safeF(freq), now = aNow();
-    node.o.frequency.cancelScheduledValues(now);
-    node.o.frequency.setValueAtTime(node.o.frequency.value, now);
-    node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
-    if (node.o2) {
-      node.o2.frequency.cancelScheduledValues(now);
-      node.o2.frequency.setValueAtTime(node.o2.frequency.value, now);
-      node.o2.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
-    }
+    (node.subs || [{ osc: node.o, ratio: 1 }]).forEach(s => {
+      const tgt = Math.max(1, f * (s.ratio || 1));
+      s.osc.frequency.cancelScheduledValues(now);
+      s.osc.frequency.setValueAtTime(s.osc.frequency.value, now);
+      s.osc.frequency.exponentialRampToValueAtTime(tgt, now + TUNE_T);
+    });
     applyHiBand(node, f);
   } catch(e) {}
 }
 
 function releaseOsc(node) {
+  const subs = node.subs || (node.o ? [{ osc: node.o }] : []);
+  if (node._id) clearOscMods(node._id);
   try {
     const now = aNow();
+    const rel = Math.max(FADE / 5, (OSC_ENV[node._id] && OSC_ENV[node._id].r) || 0);
     node.g.gain.cancelScheduledValues(now);
     node.g.gain.setValueAtTime(node.g.gain.value, now);
-    node.g.gain.setTargetAtTime(0, now, FADE / 5);
-    node.o.stop(now + FADE + 0.1);
-    if (node.o2) try { node.o2.stop(now + FADE + 0.1); } catch(e) {}
+    node.g.gain.setTargetAtTime(0, now, rel);
+    subs.forEach(s => { try { s.osc.stop(now + FADE + 0.1); } catch(e) {} });
   } catch(e) {}
   setTimeout(() => {
     try {
-      node.o.disconnect(); node.g.disconnect(); node.p.disconnect();
-      if (node.o2)      node.o2.disconnect();
+      subs.forEach(s => { try { s.osc.disconnect(); } catch(e) {} });
+      node.g.disconnect(); node.p.disconnect();
       if (node.signalIn) node.signalIn.disconnect();
       if (node.shaper)  node.shaper.disconnect();
       if (node.hpf)     node.hpf.disconnect();
@@ -523,6 +544,21 @@ function setOscReverbSend(id, v) {
   const node = nodes[id]; if (!node?.rSend) return;
   node.rSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
 }
+function setOscHPF(id, hz) {
+  const node = nodes[id]; if (!node?.hpf) return;
+  node.hpf.frequency.setTargetAtTime(Math.max(20, Math.min(2000, parseFloat(hz))), aNow(), 0.05);
+}
+function setPairHPF(i, hz) { setOscHPF(PAIRS[i].pingala.id, hz); setOscHPF(PAIRS[i].ida.id, hz); }
+// Stéréo 3D : largeur symétrique pingala/ida
+function setPair3DWidth(i, w) {
+  const width = Math.max(0, Math.min(1, parseFloat(w))), now = aNow();
+  const np = nodes[PAIRS[i].pingala.id], ni = nodes[PAIRS[i].ida.id];
+  if (np?.p) np.p.pan.setTargetAtTime(-width, now, 0.08);
+  if (ni?.p) ni.p.pan.setTargetAtTime( width, now, 0.08);
+}
+function setPairReverbSend(i, v) { setOscReverbSend(PAIRS[i].pingala.id, v); setOscReverbSend(PAIRS[i].ida.id, v); }
+function setPairPPSend(i, v)     { setOscPPSend(PAIRS[i].pingala.id, v);     setOscPPSend(PAIRS[i].ida.id, v); }
+function setPairFilter(i, cutoff, res) { setOscFilter(PAIRS[i].pingala.id, cutoff, res); setOscFilter(PAIRS[i].ida.id, cutoff, res); }
 
 function setOscPPSend(id, v) {
   const node = nodes[id]; if (!node?.ppSend) return;
@@ -754,16 +790,18 @@ async function stopFlow() {
   flowing = false;
   Object.values(nodesCopy).forEach(n => {
     if (!n) return;
+    const subs = n.subs || (n.o ? [{ osc: n.o }] : []);
+    if (n._id) clearOscMods(n._id);
     try {
       const t = aNow();
       n.g.gain.cancelScheduledValues(t);
       n.g.gain.setTargetAtTime(0, t, 0.05);
-      n.o.stop(t + 0.3);
+      subs.forEach(s => { try { s.osc.stop(t + 0.3); } catch(e) {} });
     } catch(e) {}
     setTimeout(() => {
       try {
-        n.o.disconnect(); n.g.disconnect(); n.p.disconnect();
-        if (n.o2)      n.o2.disconnect();
+        subs.forEach(s => { try { s.osc.disconnect(); } catch(e) {} });
+        n.g.disconnect(); n.p.disconnect();
         if (n.signalIn) n.signalIn.disconnect();
         if (n.shaper)  n.shaper.disconnect();
         if (n.hpf)     n.hpf.disconnect();
@@ -820,6 +858,97 @@ function masterTick() {
   });
   drawSpectroid();
 }
+
+/* ---------- 2.9b · MINI-SYNTH : MOTEUR D'ONDE, ENVELOPPE, FILTRE ---------- */
+function setOscEngine(id, key) {
+  if (!OSC_ENGINES[key]) return;
+  OSC_WAVES[id] = key;
+  if (!flowing) return;
+  PAIRS.forEach((p, i) => {
+    if (p.pingala.id === id) { if (nodes[id]) { releaseOsc(nodes[id]); delete nodes[id]; } swapPingala(i); }
+    else if (p.ida.id === id) { if (nodes[id]) { releaseOsc(nodes[id]); delete nodes[id]; } swapIda(i); }
+  });
+}
+// Applique le même moteur aux deux oscillateurs d'une paire
+function setPairEngine(i, key) {
+  setOscEngine(PAIRS[i].pingala.id, key);
+  setOscEngine(PAIRS[i].ida.id, key);
+}
+function setOscEnv(id, a, r) {
+  const cur = OSC_ENV[id] || { a: 0, r: 0 };
+  if (a != null) cur.a = Math.max(0, Math.min(4, parseFloat(a)));
+  if (r != null) cur.r = Math.max(0, Math.min(6, parseFloat(r)));
+  OSC_ENV[id] = cur;
+}
+function setPairEnv(i, a, r) { setOscEnv(PAIRS[i].pingala.id, a, r); setOscEnv(PAIRS[i].ida.id, a, r); }
+
+/* ---------- 2.9c · PATCHBAY MODULAIRE PAR OSCILLATEUR (MiniBrute 2S) ---------- */
+const _oscMods  = {};   // id → { lfo, r1, r2, rndSum, conns:{} }
+const OSC_PATCH = {};   // id → { 'src:dest': level(0-3), _rate:Hz }
+const PATCH_SRC   = ['lfo', 'rnd'];
+const PATCH_DEST  = ['cutoff', 'pitch', 'pan', 'vol'];
+const PATCH_SCALE = {
+  cutoff: [0, 300, 900, 2400],   // Hz
+  pitch:  [0, 50, 150, 400],     // cents
+  pan:    [0, 0.3, 0.6, 0.95],
+  vol:    [0, 0.03, 0.07, 0.12],
+};
+function _ensureOscMods(id) {
+  if (_oscMods[id]) return _oscMods[id];
+  const node = nodes[id]; if (!node) return null;
+  const c = audioCtx();
+  const lfo = c.createOscillator(); lfo.type='sine';
+  lfo.frequency.value = (OSC_PATCH[id] && OSC_PATCH[id]._rate) || 0.4; lfo.start();
+  const r1 = c.createOscillator(); r1.type='sine'; r1.frequency.value=0.07; r1.start();
+  const r2 = c.createOscillator(); r2.type='sine'; r2.frequency.value=0.11; r2.start();
+  const rndSum = c.createGain(); rndSum.gain.value=0.5; r1.connect(rndSum); r2.connect(rndSum);
+  _oscMods[id] = { lfo, r1, r2, rndSum, conns:{} };
+  return _oscMods[id];
+}
+function setOscPatch(id, src, dest, level) {
+  OSC_PATCH[id] = OSC_PATCH[id] || {};
+  const key = src + ':' + dest;
+  OSC_PATCH[id][key] = level;
+  const node = nodes[id]; if (!node) return;
+  const mods = _ensureOscMods(id); if (!mods) return;
+  const c = audioCtx();
+  if (mods.conns[key]) { try { mods.conns[key].disconnect(); } catch(e) {} delete mods.conns[key]; }
+  if (!level) return;
+  const scale = (PATCH_SCALE[dest] || [0])[level] || 0;
+  const dg = c.createGain(); dg.gain.value = scale;
+  (src === 'lfo' ? mods.lfo : mods.rndSum).connect(dg);
+  if (dest === 'pitch') (node.subs || []).forEach(s => { try { dg.connect(s.osc.detune); } catch(e) {} });
+  else if (dest === 'cutoff' && node.flt) dg.connect(node.flt.frequency);
+  else if (dest === 'pan'    && node.p)   dg.connect(node.p.pan);
+  else if (dest === 'vol'    && node.g)   dg.connect(node.g.gain);
+  mods.conns[key] = dg;
+}
+function setOscLfoRate(id, hz) {
+  OSC_PATCH[id] = OSC_PATCH[id] || {};
+  OSC_PATCH[id]._rate = Math.max(0.02, Math.min(36, parseFloat(hz)));
+  const m = _oscMods[id]; if (m) m.lfo.frequency.setTargetAtTime(OSC_PATCH[id]._rate, aNow(), 0.05);
+}
+function _reapplyOscPatch(id) {
+  const data = OSC_PATCH[id]; if (!data) return;
+  Object.keys(data).forEach(key => {
+    if (key === '_rate') return;
+    const [src, dest] = key.split(':');
+    if (data[key]) setOscPatch(id, src, dest, data[key]);
+  });
+}
+function clearOscMods(id) {
+  const m = _oscMods[id]; if (!m) return;
+  try { m.lfo.stop(); m.r1.stop(); m.r2.stop(); } catch(e) {}
+  Object.values(m.conns).forEach(g => { try { g.disconnect(); } catch(e) {} });
+  try { m.lfo.disconnect(); m.rndSum.disconnect(); } catch(e) {}
+  delete _oscMods[id];
+}
+// Patch appliqué aux deux oscillateurs d'une paire
+function setPairPatch(i, src, dest, level) {
+  setOscPatch(PAIRS[i].pingala.id, src, dest, level);
+  setOscPatch(PAIRS[i].ida.id, src, dest, level);
+}
+function setPairLfoRate(i, hz) { setOscLfoRate(PAIRS[i].pingala.id, hz); setOscLfoRate(PAIRS[i].ida.id, hz); }
 
 /* ---------- 2.10 · LFO DOUX PAR OSCILLATEUR ---------- */
 const _oscVolLFOs = {};

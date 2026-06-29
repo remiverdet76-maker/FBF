@@ -19,6 +19,13 @@
 </head>
 <body>
 
+<!-- Splash 36 Rayons -->
+<div id="splash-36">
+  <img src="assets/logo-36rayons.png" alt="36 Rayons" onerror="this.style.display='none'">
+  <div class="splash-title">FBF 432</div>
+  <div class="splash-sub">✦ 36 Rayons ✦</div>
+</div>
+
 <img id="cosmic-bg" src="img/cosmic-flux.jpg" alt="" onerror="this.style.display='none'">
 <canvas id="meta-canvas"></canvas>
 <div id="sphere-layer"></div>
@@ -152,6 +159,14 @@
 <!-- Panel : Notice — droite -->
 <div class="pan-right" id="panNotice">
   <div class="pct">FBF 432 — Harmonique Cosmique</div>
+  <div class="theme-switch">
+    <span class="theme-lbl">Thème visuel</span>
+    <div class="theme-btns">
+      <button class="theme-b" id="th-or"     onclick="setTheme('or')">☀ 432 Or</button>
+      <button class="theme-b" id="th-sphere" onclick="setTheme('sphere')">◉ Sphère</button>
+      <button class="theme-b" id="th-flux"   onclick="setTheme('flux')">〜 Flux</button>
+    </div>
+  </div>
   <div class="notice-panel">
     <div class="notice-block">
       <div class="notice-term">FBF — Flux Binaural Fractal</div>

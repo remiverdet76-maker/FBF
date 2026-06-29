@@ -524,9 +524,35 @@ function _renderPresets() {
   });
 }
 
+// ── Thèmes visuels (skins) ────────────────────────────────────────
+const THEME_KEY = 'fbf432-theme';
+function setTheme(name) {
+  document.body.classList.remove('theme-or','theme-sphere','theme-flux');
+  document.body.classList.add('theme-' + name);
+  ['or','sphere','flux'].forEach(t => {
+    const b = document.getElementById('th-' + t);
+    if (b) b.classList.toggle('on', t === name);
+  });
+  try { localStorage.setItem(THEME_KEY, name); } catch(e) {}
+}
+function _loadTheme() {
+  let t = 'or';
+  try { t = localStorage.getItem(THEME_KEY) || 'or'; } catch(e) {}
+  setTheme(t);
+}
+
+// ── Splash 36 Rayons ──────────────────────────────────────────────
+function hideSplash() {
+  const s = document.getElementById('splash-36');
+  if (!s) return;
+  s.classList.add('hide');
+  setTimeout(() => { if (s) s.style.display = 'none'; }, 900);
+}
+
 // ── Init ──────────────────────────────────────────────────────────
 function init() {
   loadState();
+  _loadTheme();
   harmonicRandomInit();
 
   // Inject FX panel
@@ -574,6 +600,7 @@ function init() {
   setInterval(updateInfobar, 1000);
 
   ui('idle', 'Prêt · Cliquez FLUX ou FBF pour rayonner');
+  setTimeout(hideSplash, 1400);
 }
 
 // ── Deux orientations supportées (app Android : paysage + portrait) ──

@@ -605,11 +605,9 @@ function buildPairHTML(pair, i) {
   const ws=waveState(pair.ida.delta);
   const isMutedI=!!mutedOscs[pair.ida.id];
   const isMutedP=!!mutedOscs[pair.pingala.id];
-  return `<div class="pair-panel" style="border-left-color:${c};">
-    <div class="pair-head">
-      <span class="pair-dot" style="background:${c}"></span>
-      <span class="pair-name" style="color:${c}">${pair.label} — Pingala / Ida</span>
-    </div>
+
+  // ── ① BINAURAL (contenu de l'onglet) ────────────────────────────
+  const binauralHTML = `
     <div style="background:rgba(0,0,0,.2);border-radius:10px;border-left:4px solid ${c}88;margin-bottom:.8rem;">
       <div class="accord-header" onclick="toggleAccord('p${i}')">
         <span class="accord-arrow open" id="aa-p${i}">▶</span>
@@ -679,50 +677,142 @@ function buildPairHTML(pair, i) {
       <button id="btn-lfo-${i}" onclick="toggleOscVolLFO(${i})"
         style="font-size:.68rem;padding:.18rem .5rem;background:transparent;border:1px solid ${c}44;color:${c}88;border-radius:6px;cursor:pointer;">〜 Activer</button>
     </div>
+    ${_ratioTableHTML(i, c)}`;
 
-    <!-- Mini-synth : Waveform + Filter + FX Sends -->
-    <div style="margin-top:.55rem;padding:.5rem .55rem;background:rgba(0,0,0,.2);border-radius:8px;border:1px solid ${c}22;">
-      <div style="font-size:.64rem;letter-spacing:.12em;color:${c}88;text-transform:uppercase;margin-bottom:.4rem;">Forme d'onde</div>
-      <div style="display:flex;gap:.25rem;flex-wrap:wrap;">
-        ${['sine','sine2','triangle','square','sawtooth'].map(wt=>`<button
-          id="wbtn-p${i}-${wt}" onclick="(function(){setOscWave('${PAIRS[i].pingala.id}','${wt}');setOscWave('${PAIRS[i].ida.id}','${wt}');['sine','sine2','triangle','square','sawtooth'].forEach(w=>{const b=document.getElementById('wbtn-p${i}-'+w);if(b)b.style.background='';});this.style.background='${c}33';})()"
-          style="font-size:.65rem;padding:.2rem .45rem;background:${(OSC_WAVES[PAIRS[i].pingala.id]||'sine')===wt?c+'33':'transparent'};border:1px solid ${c}33;color:${c}aa;border-radius:5px;cursor:pointer;white-space:nowrap;">
-          ${{sine:'≈ Sin',sine2:'≈≈ Sin+',triangle:'△ Tri',square:'⊓ Sqr',sawtooth:'/ Saw'}[wt]}</button>`).join('')}
-      </div>
-      <div style="margin-top:.45rem;">
-        <div style="font-size:.64rem;letter-spacing:.12em;color:${c}88;text-transform:uppercase;margin-bottom:.3rem;">Filtre Passe-bas</div>
-        <div style="display:flex;align-items:center;gap:.4rem;">
-          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">Coupe</span>
-          <input type="range" class="brange" min="200" max="20000" step="100" value="${(OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff}"
-            style="flex:1;accent-color:${c};"
-            oninput="setOscFilter('${PAIRS[i].pingala.id}',this.value,null);setOscFilter('${PAIRS[i].ida.id}',this.value,null);this.nextElementSibling.textContent=Math.round(this.value)+'Hz'">
-          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:48px;text-align:right;">${(OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff >= 19900 ? '20k Hz' : Math.round((OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff)+'Hz'}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem;">
-          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">Rés.</span>
-          <input type="range" class="brange" min="0" max="20" step="0.5" value="${(OSC_FILTER[PAIRS[i].pingala.id]||{res:0}).res}"
-            style="flex:1;accent-color:${c}88;"
-            oninput="setOscFilter('${PAIRS[i].pingala.id}',null,this.value);setOscFilter('${PAIRS[i].ida.id}',null,this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(1)">
-          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:48px;text-align:right;">${(OSC_FILTER[PAIRS[i].pingala.id]||{res:0}).res.toFixed(1)}</span>
-        </div>
-      </div>
-      <div style="margin-top:.45rem;">
-        <div style="font-size:.64rem;letter-spacing:.12em;color:${c}88;text-transform:uppercase;margin-bottom:.3rem;">Envoi FX (DB4)</div>
-        <div style="display:flex;align-items:center;gap:.4rem;">
-          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">Rev</span>
-          <input type="range" class="brange" min="0" max="1" step="0.02" value="0"
-            style="flex:1;accent-color:${c};"
-            oninput="setOscReverbSend('${PAIRS[i].pingala.id}',this.value);setOscReverbSend('${PAIRS[i].ida.id}',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:32px;text-align:right;">0%</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem;">
-          <span style="font-size:.68rem;color:rgba(200,170,255,.6);min-width:32px;">P-P</span>
-          <input type="range" class="brange" min="0" max="1" step="0.02" value="0"
-            style="flex:1;accent-color:${c}88;"
-            oninput="setOscPPSend('${PAIRS[i].pingala.id}',this.value);setOscPPSend('${PAIRS[i].ida.id}',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span style="font-size:.72rem;color:rgba(200,170,255,.75);min-width:32px;text-align:right;">0%</span>
-        </div>
-      </div>
+  // ── ② OSCILLO (façon FL MiniSynth) ──────────────────────────────
+  const curEng = OSC_WAVES[PAIRS[i].pingala.id] || 'sine';
+  const fcut = (OSC_FILTER[PAIRS[i].pingala.id]||{cutoff:20000}).cutoff;
+  const fres = (OSC_FILTER[PAIRS[i].pingala.id]||{res:0}).res;
+  const env  = (typeof OSC_ENV!=='undefined' && OSC_ENV[PAIRS[i].pingala.id]) || {a:0,r:0};
+  const oscTabHTML = `
+    <div class="osc-sec-t" style="color:${c}aa;">Moteur d'onde</div>
+    <div class="eng-grid">
+      ${Object.keys(OSC_ENGINE_LABELS).map(k=>`<button class="eng-btn${curEng===k?' on':''}" id="eng-${i}-${k}"
+        onclick="pickEngine(${i},'${k}')" style="--ec:${c};">${OSC_ENGINE_LABELS[k]}</button>`).join('')}
     </div>
+    <div class="osc-sec-t" style="color:${c}aa;">Filtre · Cutoff / Résonance</div>
+    <div class="ctl-row"><span class="ctl-l">Cutoff</span>
+      <input type="range" min="120" max="20000" step="20" value="${fcut}" style="accent-color:${c};"
+        oninput="setPairFilter(${i},this.value,null);this.nextElementSibling.textContent=(this.value>=19900?'20k':Math.round(this.value))+' Hz'">
+      <span class="ctl-v">${fcut>=19900?'20k Hz':Math.round(fcut)+' Hz'}</span></div>
+    <div class="ctl-row"><span class="ctl-l">Réson.</span>
+      <input type="range" min="0" max="24" step="0.5" value="${fres}" style="accent-color:${c}aa;"
+        oninput="setPairFilter(${i},null,this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(1)">
+      <span class="ctl-v">${fres.toFixed(1)}</span></div>
+    <div class="osc-sec-t" style="color:${c}aa;">Amp EG · Attaque / Relâche</div>
+    <div class="ctl-row"><span class="ctl-l">Attaque</span>
+      <input type="range" min="0" max="4" step="0.05" value="${env.a}" style="accent-color:${c};"
+        oninput="setPairEnv(${i},this.value,null);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'s'">
+      <span class="ctl-v">${env.a.toFixed(2)}s</span></div>
+    <div class="ctl-row"><span class="ctl-l">Relâche</span>
+      <input type="range" min="0" max="6" step="0.05" value="${env.r}" style="accent-color:${c}aa;"
+        oninput="setPairEnv(${i},null,this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'s'">
+      <span class="ctl-v">${env.r.toFixed(2)}s</span></div>
+    <div class="osc-sec-t" style="color:${c}aa;">LFO · Rythme</div>
+    <div class="ctl-row"><span class="ctl-l">Rythme</span>
+      <input type="range" min="0.02" max="12" step="0.02" value="0.4" style="accent-color:${c};"
+        oninput="setPairLfoRate(${i},this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+' Hz'">
+      <span class="ctl-v">0.40 Hz</span></div>
+    <div class="osc-hint">Routage du LFO → onglet ④ Patch</div>`;
+
+  // ── ③ FX (par oscillateur, indépendant) ─────────────────────────
+  const fxTabHTML = `
+    <div class="osc-sec-t" style="color:${c}aa;">Envois FX (DB4)</div>
+    <div class="ctl-row"><span class="ctl-l">Reverb</span>
+      <input type="range" min="0" max="1" step="0.02" value="0" style="accent-color:${c};"
+        oninput="setPairReverbSend(${i},this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+      <span class="ctl-v">0%</span></div>
+    <div class="ctl-row"><span class="ctl-l">Delay P-P</span>
+      <input type="range" min="0" max="1" step="0.02" value="0" style="accent-color:${c}aa;"
+        oninput="setPairPPSend(${i},this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+      <span class="ctl-v">0%</span></div>
+    <div class="osc-sec-t" style="color:${c}aa;">EQ · Coupe-bas</div>
+    <div class="ctl-row"><span class="ctl-l">Low cut</span>
+      <input type="range" min="20" max="400" step="2" value="20" style="accent-color:${c};"
+        oninput="setPairHPF(${i},this.value);this.nextElementSibling.textContent=Math.round(this.value)+' Hz'">
+      <span class="ctl-v">20 Hz</span></div>
+    <div class="osc-sec-t" style="color:${c}aa;">Stéréo 3D · Largeur</div>
+    <div class="ctl-row"><span class="ctl-l">Largeur</span>
+      <input type="range" min="0" max="1" step="0.02" value="${Math.abs((OSC_PAN[i]||[0.5])[0])}" style="accent-color:${c};"
+        oninput="setPair3DWidth(${i},this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+      <span class="ctl-v">${Math.round(Math.abs((OSC_PAN[i]||[0.5])[0])*100)}%</span></div>`;
+
+  // ── ④ PATCHBAY (MiniBrute 2S tactile) ───────────────────────────
+  const patchTabHTML = `
+    <div class="osc-sec-t" style="color:${c}aa;">Patchbay · tap pour câbler</div>
+    <div class="patch-grid">
+      <div class="patch-cell head"></div>
+      <div class="patch-cell head">Cutoff</div>
+      <div class="patch-cell head">Pitch</div>
+      <div class="patch-cell head">Pan</div>
+      <div class="patch-cell head">Vol</div>
+      ${['lfo','rnd'].map(src=>`
+        <div class="patch-cell rowh">${src==='lfo'?'LFO':'Rnd'}</div>
+        ${['cutoff','pitch','pan','vol'].map(dest=>{
+          const lvl=(OSC_PATCH[PAIRS[i].pingala.id]||{})[src+':'+dest]||0;
+          return `<button class="patch-cell jack lvl${lvl}" id="patch-${i}-${src}-${dest}" style="--ec:${c};"
+            onclick="patchCycle(${i},'${src}','${dest}')">${'●'.repeat(lvl)||'○'}</button>`;
+        }).join('')}`).join('')}
+    </div>
+    <div class="osc-hint">○ off · ● faible · ●● moyen · ●●● fort</div>`;
+
+  return `<div class="pair-panel" style="border-left-color:${c};--ec:${c};">
+    <div class="pair-head">
+      <span class="pair-dot" style="background:${c}"></span>
+      <span class="pair-name" style="color:${c}">${pair.label}</span>
+      <button class="osc-lockbtn${(typeof isLocked==='function'&&isLocked(i))?' locked':''}" id="lockm-${i}" onclick="toggleLock(${i})" title="Verrouiller">${(typeof isLocked==='function'&&isLocked(i))?'🔒':'🔓'}</button>
+    </div>
+    <div class="osc-tabs">
+      <button class="osc-tab on" id="otab-${i}-1" onclick="oscTab(${i},1)" style="--ec:${c};">① Binaural</button>
+      <button class="osc-tab"    id="otab-${i}-2" onclick="oscTab(${i},2)" style="--ec:${c};">② Oscillo</button>
+      <button class="osc-tab"    id="otab-${i}-3" onclick="oscTab(${i},3)" style="--ec:${c};">③ FX</button>
+      <button class="osc-tab"    id="otab-${i}-4" onclick="oscTab(${i},4)" style="--ec:${c};">④ Patch</button>
+    </div>
+    <div class="osc-pane" id="opane-${i}-1">${binauralHTML}</div>
+    <div class="osc-pane hidden" id="opane-${i}-2">${oscTabHTML}</div>
+    <div class="osc-pane hidden" id="opane-${i}-3">${fxTabHTML}</div>
+    <div class="osc-pane hidden" id="opane-${i}-4">${patchTabHTML}</div>
   </div>`;
+}
+
+// Tableau Hz par ratio — sélection rapide (54 → 396)
+function _ratioTableHTML(i, c) {
+  const n = PAIRS[i].pingala.n;
+  const cells = RATIO_OPTS.map((r, j) => {
+    const f = Math.max(F_MIN, Math.min(F_MAX, masterFreq * r.r * n));
+    const on = j === PAIRS[i].pingala.ri;
+    return `<button class="rt-cell${on?' on':''}" style="--ec:${c};" onclick="setRatio(${i},${j})">
+      <span class="rt-l">${r.l}</span><span class="rt-hz">${f.toFixed(0)}</span></button>`;
+  }).join('');
+  return `<div class="osc-sec-t" style="color:${c}aa;margin-top:.6rem;">Tableau ratio → Hz (sélection rapide)</div>
+    <div class="rt-grid">${cells}</div>`;
+}
+
+// Switch d'onglet du modal oscillateur
+function oscTab(i, n) {
+  for (let t = 1; t <= 4; t++) {
+    const pane = document.getElementById('opane-'+i+'-'+t);
+    const tab  = document.getElementById('otab-'+i+'-'+t);
+    if (pane) pane.classList.toggle('hidden', t !== n);
+    if (tab)  tab.classList.toggle('on', t === n);
+  }
+}
+
+// Sélection du moteur d'onde (les deux oscillateurs de la paire)
+function pickEngine(i, key) {
+  setPairEngine(i, key);
+  Object.keys(OSC_ENGINE_LABELS).forEach(k => {
+    const b = document.getElementById('eng-'+i+'-'+k);
+    if (b) b.classList.toggle('on', k === key);
+  });
+}
+
+// Cycle d'un jack de la patchbay (0→1→2→3→0)
+function patchCycle(i, src, dest) {
+  const id = PAIRS[i].pingala.id;
+  const cur = (OSC_PATCH[id]||{})[src+':'+dest] || 0;
+  const lvl = (cur + 1) % 4;
+  setPairPatch(i, src, dest, lvl);
+  const b = document.getElementById('patch-'+i+'-'+src+'-'+dest);
+  if (b) { b.className = 'patch-cell jack lvl'+lvl; b.textContent = '●'.repeat(lvl) || '○'; }
 }
