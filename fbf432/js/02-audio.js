@@ -77,7 +77,8 @@ const OSC_ENGINE_LABELS = {
 };
 
 // ── Grain analogique (waveshaper doux + drift de pitch) ───────────
-const GRAIN_STATE = { on: true, drive: 0.18, drift: 0.3 };
+// OFF par défaut : une sinus pure doit rester PURE (sinon saturation = bourdonnement).
+const GRAIN_STATE = { on: false, drive: 0, drift: 0 };
 let _driftLFO = null, _driftDepth = null;
 function _grainCurve(drive) {
   const n = 1024, c = new Float32Array(n);
@@ -89,9 +90,13 @@ function _grainCurve(drive) {
   return c;
 }
 function setGrainDrive(v) {
+  const was = GRAIN_STATE.on && GRAIN_STATE.drive > 0.001;
   GRAIN_STATE.drive = Math.max(0, Math.min(1, parseFloat(v)));
-  const curve = GRAIN_STATE.drive > 0.001 ? _grainCurve(GRAIN_STATE.drive) : null;
-  Object.values(nodes).forEach(n => { if (n && n.shaper) n.shaper.curve = curve; });
+  GRAIN_STATE.on = GRAIN_STATE.drive > 0.001;
+  const now = GRAIN_STATE.on;
+  if (was !== now && flowing) { rebuildAllOscs(); }   // insère/retire le saturateur proprement
+  else { const curve = now ? _grainCurve(GRAIN_STATE.drive) : null;
+         Object.values(nodes).forEach(n => { if (n && n.shaper) n.shaper.curve = curve; }); }
   const el = document.getElementById('sv-grain-drive'); if (el) el.textContent = GRAIN_STATE.drive.toFixed(2);
 }
 function setGrainDrift(v) {
@@ -134,10 +139,14 @@ function buildOsc(id, freq, vol, pan) {
     subs.push({ osc, ratio });
   });
 
-  // Grain analogique : saturation douce (waveshaper tanh) pré-filtre
-  const shaper = c.createWaveShaper();
-  shaper.oversample = 'none';  // CPU : pas de suréchantillonnage (marge pour le thread audio)
-  shaper.curve = (GRAIN_STATE.on && GRAIN_STATE.drive > 0.001) ? _grainCurve(GRAIN_STATE.drive) : null;
+  // Grain analogique : saturation douce — UNIQUEMENT si activé (sinon trajet 100% propre)
+  const grainOn = GRAIN_STATE.on && GRAIN_STATE.drive > 0.001;
+  let shaper = null;
+  if (grainOn) {
+    shaper = c.createWaveShaper();
+    shaper.oversample = '4x';
+    shaper.curve = _grainCurve(GRAIN_STATE.drive);
+  }
 
   const p   = c.createStereoPanner(); p.pan.value = pan;
   const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
@@ -147,7 +156,8 @@ function buildOsc(id, freq, vol, pan) {
   const g      = c.createGain(); g.gain.value = 0;
   const hiTrim = c.createGain(); hiTrim.gain.value = 1;
 
-  signalIn.connect(shaper); shaper.connect(p);
+  if (shaper) { signalIn.connect(shaper); shaper.connect(p); }
+  else        { signalIn.connect(p); }      // sinus pure → aucun traitement
   p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
   hiTrim.connect(masterGain);
 
