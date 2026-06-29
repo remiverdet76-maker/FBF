@@ -240,73 +240,82 @@ function aeratedN(master, ratio, idx, spread) {
   return Math.max(0.03, Math.min(N_MAX, Math.round(n * 100) / 100));
 }
 
+// Indice de ratio le plus proche d'une valeur cible dans RATIO_OPTS
+function closestRatioIdx(target) {
+  return RATIO_OPTS.reduce((best, o, i) =>
+    Math.abs(o.r - target) < Math.abs(RATIO_OPTS[best].r - target) ? i : best, 0);
+}
+
 function triggerMagicAuto(opts) {
   const keepMaster = !!(opts && opts.keepMaster);
-  const {freqMin,freqMax,rangeOn,useFX}=RAND_OPTS;
-  const lo = rangeOn ? Math.max(F_MIN, freqMin) : F_MIN;
-  const hi = rangeOn ? Math.min(432, freqMax)   : 432;
+  const spread = RAND_OPTS.spread, useFX = RAND_OPTS.useFX;
 
-  // ── 1. Ratio-graine : UN seul ratio tire tout le champ ───────────
-  const seedRi  = Math.floor(Math.random() * RATIO_OPTS.length);
-  const seedR   = RATIO_OPTS[seedRi].r;
-  const invRi   = RATIO_OPTS.reduce((best,r,i) =>
-    Math.abs(r.r - 1/seedR) < Math.abs(RATIO_OPTS[best].r - 1/seedR) ? i : best, 0);
-  const sq      = seedR * seedR;
-  const sqRi    = RATIO_OPTS.reduce((best,r,i) =>
-    Math.abs(r.r - sq) < Math.abs(RATIO_OPTS[best].r - sq) ? i : best, 0);
-  // Schéma : R / 1/R / R / 1/R / R² / 1/R
-  const RI_SCHEME = [seedRi, invRi, seedRi, invRi, sqRi, invRi];
+  // ── 1. Fréquence maître = SOURCE (jamais > 432) ───────────────────
+  // Le maître reste la base ; le random le garde s'il est verrouillé.
+  const masterLocked = (typeof isLocked === 'function' && isLocked(MASTER_IDX)) || keepMaster;
+  const newMaster = masterLocked ? masterFreq
+    : Math.max(F_MIN, Math.min(432, masterFreq)); // pas de saut sauvage : on garde la source
 
-  // ── 2. Delta-base + multiplicateurs cohérents ─────────────────────
-  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+  // ── 2. Binaural global : un seul Δ, appliqué ± à toutes les paires ─
+  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 7.83];
   const baseDelta   = BASE_DELTAS[Math.floor(Math.random() * BASE_DELTAS.length)];
-  const D_MULT      = [1, 2, 0.5, 3, 1.5, 4];
 
-  // ── 3. Nouvelle fréquence maître via ratio-graine ─────────────────
-  // Lock maître (Phase 3) : on garde la valeur si verrouillée.
-  const masterLocked = typeof isLocked === 'function' && isLocked(MASTER_IDX);
-  const newMaster = (masterLocked || keepMaster) ? masterFreq
-    : Math.max(lo, Math.min(hi, Math.round(masterFreq * seedR)));
-
-  // ── 4. Aération : carriers étalés sur la bande selon RAND_OPTS.spread ──
-  const spread = RAND_OPTS.spread;
+  // ── 3. Une graine miroir par bande (ratios miroir R / 1/R) ────────
+  const bandData = FBF_BANDS.map(([blo, bhi]) => {
+    const geoC = Math.sqrt(blo * bhi);
+    // léger jeu autour du centre + ouverture selon spread
+    const seed = geoC * (1 + (Math.random() - 0.5) * 0.2 * (0.4 + spread));
+    const maxR = Math.min(bhi / seed, seed / blo);            // garde R et 1/R dans la bande
+    const cands = RATIO_OPTS.map((o, i) => ({ i, r: o.r })).filter(o => o.r >= 1.0 && o.r <= maxR);
+    const pick  = cands.length ? cands[Math.floor(Math.random() * cands.length)] : { i: closestRatioIdx(1), r: 1 };
+    return { seed, Ri: pick.i, invRi: closestRatioIdx(1 / pick.r) };
+  });
 
   PAIRS.forEach((pair, idx) => {
-    // Lock par fréquence (Phase 3) : on ne touche pas une paire verrouillée.
     if (typeof isLocked === 'function' && isLocked(idx)) return;
 
     if (idx === MASTER_IDX) {
-      pair.pingala.ri = seedRi;
-      pair.pingala.n  = 1.0;
-      pair.ida.delta  = baseDelta;
-    } else {
-      pair.pingala.ri = RI_SCHEME[idx];
-      pair.pingala.n  = aeratedN(newMaster, RATIO_OPTS[pair.pingala.ri].r, idx, spread);
-      pair.ida.delta  = Math.max(0.1, Math.min(36,
-        Math.round(baseDelta * D_MULT[idx] * 10) / 10));
+      pair.pingala.n = 1.0;
+      pair.ida.delta = baseDelta;
+      pair.ida.polarity = 1;
+      const pf = Math.min(432, newMaster);
+      pair.pingala.vol = isosonicVol(pf, 0.14);
+      pair.ida.vol     = isosonicVol(pf, 0.14);
+      return;
     }
-    const pf   = idx === MASTER_IDX ? Math.min(432, newMaster)
-      : Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
-    const base = idx === MASTER_IDX ? 0.14 : 0.12;
-    // Point 9 : au-dessus du seuil → −50% de volume (spatialisation gérée côté audio)
-    const volMul = (idx !== MASTER_IDX && pf > F_SEUIL) ? 0.5 : 1.0;
-    pair.pingala.vol  = isosonicVol(pf, base) * volMul;
-    pair.ida.vol      = isosonicVol(pf, base) * volMul;
-    pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
+
+    const b = PAIR_BAND[idx];
+    const bd = bandData[b];
+    const isFirst = (idx % 2 === 0);              // 0,2,4 = première paire de la bande
+    // Ratios miroir : une paire monte, l'autre descend (polarité 432)
+    pair.pingala.ri  = isFirst ? bd.invRi : bd.Ri;
+    pair.pingala.n   = bd.seed / newMaster;       // freq = master × ratio × n = seed × ratio
+    pair.ida.delta   = baseDelta;                 // même Δ binaural partout
+    pair.ida.polarity = isFirst ? -1 : 1;         // ± appliqué vers IDA
+
+    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
+    pair.pingala.vol = isosonicVol(pf, 0.12);
+    pair.ida.vol     = isosonicVol(pf, 0.12);
+
+    // Bande haute (288–566) : lowpass doux imposé (aération, anti-agressivité)
+    const cut = (b === 2) ? 200 : 6000;
+    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 4 };
+    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 4 };
   });
 
   // Éventail stéréo selon le spread
   OSC_PAN = buildOscPan(0.35 + spread * 0.6);
 
   setMasterFreq(newMaster);
-  // Applique volumes + pan (éventail) + protection seuil sur les nœuds vivants
+  // Applique volumes + pan + filtres sur les nœuds vivants
   if (flowing) PAIRS.forEach((pair, i) => {
     const pid = pair.pingala.id, iid = pair.ida.id;
     if (nodes[pid] && !mutedOscs[pid]) safeRamp(nodes[pid].g.gain, pair.pingala.vol, 0.4);
     if (nodes[iid] && !mutedOscs[iid]) safeRamp(nodes[iid].g.gain, pair.ida.vol, 0.4);
     if (nodes[pid]?.p && OSC_PAN[i]) nodes[pid].p.pan.setTargetAtTime(OSC_PAN[i][0], aNow(), 0.15);
     if (nodes[iid]?.p && OSC_PAN[i]) nodes[iid].p.pan.setTargetAtTime(OSC_PAN[i][1], aNow(), 0.15);
-    if (typeof _applySeuilProtect === 'function') _applySeuilProtect(i);
+    if (i !== MASTER_IDX) { setOscFilter(pid, OSC_FILTER[pid].cutoff, OSC_FILTER[pid].res);
+                            setOscFilter(iid, OSC_FILTER[iid].cutoff, OSC_FILTER[iid].res); }
   });
   if (useFX) randomizeFX();
   if (!flowing) startFlow();

@@ -118,7 +118,7 @@ function applyHiBand(node, freq) {
 function buildOsc(id, freq, vol, pan) {
   const c      = audioCtx();
   const engine = OSC_ENGINES[OSC_WAVES[id]] || OSC_ENGINES.sine;
-  const fs     = OSC_FILTER[id] || { cutoff: 20000, res: 0 };
+  const fs     = OSC_FILTER[id] || { cutoff: 6000, res: 4 };  // défaut doux (sinus)
   const env    = OSC_ENV[id]    || { a: 0, r: 0 };
   const f0     = safeF(freq);
 
@@ -233,7 +233,6 @@ function swapPingala(i) {
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   _applyAntiCrack();
-  _applySeuilProtect(i);
   updatePairUI(i);
 }
 function swapIda(i) {
@@ -247,7 +246,6 @@ function swapIda(i) {
     nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), vol, pan);
   }
   _applyAntiCrack();
-  _applySeuilProtect(i);
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
@@ -324,9 +322,10 @@ function initFXChain() {
   if (eqLow) return;
   const c = audioCtx();
 
-  eqLow  = c.createBiquadFilter(); eqLow.type='lowshelf';  eqLow.frequency.value=200;  eqLow.gain.value=0;
-  eqMid  = c.createBiquadFilter(); eqMid.type='peaking';   eqMid.frequency.value=1000; eqMid.Q.value=1; eqMid.gain.value=0;
-  eqHigh = c.createBiquadFilter(); eqHigh.type='highshelf';eqHigh.frequency.value=5000; eqHigh.gain.value=0;
+  // EQ unique (2D) — bandes : Bass 54-144 · Médium 144-288 · Haut 288-566
+  eqLow  = c.createBiquadFilter(); eqLow.type='lowshelf';  eqLow.frequency.value=96;  eqLow.gain.value=0;
+  eqMid  = c.createBiquadFilter(); eqMid.type='peaking';   eqMid.frequency.value=216; eqMid.Q.value=1; eqMid.gain.value=0;
+  eqHigh = c.createBiquadFilter(); eqHigh.type='highshelf';eqHigh.frequency.value=427; eqHigh.gain.value=0;
 
   compressor = c.createDynamicsCompressor();
   compressor.threshold.value=-24; compressor.ratio.value=4; compressor.attack.value=0.02; compressor.release.value=0.25;
@@ -386,8 +385,8 @@ function initFXChain() {
   limiter.attack.value=0.002; limiter.release.value=0.18;
 
   // Master bus chain
-  busTrim.connect(mEqLow); mEqLow.connect(mEqMid); mEqMid.connect(mEqHigh);
-  mEqHigh.connect(masterGlue); masterGlue.connect(masterFader);
+  // EQ master 3-bandes retiré (doublon de l'EQ 2D) → busTrim direct vers le glue
+  busTrim.connect(masterGlue); masterGlue.connect(masterFader);
   masterFader.connect(limiter); limiter.connect(c.destination);
 
   // Channel insert (mix sec) → compressor → busTrim

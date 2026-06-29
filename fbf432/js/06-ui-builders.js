@@ -3,14 +3,17 @@
    ═══════════════════════════════════════════ */
 
 // ── EQ 2D Parametric Canvas ───────────────────────────────────────
+// Bandes recalées sur le jeu FBF : Bass 54-144 · Médium 144-288 · Haut 288-566
 const EQ_BANDS=[
-  {id:'low', freq:200, gain:0,color:'#60D8FF',type:'lowshelf', fMin:20,  fMax:600,  label:'BAS'},
-  {id:'mid', freq:1000,gain:0,color:'#FFD060',type:'peak',     fMin:200, fMax:6000, label:'MID'},
-  {id:'high',freq:5000,gain:0,color:'#FF8EFF',type:'highshelf',fMin:2000,fMax:20000,label:'HAUT'},
+  {id:'low', freq:96, gain:0,color:'#60D8FF',type:'lowshelf', fMin:54,  fMax:144, label:'BAS'},
+  {id:'mid', freq:216,gain:0,color:'#FFD060',type:'peak',     fMin:144, fMax:288, label:'MED'},
+  {id:'high',freq:427,gain:0,color:'#FF8EFF',type:'highshelf',fMin:288, fMax:566, label:'HAUT'},
 ];
+// Axe fréquentiel borné : 40 → 1296 Hz (ne monte jamais plus haut)
+const EQ_FLO=40, EQ_FHI=1296;
 var _eqDrag=null;
-function _f2x(f,w){return w*Math.log(f/20)/Math.log(1000);}
-function _x2f(x,w){return 20*Math.pow(1000,x/w);}
+function _f2x(f,w){return w*Math.log(f/EQ_FLO)/Math.log(EQ_FHI/EQ_FLO);}
+function _x2f(x,w){return EQ_FLO*Math.pow(EQ_FHI/EQ_FLO,x/w);}
 function _g2y(g,h){return h*(1-(g+18)/36);}
 function _y2g(y,h){return(1-y/h)*36-18;}
 function _eqCurveY(f){
@@ -29,14 +32,14 @@ function drawEQ2D(cv){
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle='rgba(4,2,16,.9)';ctx.fillRect(0,0,W,H);
-  // Grid
-  [50,100,200,500,1000,2000,5000,10000].forEach(f=>{
-    if(f>20000)return;
+  // Grid (bornes 54 · 144 · 288 · 432 · 566 · 1296)
+  [54,144,288,432,566,864,1296].forEach(f=>{
+    if(f>EQ_FHI)return;
     const x=_f2x(f,W);
     ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
-    if(f>=100){ctx.fillStyle='rgba(255,255,255,.2)';ctx.font=`${Math.max(7,W*.028)}px monospace`;
-      ctx.fillText(f>=1000?(f/1000)+'k':f,x+2,H-3);}
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.font=`${Math.max(7,W*.028)}px monospace`;
+    ctx.fillText(f>=1000?(f/1000).toFixed(1)+'k':f,x+2,H-3);
   });
   // 0 dB line
   const y0=_g2y(0,H);
@@ -45,7 +48,7 @@ function drawEQ2D(cv){
   // EQ curve
   const N=100;
   ctx.beginPath();
-  for(let i=0;i<=N;i++){const f=20*Math.pow(1000,i/N);const x=_f2x(f,W);const y=_g2y(_eqCurveY(f),H);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  for(let i=0;i<=N;i++){const f=EQ_FLO*Math.pow(EQ_FHI/EQ_FLO,i/N);const x=_f2x(f,W);const y=_g2y(_eqCurveY(f),H);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
   ctx.strokeStyle='rgba(160,210,255,.6)';ctx.lineWidth=1.5;ctx.stroke();
   ctx.lineTo(W,y0);ctx.lineTo(0,y0);ctx.closePath();
   ctx.fillStyle='rgba(80,150,255,.06)';ctx.fill();
