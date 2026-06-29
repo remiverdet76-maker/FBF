@@ -22,7 +22,10 @@ let eqLow = null, eqMid = null, eqHigh = null;
 let masterDelay = null, masterDelayFb = null;
 let masterReverb = null, reverbWetGain = null, reverbDryGain = null;
 let pingPongDelay = null, ppL = null, ppR = null, ppFb = null, ppWet = null;
-let ppSendBus = null, reverbSendBus = null;
+let ppSendBus = null, reverbSendBus = null, delayInBus = null;
+// FX par paire : envoi unique (fxSend) vers les 3 tanks. OFF = 100% sec.
+const PAIR_FX = {};           // id oscillateur → bool (défaut true)
+const FX_SEND_LEVEL = 0.3;    // niveau d'envoi quand FX ON
 let compressor = null;
 let busTrim = null, mEqLow = null, mEqMid = null, mEqHigh = null, masterGlue = null, masterFader = null;
 let _fxInput = null;
@@ -98,35 +101,12 @@ function setGrainDrift(v) {
 }
 
 /* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
-let hiDelayBus = null;
-function ensureHiDelay() {
-  if (hiDelayBus) return hiDelayBus;
-  if (!masterGain) return null;
-  const c = audioCtx();
-  hiDelayBus = c.createGain(); hiDelayBus.gain.value = 1;
-  const dL = c.createDelay(1.0); dL.delayTime.value = 0.18;
-  const dR = c.createDelay(1.0); dR.delayTime.value = 0.27;
-  const fbL = c.createGain(); fbL.gain.value = 0.30;
-  const fbR = c.createGain(); fbR.gain.value = 0.30;
-  const panL = c.createStereoPanner(); panL.pan.value = -0.85;
-  const panR = c.createStereoPanner(); panR.pan.value =  0.85;
-  const outG = c.createGain(); outG.gain.value = 0.5;
-  hiDelayBus.connect(dL); hiDelayBus.connect(dR);
-  dL.connect(fbL); fbL.connect(dR);
-  dR.connect(fbR); fbR.connect(dL);
-  dL.connect(panL); dR.connect(panR);
-  panL.connect(outG); panR.connect(outG);
-  outG.connect(masterGain);
-  return hiDelayBus;
-}
-
 function applyHiBand(node, freq) {
   if (!node) return;
   const hi = freq > 432, now = aNow();
   try {
     if (node.hpf)    node.hpf.frequency.setTargetAtTime(hi ? 420 : 20, now, 0.05);
     if (node.hiTrim) node.hiTrim.gain.setTargetAtTime(hi ? 0.75 : 1.0, now, 0.08);
-    if (node.dSend)  node.dSend.gain.setTargetAtTime(hi ? 0.40 : 0.0, now, 0.08);
   } catch(e) {}
 }
 
@@ -156,7 +136,7 @@ function buildOsc(id, freq, vol, pan) {
 
   // Grain analogique : saturation douce (waveshaper tanh) pré-filtre
   const shaper = c.createWaveShaper();
-  shaper.oversample = '2x';
+  shaper.oversample = 'none';  // CPU : pas de suréchantillonnage (marge pour le thread audio)
   shaper.curve = (GRAIN_STATE.on && GRAIN_STATE.drive > 0.001) ? _grainCurve(GRAIN_STATE.drive) : null;
 
   const p   = c.createStereoPanner(); p.pan.value = pan;
@@ -171,16 +151,15 @@ function buildOsc(id, freq, vol, pan) {
   p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
   hiTrim.connect(masterGain);
 
-  const dSend = c.createGain(); dSend.gain.value = 0;
-  hiTrim.connect(dSend);
-  const bus = ensureHiDelay(); if (bus) dSend.connect(bus);
+  // Envoi FX unique de la paire (vers reverb + delay + ping-pong)
+  const fxOn   = PAIR_FX[id] !== false;
+  const fxSend = c.createGain(); fxSend.gain.value = fxOn ? FX_SEND_LEVEL : 0;
+  hiTrim.connect(fxSend);
+  if (reverbSendBus) fxSend.connect(reverbSendBus);
+  if (delayInBus)    fxSend.connect(delayInBus);
+  if (ppSendBus)     fxSend.connect(ppSendBus);
 
-  const rSend  = c.createGain(); rSend.gain.value  = 0; hiTrim.connect(rSend);
-  const ppSend = c.createGain(); ppSend.gain.value = 0; hiTrim.connect(ppSend);
-  if (reverbSendBus) rSend.connect(reverbSendBus);
-  if (ppSendBus)     ppSend.connect(ppSendBus);
-
-  const node = { _id: id, o: subs[0].osc, subs, signalIn, shaper, g, p, hpf, flt, hiTrim, dSend, rSend, ppSend };
+  const node = { _id: id, o: subs[0].osc, subs, signalIn, shaper, g, p, hpf, flt, hiTrim, fxSend };
   applyHiBand(node, f0);
   if (OSC_PATCH[id]) setTimeout(() => _reapplyOscPatch(id), 20);
   if (!mutedOscs[id] && vol > 0) {
@@ -227,9 +206,7 @@ function releaseOsc(node) {
       if (node.hpf)     node.hpf.disconnect();
       if (node.flt)     node.flt.disconnect();
       if (node.hiTrim)  node.hiTrim.disconnect();
-      if (node.dSend)   node.dSend.disconnect();
-      if (node.rSend)   node.rSend.disconnect();
-      if (node.ppSend)  node.ppSend.disconnect();
+      if (node.fxSend)  node.fxSend.disconnect();
     } catch(e){}
   }, (FADE + 0.4) * 1000);
 }
@@ -279,6 +256,8 @@ function _applyAntiCrack() {
   if (!masterGain) return;
   const active = Object.keys(nodes).length || 1;
   _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+  // Appliqué ici (au changement), plus dans la boucle RAF → 0 écriture audio/frame
+  if (_lfoGain) _lfoGain.gain.setTargetAtTime(_antiCrackTarget, aNow(), 0.3);
 }
 
 /* ---------- 2.2b · PROTECTION SEUIL 360 Hz (point 9) ----------
@@ -292,9 +271,8 @@ function _applySeuilProtect(i) {
   [[pid, -1], [iid, 1]].forEach(([id, side]) => {
     const node = nodes[id]; if (!node) return;
     try {
-      if (node.hpf)    node.hpf.frequency.setTargetAtTime(above ? 120 : 20, now, 0.12);
-      if (node.rSend)  node.rSend.gain.setTargetAtTime(above ? 0.30 : 0, now, 0.12);
-      if (node.ppSend) node.ppSend.gain.setTargetAtTime(above ? 0.22 : 0, now, 0.12);
+      // Au-dessus du seuil : HPF imposé + pan élargi (le −50% volume est géré au random)
+      if (node.hpf)        node.hpf.frequency.setTargetAtTime(above ? 120 : 20, now, 0.12);
       if (node.p && above) node.p.pan.setTargetAtTime(side * 0.92, now, 0.12);
     } catch(e) {}
   });
@@ -343,40 +321,43 @@ function initFXChain() {
   compressor = c.createDynamicsCompressor();
   compressor.threshold.value=-24; compressor.ratio.value=4; compressor.attack.value=0.02; compressor.release.value=0.25;
 
-  masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
-  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.3;
-  masterDelay.connect(masterDelayFb); masterDelayFb.connect(masterDelay);
-  const delayWet = c.createGain(); delayWet.gain.value=0; masterDelay.connect(delayWet);
+  // ═══ FX GLOBAUX façon DB4 : tanks partagés, alimentés UNIQUEMENT par les
+  //     envois de paires (fxSend). Une paire FX-off n'envoie rien → 100% sèche.
+  //     Le maître (panneau FX) règle les RETOURS (wet) et les paramètres. ═══
 
-  // Reverb — always connected; reverbWetGain.gain controls wet (starts at 0 → no crack)
+  // Delay — entrée = ppSendBus/reverbSendBus pattern ; ici delayInBus
+  masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
+  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.25;
+  masterDelay.connect(masterDelayFb); masterDelayFb.connect(masterDelay);
+  delayInBus = c.createGain(); delayInBus.gain.value = 0.5;   // bus d'entrée (envois de paires, headroom)
+  const delayWet = c.createGain(); delayWet.gain.value = 0; // retour (curseur master)
+  delayInBus.connect(masterDelay); masterDelay.connect(delayWet);
+
+  // Reverb — entrée reverbSendBus → convolver → retour reverbWetGain
   masterReverb  = c.createConvolver();
   masterReverb.buffer = _makeIR(1.5, 0.05);
-  reverbWetGain = c.createGain(); reverbWetGain.gain.value = 0;
-  reverbDryGain = c.createGain(); reverbDryGain.gain.value = 1; // kept for compat
-  reverbSendBus = c.createGain(); reverbSendBus.gain.value = 1; // per-osc reverb sends
+  reverbSendBus = c.createGain(); reverbSendBus.gain.value = 0.5; // entrée (envois de paires, headroom)
+  reverbWetGain = c.createGain(); reverbWetGain.gain.value = 0; // retour (curseur master)
+  reverbDryGain = c.createGain(); reverbDryGain.gain.value = 1; // compat (inutilisé)
+  reverbSendBus.connect(masterReverb); masterReverb.connect(reverbWetGain);
 
-  // True stereo ping-pong — cross-feedback (L→R→L cross-bounce)
+  // Ping-pong stéréo cross-feedback — entrée ppSendBus → tank → retour ppWet
   const ppDelL = c.createDelay(2.0); ppDelL.delayTime.value = 0.25;
   const ppDelR = c.createDelay(2.0); ppDelR.delayTime.value = 0.375;
-  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.35;  // L→R cross
-  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.35;  // R→L cross
+  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.28;  // L→R cross (amorti, anti-tore)
+  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.28;  // R→L cross
   const ppPanL = c.createStereoPanner(); ppPanL.pan.value = -1;
   const ppPanR = c.createStereoPanner(); ppPanR.pan.value =  1;
-  ppWet    = c.createGain(); ppWet.gain.value = 1;  // sortie du tank (toujours passante ; bus parallèle)
-  ppSendBus = c.createGain(); ppSendBus.gain.value = 1; // per-osc PP sends
+  ppWet    = c.createGain(); ppWet.gain.value = 0;   // retour (curseur master)
+  ppSendBus = c.createGain(); ppSendBus.gain.value = 0.5; // entrée (envois de paires, headroom)
 
-  // Master PP send (controlled by ppMasterSend gain, starts silent)
-  const ppMasterSend = c.createGain(); ppMasterSend.gain.value = 0;
-  compressor.connect(ppMasterSend); ppMasterSend.connect(ppSendBus);
-
-  // Ping-pong routing
   ppSendBus.connect(ppDelL);
   ppDelL.connect(ppFbLR); ppFbLR.connect(ppDelR);
   ppDelR.connect(ppFbRL); ppFbRL.connect(ppDelL);
   ppDelL.connect(ppPanL); ppDelR.connect(ppPanR);
   ppPanL.connect(ppWet); ppPanR.connect(ppWet);
   pingPongDelay = { delayL: ppDelL, delayR: ppDelR, _fbLR: ppFbLR, _fbRL: ppFbRL, _wet: ppWet };
-  ppL = ppDelL; ppR = ppDelR; // keep legacy refs
+  ppL = ppDelL; ppR = ppDelR; // legacy refs
 
   busTrim = c.createGain(); busTrim.gain.value = 1;
 
@@ -399,20 +380,17 @@ function initFXChain() {
   mEqHigh.connect(masterGlue); masterGlue.connect(masterFader);
   masterFader.connect(limiter); limiter.connect(c.destination);
 
-  // Channel insert → compressor
+  // Channel insert (mix sec) → compressor → busTrim
   eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(compressor);
+  compressor.connect(busTrim);   // chemin SEC (le seul depuis le bus voix)
 
-  // Compressor parallel sends (all permanent connections)
-  compressor.connect(busTrim);                          // dry path
-  compressor.connect(masterDelay); delayWet.connect(busTrim);  // delay
-  compressor.connect(reverbWetGain);                    // reverb (always on, gain=0 by default)
-  reverbWetGain.connect(masterReverb);
-  reverbSendBus.connect(masterReverb);                  // per-osc reverb input
-  masterReverb.connect(busTrim);
-  ppWet.connect(busTrim);                               // ping-pong output
+  // Retours FX → busTrim (alimentés par les envois de paires, pas par le bus voix)
+  delayWet.connect(busTrim);
+  reverbWetGain.connect(busTrim);
+  ppWet.connect(busTrim);
 
   _fxInput = eqLow;
-  _fxRefs = { delayWet, ppMasterSend };
+  _fxRefs = { delayWet };
 }
 let _fxRefs = {};
 
@@ -535,10 +513,17 @@ function setOscFilter(id, cutoff, res) {
   node.flt.Q.setTargetAtTime(cur.res, now, 0.05);
 }
 
-function setOscReverbSend(id, v) {
-  const node = nodes[id]; if (!node?.rSend) return;
-  node.rSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+// FX on/off par oscillateur (envoi unique vers les 3 tanks)
+function setOscFX(id, on) {
+  PAIR_FX[id] = !!on;
+  const node = nodes[id]; if (!node?.fxSend) return;
+  node.fxSend.gain.setTargetAtTime(on ? FX_SEND_LEVEL : 0, aNow(), 0.08);
 }
+function setPairFX(i, on) {
+  setOscFX(PAIRS[i].pingala.id, on);
+  setOscFX(PAIRS[i].ida.id, on);
+}
+function isPairFX(i) { return PAIR_FX[PAIRS[i].pingala.id] !== false; }
 function setOscHPF(id, hz) {
   const node = nodes[id]; if (!node?.hpf) return;
   node.hpf.frequency.setTargetAtTime(Math.max(20, Math.min(2000, parseFloat(hz))), aNow(), 0.05);
@@ -551,14 +536,7 @@ function setPair3DWidth(i, w) {
   if (np?.p) np.p.pan.setTargetAtTime(-width, now, 0.08);
   if (ni?.p) ni.p.pan.setTargetAtTime( width, now, 0.08);
 }
-function setPairReverbSend(i, v) { setOscReverbSend(PAIRS[i].pingala.id, v); setOscReverbSend(PAIRS[i].ida.id, v); }
-function setPairPPSend(i, v)     { setOscPPSend(PAIRS[i].pingala.id, v);     setOscPPSend(PAIRS[i].ida.id, v); }
 function setPairFilter(i, cutoff, res) { setOscFilter(PAIRS[i].pingala.id, cutoff, res); setOscFilter(PAIRS[i].ida.id, cutoff, res); }
-
-function setOscPPSend(id, v) {
-  const node = nodes[id]; if (!node?.ppSend) return;
-  node.ppSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
-}
 
 function setPingPongTime(t) {
   if (!pingPongDelay) return;
@@ -582,10 +560,6 @@ function setPingPongWet(v) {
   if (ppWet) ppWet.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
 }
 
-function setPingPongMasterSend(v) {
-  if (_fxRefs.ppMasterSend) _fxRefs.ppMasterSend.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
-}
-
 /* ---------- 2.6d · SNAPSHOT / RESTORE FX (pour ❤️ presets) ---------- */
 function getFXState() {
   return {
@@ -598,12 +572,12 @@ function getFXState() {
     reverb: reverbWetGain ? reverbWetGain.gain.value : 0,
     pp: pingPongDelay ? { t:pingPongDelay.delayL.delayTime.value,
                           fb:pingPongDelay._fbLR.gain.value,
-                          wet:ppWet ? ppWet.gain.value : 0,
-                          send:_fxRefs.ppMasterSend ? _fxRefs.ppMasterSend.gain.value : 0 } : null,
+                          wet:ppWet ? ppWet.gain.value : 0 } : null,
     lfo: { ...LFO_STATE }, breath: { ...BREATH_STATE }, grain: { ...GRAIN_STATE },
     comp: compressor ? { th:compressor.threshold.value, ra:compressor.ratio.value } : null,
     waves: { ...OSC_WAVES },
-    filters: JSON.parse(JSON.stringify(OSC_FILTER))
+    filters: JSON.parse(JSON.stringify(OSC_FILTER)),
+    pairFX: { ...PAIR_FX }
   };
 }
 
@@ -619,9 +593,8 @@ function applyFXState(s) {
     .forEach(([id,v]) => { setSl(id,v); if (typeof updateFX==='function') updateFX(id,v); }); }
   if (s.reverb != null) { setSl('reverbWet',s.reverb); if (typeof updateFX==='function') updateFX('reverbWet',s.reverb); }
   if (s.pp) {
-    setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb);
-    setPingPongWet(s.pp.wet != null ? s.pp.wet : 1); setPingPongMasterSend(s.pp.send || 0);
-    setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider', s.pp.send || 0);
+    setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb); setPingPongWet(s.pp.wet || 0);
+    setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider', s.pp.wet || 0);
   }
   if (s.lfo)    { LFO_STATE.rate=s.lfo.rate; LFO_STATE.depth=s.lfo.depth; lfoToggle(!!s.lfo.on);
                   const c=document.getElementById('lfo-on'); if (c) c.checked=!!s.lfo.on; }
@@ -631,6 +604,7 @@ function applyFXState(s) {
   let wavesChanged = false;
   if (s.waves)   { if (JSON.stringify(OSC_WAVES) !== JSON.stringify(s.waves)) wavesChanged = true; Object.assign(OSC_WAVES, s.waves); }
   if (s.filters) { Object.keys(s.filters).forEach(id => { OSC_FILTER[id] = s.filters[id]; if (nodes[id]) setOscFilter(id, s.filters[id].cutoff, s.filters[id].res); }); }
+  if (s.pairFX)  { Object.keys(s.pairFX).forEach(id => { PAIR_FX[id] = s.pairFX[id]; const n=nodes[id]; if (n?.fxSend) n.fxSend.gain.setTargetAtTime(s.pairFX[id]!==false?FX_SEND_LEVEL:0, aNow(), 0.08); }); }
   if (wavesChanged) rebuildAllOscs();
 }
 
@@ -803,9 +777,7 @@ async function stopFlow() {
         if (n.hpf)     n.hpf.disconnect();
         if (n.flt)     n.flt.disconnect();
         if (n.hiTrim)  n.hiTrim.disconnect();
-        if (n.dSend)   n.dSend.disconnect();
-        if (n.rSend)   n.rSend.disconnect();
-        if (n.ppSend)  n.ppSend.disconnect();
+        if (n.fxSend)  n.fxSend.disconnect();
       } catch(e){}
     }, 500);
   });
@@ -815,7 +787,6 @@ async function stopFlow() {
       .forEach(x => { try { x?.disconnect(); } catch(e){} });
     if (analyser) { try { analyser.disconnect(); } catch(e){} }
     _lfoNode=_lfoGain=_lfoDepthGain=_breathLFO=_breathGain=_breathDepthGain=_driftLFO=_driftDepth=masterGain=analyser=null;
-    hiDelayBus = null;
     PAIRS.forEach((_, i) => updateOrbUI(i));
     const mc = document.getElementById('vpc-p' + MASTER_IDX);
     if (mc) mc.style.boxShadow = '';
@@ -823,15 +794,25 @@ async function stopFlow() {
   }, 600);
 }
 
-/* ---------- 2.9 · MASTER TICK (RAF) ---------- */
-let _glowFrame = 0;
-function masterTick() {
+/* ---------- 2.9 · MASTER TICK (RAF, bridé 30 fps, pausé si menu ouvert) ---------- */
+let _glowFrame = 0, _lastTick = 0;
+// L'UI doit céder au thread audio : on suspend tous les dessins quand un
+// panneau/modal couvre l'écran (c'est ce qui affamait l'audio = craquement).
+function _uiBusy() {
+  return !!document.querySelector('.pan-left.open, .pan-right.open, #osc-modal.open');
+}
+function masterTick(ts) {
   masterRAF = requestAnimationFrame(masterTick);
-  metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
-  drawMetatron();
-  if (!flowing || !analyser || document.visibilityState === 'hidden') return;
+  // Bride à ~30 fps (moitié de charge CPU, invisible à l'œil)
+  if (ts && _lastTick && ts - _lastTick < 33) return;
+  _lastTick = ts || 0;
+  if (document.visibilityState === 'hidden') return;
+  // Menu/modal ouvert → on ne dessine RIEN (priorité au son)
+  if (_uiBusy()) return;
 
-  if (_lfoGain) _lfoGain.gain.setTargetAtTime(_antiCrackTarget, aNow(), 0.2);
+  metaAngle = (metaAngle + 0.006) % (Math.PI * 2);
+  drawMetatron();
+  if (!flowing || !analyser) return;
 
   if ((_glowFrame++ & 1) === 0) { drawSpectroid(); return; }
   const data = analyser.getValue();

@@ -86,7 +86,15 @@ function initEQ2D(cv){
   cv.addEventListener('touchstart',e=>{const{x,y}=getXY(e);_eqDrag=findBand(x,y);if(_eqDrag>=0)e.preventDefault();},{passive:false});
   cv.addEventListener('touchmove',e=>{if(_eqDrag===null||_eqDrag<0)return;e.preventDefault();const r=cv.getBoundingClientRect();drag(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);},{passive:false});
   cv.addEventListener('touchend',()=>{_eqDrag=null;});
-  (function loop(){drawEQ2D(cv);requestAnimationFrame(loop);})();
+  // Boucle gatée : ne dessine QUE si le panneau FX est visible (sinon poll léger).
+  // Évite un redraw 60 fps permanent qui affamait le thread audio.
+  drawEQ2D(cv);
+  (function loop(){
+    if(!document.body.contains(cv)){cv._eq2d=false;return;}
+    const open=document.getElementById('panFX')?.classList.contains('open');
+    if(open) drawEQ2D(cv);
+    setTimeout(()=>requestAnimationFrame(loop), open?40:350);
+  })();
 }
 
 // ── Mini frequency table (bottom left) ───────────────────────────
@@ -373,7 +381,7 @@ function buildMasterFXHTML() {
         </div>
         <div class="fx-control-group">
           <span class="fx-label">Mix</span>
-          <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongMasterSend(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
+          <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongWet(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
           <span class="fx-val-disp" id="ppWet-val">0%</span>
         </div>
       </div>
@@ -715,17 +723,16 @@ function buildPairHTML(pair, i) {
       <span class="ctl-v">0.40 Hz</span></div>
     <div class="osc-hint">Routage du LFO → onglet ④ Patch</div>`;
 
-  // ── ③ FX (par oscillateur, indépendant) ─────────────────────────
+  // ── ③ FX (on/off par paire → bus FX global du maître) ──────────
+  const fxOn = (typeof isPairFX === 'function') ? isPairFX(i) : true;
   const fxTabHTML = `
-    <div class="osc-sec-t" style="color:${c}aa;">Envois FX (DB4)</div>
-    <div class="ctl-row"><span class="ctl-l">Reverb</span>
-      <input type="range" min="0" max="1" step="0.02" value="0" style="accent-color:${c};"
-        oninput="setPairReverbSend(${i},this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-      <span class="ctl-v">0%</span></div>
-    <div class="ctl-row"><span class="ctl-l">Delay P-P</span>
-      <input type="range" min="0" max="1" step="0.02" value="0" style="accent-color:${c}aa;"
-        oninput="setPairPPSend(${i},this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-      <span class="ctl-v">0%</span></div>
+    <div class="osc-sec-t" style="color:${c}aa;">Bus FX global (maître)</div>
+    <div class="fx-onoff-row">
+      <span class="ctl-l">Envoi FX</span>
+      <button class="fx-onoff${fxOn?' on':''}" id="fxon-${i}" style="--ec:${c};"
+        onclick="togglePairFX(${i})">${fxOn?'● ON':'○ OFF'}</button>
+    </div>
+    <div class="osc-hint">ON = la paire entre dans Reverb/Delay/Ping-Pong du maître · OFF = 100% sèche</div>
     <div class="osc-sec-t" style="color:${c}aa;">EQ · Coupe-bas</div>
     <div class="ctl-row"><span class="ctl-l">Low cut</span>
       <input type="range" min="20" max="400" step="2" value="20" style="accent-color:${c};"
@@ -805,6 +812,14 @@ function pickEngine(i, key) {
     const b = document.getElementById('eng-'+i+'-'+k);
     if (b) b.classList.toggle('on', k === key);
   });
+}
+
+// Bascule FX on/off d'une paire (bus FX global du maître)
+function togglePairFX(i) {
+  const on = !isPairFX(i);
+  setPairFX(i, on);
+  const b = document.getElementById('fxon-' + i);
+  if (b) { b.classList.toggle('on', on); b.textContent = on ? '● ON' : '○ OFF'; }
 }
 
 // Cycle d'un jack de la patchbay (0→1→2→3→0)
