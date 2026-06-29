@@ -47,16 +47,20 @@ const PAIRS = [
     pingala:{id:'p6', ri:0, n:1.0, vol:.14}, ida:{id:'i6', delta:1.8, polarity:1, vol:.14} },
 ];
 
-// Panoramique 3D par paire [pingala, ida] — spread différent selon position hexagonale
-const OSC_PAN = [
-  [-0.65, 0.65],  // Paire 1 — large
-  [-0.45, 0.45],  // Paire 2 — medium
-  [-0.80, 0.80],  // Paire 3 — très large
-  [-0.55, 0.55],  // Paire 4
-  [-0.90, 0.90],  // Paire 5 — max spread
-  [-0.35, 0.35],  // Paire 6 — étroit
-  [-0.22, 0.22],  // Maître — centre
-];
+// Panoramique stéréo — éventail : chaque paire a un CENTRE distinct (gauche→droite),
+// Pingala/Ida légèrement écartés autour de ce centre (battement binaural aéré).
+// Modulé par RAND_OPTS.spread (largeur de l'éventail) au moment du random.
+const PAN_CENTERS = [-0.78, -0.50, -0.20, 0.20, 0.50, 0.78, 0.0]; // 6 paires + maître
+const PAN_SPREAD  = 0.10; // écart Pingala/Ida autour du centre
+function buildOscPan(width) {
+  const w = (typeof width === 'number') ? Math.max(0, Math.min(1, width)) : 0.7;
+  return PAN_CENTERS.map((ctr, i) => {
+    const c = i === MASTER_IDX ? 0 : ctr * w;
+    const sp = i === MASTER_IDX ? PAN_SPREAD * 0.5 : PAN_SPREAD;
+    return [Math.max(-1, c - sp), Math.min(1, c + sp)];
+  });
+}
+let OSC_PAN = buildOscPan(0.7);
 
 // Courbe isosonique : graves plus forts, aigus plus doux
 function isosonicVol(freq, base) {

@@ -277,6 +277,19 @@ function buildMasterFXHTML() {
       </div>
     </div>
 
+    <!-- ✦ Spatialisation (intégrée au random) -->
+    <div class="fx-block" style="border:1px solid rgba(140,255,200,.22);background:rgba(140,255,200,.04);">
+      <div class="fx-title" style="color:rgba(140,255,200,.85);">✦ Spatialisation · Aération</div>
+      <div class="fx-row">
+        <div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Étalement fréquences + éventail stéréo</span>
+          <input type="range" class="fx-slider" id="randSpread" min="0" max="1" step="0.02" value="0.6" oninput="setRandSpread(this.value)">
+          <span class="fx-val-disp" id="sv-spread">60%</span>
+        </div>
+      </div>
+      <div style="font-size:.62rem;color:rgba(140,255,200,.5);font-style:italic;">0% = compact au médium · 100% = étalé 54–396 Hz, large stéréo · appliqué au ⚄ random</div>
+    </div>
+
     <!-- ① Fondu -->
     <div class="fx-block">
       <div class="fx-title">① Fondu d'entrée / sortie</div>

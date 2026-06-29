@@ -17,7 +17,20 @@ function toggleLock(i) {
 }
 
 // ── Options mode aléatoire ────────────────────────────────────────
-const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false};
+const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false,spread:0.6};
+
+// Spatialisation : aération fréquentielle + largeur de l'éventail stéréo
+function setRandSpread(v) {
+  RAND_OPTS.spread = Math.max(0, Math.min(1, parseFloat(v)));
+  OSC_PAN = buildOscPan(0.35 + RAND_OPTS.spread * 0.6); // éventail 0.35 → 0.95
+  // Re-pan les oscillateurs vivants
+  if (flowing) PAIRS.forEach((pair, i) => {
+    const np = nodes[pair.pingala.id], ni = nodes[pair.ida.id];
+    if (np?.p && OSC_PAN[i]) np.p.pan.setTargetAtTime(OSC_PAN[i][0], aNow(), 0.1);
+    if (ni?.p && OSC_PAN[i]) ni.p.pan.setTargetAtTime(OSC_PAN[i][1], aNow(), 0.1);
+  });
+  const el = document.getElementById('sv-spread'); if (el) el.textContent = Math.round(RAND_OPTS.spread*100)+'%';
+}
 function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
 function setRandFreqMin(v){
   RAND_OPTS.freqMin=Math.max(36,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
@@ -217,6 +230,16 @@ function fitDensityN(master, ratio, baseN) {
   return Math.min(N_MAX, Math.round(n * 100) / 100);
 }
 
+// AÉRATION : cible fréquentielle log-espacée par paire, étalée selon `spread`.
+// spread=0 → tout regroupé au médium (~146 Hz) ; spread=1 → étalé sur 54–396.
+function aeratedN(master, ratio, idx, spread) {
+  const GEO = Math.sqrt(F_MIN * F_MAX);                       // ~146 Hz (centre géométrique)
+  const anchor = F_MIN * Math.pow(F_MAX / F_MIN, (idx + 0.5) / 6); // étage log de la paire
+  const target = GEO * Math.pow(anchor / GEO, spread);       // spread = ouverture de l'éventail
+  let n = target / (master * ratio);
+  return Math.max(0.03, Math.min(N_MAX, Math.round(n * 100) / 100));
+}
+
 function triggerMagicAuto(opts) {
   const keepMaster = !!(opts && opts.keepMaster);
   const {freqMin,freqMax,rangeOn,useFX}=RAND_OPTS;
@@ -245,8 +268,8 @@ function triggerMagicAuto(opts) {
   const newMaster = (masterLocked || keepMaster) ? masterFreq
     : Math.max(lo, Math.min(hi, Math.round(masterFreq * seedR)));
 
-  // ── 4. Densités recalculées selon le nouveau maître ──────────────
-  const baseScheme = densityScheme(newMaster);
+  // ── 4. Aération : carriers étalés sur la bande selon RAND_OPTS.spread ──
+  const spread = RAND_OPTS.spread;
 
   PAIRS.forEach((pair, idx) => {
     // Lock par fréquence (Phase 3) : on ne touche pas une paire verrouillée.
@@ -258,7 +281,7 @@ function triggerMagicAuto(opts) {
       pair.ida.delta  = baseDelta;
     } else {
       pair.pingala.ri = RI_SCHEME[idx];
-      pair.pingala.n  = fitDensityN(newMaster, RATIO_OPTS[pair.pingala.ri].r, baseScheme[idx]);
+      pair.pingala.n  = aeratedN(newMaster, RATIO_OPTS[pair.pingala.ri].r, idx, spread);
       pair.ida.delta  = Math.max(0.1, Math.min(36,
         Math.round(baseDelta * D_MULT[idx] * 10) / 10));
     }
@@ -272,12 +295,17 @@ function triggerMagicAuto(opts) {
     pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
   });
 
+  // Éventail stéréo selon le spread
+  OSC_PAN = buildOscPan(0.35 + spread * 0.6);
+
   setMasterFreq(newMaster);
-  // Applique volumes + protection seuil sur les nœuds vivants
+  // Applique volumes + pan (éventail) + protection seuil sur les nœuds vivants
   if (flowing) PAIRS.forEach((pair, i) => {
     const pid = pair.pingala.id, iid = pair.ida.id;
     if (nodes[pid] && !mutedOscs[pid]) safeRamp(nodes[pid].g.gain, pair.pingala.vol, 0.4);
     if (nodes[iid] && !mutedOscs[iid]) safeRamp(nodes[iid].g.gain, pair.ida.vol, 0.4);
+    if (nodes[pid]?.p && OSC_PAN[i]) nodes[pid].p.pan.setTargetAtTime(OSC_PAN[i][0], aNow(), 0.15);
+    if (nodes[iid]?.p && OSC_PAN[i]) nodes[iid].p.pan.setTargetAtTime(OSC_PAN[i][1], aNow(), 0.15);
     if (typeof _applySeuilProtect === 'function') _applySeuilProtect(i);
   });
   if (useFX) randomizeFX();
