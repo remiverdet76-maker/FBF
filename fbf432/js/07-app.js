@@ -541,6 +541,26 @@ function _loadTheme() {
   setTheme(t);
 }
 
+// Mode avancé : révèle les 6 sphères satellites (surface simple → profondeur)
+const ADV_KEY = 'fbf432-advanced';
+function toggleAdvanced() {
+  const goAdvanced = document.body.classList.contains('mode-simple'); // simple → avancé
+  document.body.classList.toggle('mode-simple', !goAdvanced);
+  try { localStorage.setItem(ADV_KEY, goAdvanced ? '1' : '0'); } catch(e) {}
+  const b = document.getElementById('btn-advanced');
+  if (b) { b.classList.toggle('on', goAdvanced); const s=b.querySelector('span'); if(s) s.textContent = 'Mode avancé (6 sphères) : ' + (goAdvanced ? 'ON' : 'OFF'); }
+  buildVesicaPairs();
+}
+function _loadAdvanced() {
+  let adv = false;
+  try { adv = localStorage.getItem(ADV_KEY) === '1'; } catch(e) {}
+  if (adv) {
+    document.body.classList.remove('mode-simple');
+    const b = document.getElementById('btn-advanced');
+    if (b) { b.classList.add('on'); const s=b.querySelector('span'); if(s) s.textContent='Mode avancé (6 sphères) : ON'; }
+  }
+}
+
 // #36 mode visuel "lite" : coupe le dessin du métatron (CPU) pour les appareils faibles
 const VISLITE_KEY = 'fbf432-vislite';
 function toggleVisLite() {
@@ -572,6 +592,7 @@ function init() {
   loadState();
   _loadTheme();
   _loadVisLite();
+  _loadAdvanced();
   harmonicRandomInit();
 
   // Inject FX panel

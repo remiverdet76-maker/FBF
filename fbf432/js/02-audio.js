@@ -7,7 +7,9 @@
 function audioCtx() {
   if (!AC) {
     const C = window.AudioContext || window.webkitAudioContext;
-    AC = new C({ latencyHint: 'playback' });
+    // latence numérique = gros buffer → résiste aux pics du thread principal
+    // (ouverture de menu, changement de ratio…). Latence sans importance en méditation.
+    AC = new C({ latencyHint: 0.22 });
     window.AC = AC;
   }
   return AC;
@@ -866,10 +868,14 @@ function masterTick(ts) {
   const e = Math.min(1, sum / count * 7);
   const mc = document.getElementById('vpc-p' + MASTER_IDX);
   if (mc) {
-    const g = Math.round(e * 45);
-    const a = (0.12 + e * .48).toFixed(2);
-    mc.style.boxShadow = `0 0 ${g}px rgba(255,160,255,${a}),0 0 ${g*2}px rgba(255,160,255,${(+a*.35).toFixed(2)}),inset 0 0 ${Math.round(g*.5)}px rgba(255,160,255,${(+a*.25).toFixed(2)})`;
+    const g = Math.round(e * 50);
+    const a = (0.12 + e * .5);
+    const H = (typeof freqHue === 'function') ? freqHue(masterFreq) : 300;  // couleur ∝ fréquence
+    const hsl = (al) => `hsla(${H},72%,64%,${al.toFixed(2)})`;
+    mc.style.boxShadow = `0 0 ${g}px ${hsl(a)},0 0 ${g*2}px ${hsl(a*.35)},inset 0 0 ${Math.round(g*.55)}px ${hsl(a*.3)}`;
   }
+  // En mode simple : une seule sphère → on saute la boucle des 6 satellites (CPU)
+  if (document.body.classList.contains('mode-simple')) { drawSpectroid(); return; }
   PAIRS.forEach((pair, i) => {
     if (i === MASTER_IDX) return;
     const vcp = document.getElementById('vpc-p' + i);

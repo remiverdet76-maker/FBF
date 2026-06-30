@@ -40,7 +40,9 @@ function buildVesicaPairs() {
   // Rayon : garde la bulle du bas au-dessus du dock et la bulle du haut sous le bord
   const R  = Math.max(70, Math.min(sz * 0.32, vh / 2 - dockH - 56, cy - 40));
 
-  for (let i = 0; i < 6; i++) {
+  const simple = document.body.classList.contains('mode-simple');
+
+  for (let i = 0; i < 6 && !simple; i++) {
     const pair = PAIRS[i];
     const c    = pair.color;
     const rad  = (HEX_DEG[i] - 90) * Math.PI / 180;
@@ -71,28 +73,30 @@ function buildVesicaPairs() {
   }
 
   const mp  = PAIRS[MASTER_IDX];
-  const mc  = mp.color;
   const isMutedMP = !!mutedOscs[mp.pingala.id];
-
+  // Couleur organique selon la fréquence maître
+  const mc   = (typeof freqColor === 'function') ? freqColor(masterFreq, 64) : mp.color;
+  const mcSoft = (typeof freqColorA === 'function') ? freqColorA(masterFreq, 60, 0.32) : mp.color;
+  const mcGlow = (typeof freqColorA === 'function') ? freqColorA(masterFreq, 62, 0.5)  : mp.color;
   const vcw = document.createElement('div');
-  vcw.className = 'vp-center-wrap';
+  vcw.className = 'vp-center-wrap' + (document.body.classList.contains('mode-simple') ? ' vp-solo' : '');
   vcw.id = 'vp' + MASTER_IDX;
   vcw.innerHTML = `
     <div class="vp-p ${isMutedMP?'vp-muted':''} ${flowing&&!isMutedMP?'vp-live':''}"
          id="vpc-p${MASTER_IDX}"
-         style="border-color:${mc}CC;background:radial-gradient(circle,${mc}50 0%,${mc}20 55%,rgba(26,5,51,.6) 100%);box-shadow:0 0 25px ${mc}50;backdrop-filter:blur(4px);cursor:pointer;user-select:none;"
+         style="border-color:${mc};background:radial-gradient(circle,${mcSoft} 0%,${mcGlow.replace('0.5','0.18')} 55%,rgba(20,5,38,.6) 100%);box-shadow:0 0 30px ${mcGlow};backdrop-filter:blur(4px);cursor:pointer;user-select:none;"
          onmousedown="_vpStart(${MASTER_IDX},event)" onmouseup="_vpEnd(${MASTER_IDX})" onmouseleave="_vpCancel()"
          ontouchstart="_vpStart(${MASTER_IDX},event)" ontouchend="_vpEnd(${MASTER_IDX})">
-      <span class="vp-type" style="color:${mc}BB;font-size:.7rem;letter-spacing:.14em;">MAÎTRE</span>
+      <span class="vp-type" style="color:${mc};font-size:.7rem;letter-spacing:.14em;">MAÎTRE</span>
       <span class="ms-freq" id="ms-freq" onclick="event.stopPropagation();openFreqEdit();">${masterFreq}</span>
       <input type="number" id="freq-input-master" min="36" max="864" placeholder="${masterFreq}" autocomplete="off"
              onkeydown="handleFreqKey(event);">
       <span class="ms-state" id="ms-state">Binaural</span>
     </div>
-    <div class="micro-btn micro-left"  style="border-color:${mc}BB;color:${mc};" onclick="masterStep(-18)" title="-18 Hz">−18</div>
-    <div class="micro-btn micro-right" style="border-color:${mc}BB;color:${mc};" onclick="masterStep(18)"  title="+18 Hz">+18</div>
-    <div class="micro-btn micro-top"   style="border-color:${mc}BB;color:${mc};" onclick="resetAll()"      title="Reset">↺</div>
-    <div class="micro-btn micro-bot"   style="border-color:${mc}BB;color:${mc};" onclick="triggerMagicAuto()" title="Aléatoire">⚄</div>`;
+    <div class="micro-btn micro-left"  style="border-color:${mc};color:${mc};" onclick="masterStep(-18)" title="-18 Hz">−18</div>
+    <div class="micro-btn micro-right" style="border-color:${mc};color:${mc};" onclick="masterStep(18)"  title="+18 Hz">+18</div>
+    <div class="micro-btn micro-top"   style="border-color:${mc};color:${mc};" onclick="resetAll()"      title="Reset">↺</div>
+    <div class="micro-btn micro-bot"   style="border-color:${mc};color:${mc};" onclick="triggerMagicAuto()" title="Aléatoire">⚄</div>`;
   layer.appendChild(vcw);
 
   const inp = document.getElementById('freq-input-master');
