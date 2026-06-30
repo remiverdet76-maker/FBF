@@ -248,27 +248,36 @@ function closestRatioIdx(target) {
 
 function triggerMagicAuto(opts) {
   const keepMaster = !!(opts && opts.keepMaster);
-  const spread = RAND_OPTS.spread, useFX = RAND_OPTS.useFX;
+  const spread = RAND_OPTS.spread, useFX = RAND_OPTS.useFX, mode = RAND_OPTS.ratioMode;
 
-  // ── 1. Fréquence maître = SOURCE (jamais > 432) ───────────────────
-  // Le maître reste la base ; le random le garde s'il est verrouillé.
+  // ── #1 PLAGE DE FRÉQUENCE (reconnectée) ───────────────────────────
+  // Si activée, les 3 bandes couvrent [freqMin, freqMax] ; sinon bandes FBF par défaut.
+  let BANDS = FBF_BANDS;
+  if (RAND_OPTS.rangeOn) {
+    const lo = Math.max(40, Math.min(540, RAND_OPTS.freqMin));
+    const hi = Math.max(lo + 24, Math.min(566, RAND_OPTS.freqMax));
+    const e1 = lo * Math.pow(hi / lo, 1/3), e2 = lo * Math.pow(hi / lo, 2/3);
+    BANDS = [[lo, e1], [e1, e2], [e2, hi]];
+  }
+
+  // ── #2 MAÎTRE : varie sur random (sauf verrou) ────────────────────
+  // Avant il restait figé → "dernier oscillateur bloqué". Le verrou 🔒 le garde comme base.
   const masterLocked = (typeof isLocked === 'function' && isLocked(MASTER_IDX)) || keepMaster;
+  const MASTER_POOL = [144,162,180,198,216,234,252,288,324,360,396,432];
   const newMaster = masterLocked ? masterFreq
-    : Math.max(F_MIN, Math.min(432, masterFreq)); // pas de saut sauvage : on garde la source
+    : MASTER_POOL[Math.floor(Math.random() * MASTER_POOL.length)];
 
-  // ── 2. Binaural global : un seul Δ, appliqué ± à toutes les paires ─
   const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 7.83];
   const baseDelta   = BASE_DELTAS[Math.floor(Math.random() * BASE_DELTAS.length)];
 
-  // ── 3. Une graine miroir par bande (ratios miroir R / 1/R) ────────
-  const bandData = FBF_BANDS.map(([blo, bhi]) => {
+  // Graine + ratios par bande, selon le mode (Harmonique / Identique / Aléatoire)
+  const bandData = BANDS.map(([blo, bhi]) => {
     const geoC = Math.sqrt(blo * bhi);
-    // léger jeu autour du centre + ouverture selon spread
     const seed = geoC * (1 + (Math.random() - 0.5) * 0.2 * (0.4 + spread));
-    const maxR = Math.min(bhi / seed, seed / blo);            // garde R et 1/R dans la bande
+    const maxR = Math.min(bhi / seed, seed / blo);
     const cands = RATIO_OPTS.map((o, i) => ({ i, r: o.r })).filter(o => o.r >= 1.0 && o.r <= maxR);
-    const pick  = cands.length ? cands[Math.floor(Math.random() * cands.length)] : { i: closestRatioIdx(1), r: 1 };
-    return { seed, Ri: pick.i, invRi: closestRatioIdx(1 / pick.r) };
+    const pk = () => cands.length ? cands[Math.floor(Math.random() * cands.length)] : { i: closestRatioIdx(1), r: 1 };
+    return { seed, p1: pk(), p2: pk() };
   });
 
   PAIRS.forEach((pair, idx) => {
@@ -286,24 +295,26 @@ function triggerMagicAuto(opts) {
 
     const b = PAIR_BAND[idx];
     const bd = bandData[b];
-    const isFirst = (idx % 2 === 0);              // 0,2,4 = première paire de la bande
-    // Ratios miroir : une paire monte, l'autre descend (polarité 432)
-    pair.pingala.ri  = isFirst ? bd.invRi : bd.Ri;
-    pair.pingala.n   = bd.seed / newMaster;       // freq = master × ratio × n = seed × ratio
-    pair.ida.delta   = baseDelta;                 // même Δ binaural partout
-    pair.ida.polarity = isFirst ? -1 : 1;         // ± appliqué vers IDA
+    const isFirst = (idx % 2 === 0);
+    // #1b mode de ratio reconnecté :
+    //   harmonic = miroir R / 1/R · same = ratio identique · random = indépendant
+    let ri;
+    if      (mode === 'same')     ri = bd.p1.i;
+    else if (mode === 'harmonic') ri = isFirst ? closestRatioIdx(1 / bd.p1.r) : bd.p1.i;
+    else                          ri = isFirst ? bd.p1.i : bd.p2.i;
+    pair.pingala.ri  = ri;
+    pair.pingala.n   = Math.round((bd.seed / newMaster) * 1000) / 1000;  // #2b n arrondi (fini les décimales à rallonge)
+    pair.ida.delta   = baseDelta;
+    pair.ida.polarity = isFirst ? -1 : 1;
 
-    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
+    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[ri].r * pair.pingala.n));
     pair.pingala.vol = isosonicVol(pf, 0.12);
     pair.ida.vol     = isosonicVol(pf, 0.12);
 
-    // Filtres par bande :
-    //  · bande basse (54-144)  → low-cut (passe-haut) 100 Hz : nettoie le sub profond
-    //  · bande haute (288-566) → lowpass 200 Hz : aération, anti-agressivité
+    // #3 LOW-CUT SUPPRIMÉ (plus de passe-haut). Bande haute : lowpass doux conservé.
     const cut = (b === 2) ? 200 : 6000;
-    const hp  = (b === 0) ? 100 : 20;
-    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 0.707, hp };  // Q neutre = pas de surtension
-    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 0.707, hp };
+    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 0.707, hp: 20 };
+    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 0.707, hp: 20 };
   });
 
   // Éventail stéréo selon le spread

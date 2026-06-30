@@ -116,7 +116,7 @@ function buildFreqMini() {
       <span class="fmini-dot" style="background:${pair.color}cc" id="fmini-dot-${i}"></span>
       <span class="fmini-freq"  id="fmini-f-${i}" style="color:${pair.color}">${pF.toFixed(0)} Hz</span>
       <span class="fmini-ratio" id="fmini-r-${i}" style="color:${pair.color}bb">${RATIO_OPTS[pair.pingala.ri].l}</span>
-      <span class="fmini-n"     id="fmini-n-${i}" style="color:${pair.color}88">×${pair.pingala.n}</span>`;
+      <span class="fmini-n"     id="fmini-n-${i}" style="color:${pair.color}88">×${(+pair.pingala.n).toFixed(2)}</span>`;
     wrap.appendChild(row);
   });
 }
@@ -126,7 +126,7 @@ function patchFreqMini() {
     const pF = calcPFreq(i);
     const f = document.getElementById('fmini-f-'+i); if (f) f.textContent = pF.toFixed(0)+' Hz';
     const r = document.getElementById('fmini-r-'+i); if (r) r.textContent = RATIO_OPTS[pair.pingala.ri].l;
-    const n = document.getElementById('fmini-n-'+i); if (n) n.textContent = '×'+pair.pingala.n;
+    const n = document.getElementById('fmini-n-'+i); if (n) n.textContent = '×'+(+pair.pingala.n).toFixed(2);
   });
 }
 
@@ -150,7 +150,7 @@ function buildRandomTable() {
       <span class="rand-dot" style="background:${pair.color}"></span>
       <span class="rand-freq"  id="rt-f-${i}" style="color:${pair.color}">${pF.toFixed(1)} Hz</span>
       <span class="rand-ratio" id="rt-r-${i}" style="color:${pair.color}bb">${RATIO_OPTS[pair.pingala.ri].l}</span>
-      <span class="rand-n"     id="rt-n-${i}" style="color:${pair.color}88">×${pair.pingala.n}</span>
+      <span class="rand-n"     id="rt-n-${i}" style="color:${pair.color}88">×${(+pair.pingala.n).toFixed(2)}</span>
       <button class="rand-lock${lk?' locked':''}" id="lock-${i}" onclick="toggleLock(${i})" title="Verrouiller la fréquence">${lk?'🔒':'🔓'}</button>
     </div>`;
   }).join('');
@@ -161,7 +161,7 @@ function patchRandomTable() {
     const pF = calcPFreq(i);
     const f = document.getElementById('rt-f-'+i); if (f) f.textContent = pF.toFixed(1)+' Hz';
     const r = document.getElementById('rt-r-'+i); if (r) r.textContent = RATIO_OPTS[pair.pingala.ri].l;
-    const n = document.getElementById('rt-n-'+i); if (n) n.textContent = '×'+pair.pingala.n;
+    const n = document.getElementById('rt-n-'+i); if (n) n.textContent = '×'+(+pair.pingala.n).toFixed(2);
     const lk = document.getElementById('lock-'+i);
     if (lk && typeof isLocked === 'function') { const on = isLocked(i); lk.textContent = on?'🔒':'🔓'; lk.classList.toggle('locked', on); }
   });
