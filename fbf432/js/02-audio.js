@@ -41,7 +41,7 @@ const HEX_3D_POS = [
   [ 0.0, 0,  0.0],  // Maître  → centre
 ];
 const LFO_STATE    = {on:false, rate:.25,  depth:.08};
-const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
+const BREATH_STATE = {on:true, rate:0.11, depth:0.18};  // respiration douce par défaut = le souffle de vie
 let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
 let _breathLFO = null, _breathGain = null, _breathDepthGain = null;
 let _btKeepalive = null;
@@ -260,7 +260,7 @@ let _antiCrackTarget = 1;
 function _applyAntiCrack() {
   if (!masterGain) return;
   const active = Object.keys(nodes).length || 1;
-  _antiCrackTarget = Math.max(0.22, 0.88 / Math.sqrt(active));  // marge de crête anti-écrêtage
+  _antiCrackTarget = Math.max(0.28, 1.0 / Math.sqrt(active));  // présence rendue, le limiteur tient le plafond
   // Appliqué ici (au changement), plus dans la boucle RAF → 0 écriture audio/frame
   if (_lfoGain) _lfoGain.gain.setTargetAtTime(_antiCrackTarget, aNow(), 0.3);
 }
@@ -393,9 +393,10 @@ function initFXChain() {
   busTrim.connect(masterGlue); masterGlue.connect(masterFader);
   masterFader.connect(masterHPF); masterHPF.connect(limiter); limiter.connect(c.destination);
 
-  // Channel insert (mix sec) → compressor → busTrim
-  eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(compressor);
-  compressor.connect(busTrim);   // chemin SEC (le seul depuis le bus voix)
+  // Channel insert (mix sec) → busTrim DIRECT.
+  // Compresseur −24/4 DÉBRANCHÉ : il écrasait toute la dynamique (son plat/compressé).
+  // La dynamique vit librement ; seuls le glue léger (1.5) et le limiteur tiennent le plafond.
+  eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(busTrim);
 
   // Retours FX → busTrim (alimentés par les envois de paires, pas par le bus voix)
   delayWet.connect(busTrim);
@@ -816,8 +817,8 @@ function _uiBusy() {
 }
 function masterTick(ts) {
   masterRAF = requestAnimationFrame(masterTick);
-  // Bride à ~30 fps (moitié de charge CPU, invisible à l'œil)
-  if (ts && _lastTick && ts - _lastTick < 33) return;
+  // Bride à ~22 fps : libère du CPU pour le thread audio (anti-"braises"/underrun)
+  if (ts && _lastTick && ts - _lastTick < 45) return;
   _lastTick = ts || 0;
   if (document.visibilityState === 'hidden') return;
   // Menu/modal ouvert → on ne dessine RIEN (priorité au son)

@@ -69,8 +69,8 @@ let OSC_PAN = buildOscPan(0.7);
 // Courbe isosonique : graves plus forts, aigus plus doux
 function isosonicVol(freq, base) {
   const f = Math.max(F_MIN, Math.min(F_MAX, freq));
-  const k = 1 + 0.40 * (1 - Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN));
-  return base * Math.max(0.5, Math.min(1.35, k));  // boost grave plafonné → marge de crête
+  const k = 1 + 0.48 * (1 - Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN));
+  return base * Math.max(0.5, Math.min(1.5, k));  // dynamique grave rendue (mais maîtrisée)
 }
 
 let mutedOscs = {};
