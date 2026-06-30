@@ -106,14 +106,8 @@ function setGrainDrift(v) {
 }
 
 /* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
-function applyHiBand(node, freq) {
-  if (!node) return;
-  const hi = freq > 432, now = aNow();
-  try {
-    if (node.hpf)    node.hpf.frequency.setTargetAtTime(hi ? 420 : 20, now, 0.05);
-    if (node.hiTrim) node.hiTrim.gain.setTargetAtTime(hi ? 0.75 : 1.0, now, 0.08);
-  } catch(e) {}
-}
+// Les filtres sont gérés par bande (cut bas/haut). applyHiBand est neutralisé.
+function applyHiBand(node, freq) { /* no-op : géré par les cuts de bande */ }
 
 function buildOsc(id, freq, vol, pan) {
   const c      = audioCtx();
@@ -149,7 +143,7 @@ function buildOsc(id, freq, vol, pan) {
   }
 
   const p   = c.createStereoPanner(); p.pan.value = pan;
-  const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
+  const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = fs.hp || 20; hpf.Q.value = 0.707;
   const flt = c.createBiquadFilter(); flt.type = 'lowpass';
   flt.frequency.value = Math.max(20, Math.min(20000, fs.cutoff));
   flt.Q.value = Math.max(0, Math.min(30, fs.res));

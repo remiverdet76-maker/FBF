@@ -297,10 +297,13 @@ function triggerMagicAuto(opts) {
     pair.pingala.vol = isosonicVol(pf, 0.12);
     pair.ida.vol     = isosonicVol(pf, 0.12);
 
-    // Bande haute (288–566) : lowpass doux imposé (aération, anti-agressivité)
+    // Filtres par bande :
+    //  · bande basse (54-144)  → low-cut (passe-haut) 100 Hz : nettoie le sub profond
+    //  · bande haute (288-566) → lowpass 200 Hz : aération, anti-agressivité
     const cut = (b === 2) ? 200 : 6000;
-    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 4 };
-    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 4 };
+    const hp  = (b === 0) ? 100 : 20;
+    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 4, hp };
+    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 4, hp };
   });
 
   // Éventail stéréo selon le spread
@@ -314,8 +317,11 @@ function triggerMagicAuto(opts) {
     if (nodes[iid] && !mutedOscs[iid]) safeRamp(nodes[iid].g.gain, pair.ida.vol, 0.4);
     if (nodes[pid]?.p && OSC_PAN[i]) nodes[pid].p.pan.setTargetAtTime(OSC_PAN[i][0], aNow(), 0.15);
     if (nodes[iid]?.p && OSC_PAN[i]) nodes[iid].p.pan.setTargetAtTime(OSC_PAN[i][1], aNow(), 0.15);
-    if (i !== MASTER_IDX) { setOscFilter(pid, OSC_FILTER[pid].cutoff, OSC_FILTER[pid].res);
-                            setOscFilter(iid, OSC_FILTER[iid].cutoff, OSC_FILTER[iid].res); }
+    if (i !== MASTER_IDX) {
+      setOscFilter(pid, OSC_FILTER[pid].cutoff, OSC_FILTER[pid].res);
+      setOscFilter(iid, OSC_FILTER[iid].cutoff, OSC_FILTER[iid].res);
+      if (typeof setOscHPF === 'function') { setOscHPF(pid, OSC_FILTER[pid].hp); setOscHPF(iid, OSC_FILTER[iid].hp); }
+    }
   });
   if (useFX) randomizeFX();
   if (!flowing) startFlow();
