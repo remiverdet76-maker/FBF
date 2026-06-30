@@ -302,8 +302,8 @@ function triggerMagicAuto(opts) {
     //  · bande haute (288-566) → lowpass 200 Hz : aération, anti-agressivité
     const cut = (b === 2) ? 200 : 6000;
     const hp  = (b === 0) ? 100 : 20;
-    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 4, hp };
-    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 4, hp };
+    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 0.707, hp };  // Q neutre = pas de surtension
+    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 0.707, hp };
   });
 
   // Éventail stéréo selon le spread

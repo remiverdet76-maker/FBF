@@ -112,7 +112,7 @@ function applyHiBand(node, freq) { /* no-op : géré par les cuts de bande */ }
 function buildOsc(id, freq, vol, pan) {
   const c      = audioCtx();
   const engine = OSC_ENGINES[OSC_WAVES[id]] || OSC_ENGINES.sine;
-  const fs     = OSC_FILTER[id] || { cutoff: 6000, res: 4 };  // défaut doux (sinus)
+  const fs     = OSC_FILTER[id] || { cutoff: 6000, res: 0.707 };  // Q neutre (pas de surtension)
   const env    = OSC_ENV[id]    || { a: 0, r: 0 };
   const f0     = safeF(freq);
 
@@ -257,7 +257,7 @@ let _antiCrackTarget = 1;
 function _applyAntiCrack() {
   if (!masterGain) return;
   const active = Object.keys(nodes).length || 1;
-  _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+  _antiCrackTarget = Math.max(0.22, 0.88 / Math.sqrt(active));  // marge de crête anti-écrêtage
   // Appliqué ici (au changement), plus dans la boucle RAF → 0 écriture audio/frame
   if (_lfoGain) _lfoGain.gain.setTargetAtTime(_antiCrackTarget, aNow(), 0.3);
 }
@@ -368,20 +368,24 @@ function initFXChain() {
   mEqMid  = c.createBiquadFilter(); mEqMid.type='peaking';   mEqMid.frequency.value=216;  mEqMid.Q.value=0.9; mEqMid.gain.value=0;
   mEqHigh = c.createBiquadFilter(); mEqHigh.type='highshelf';mEqHigh.frequency.value=432; mEqHigh.gain.value=0;
 
+  // Glue doux (un seul vrai compresseur léger)
   masterGlue = c.createDynamicsCompressor();
-  masterGlue.threshold.value=-18; masterGlue.knee.value=6; masterGlue.ratio.value=2;
+  masterGlue.threshold.value=-14; masterGlue.knee.value=8; masterGlue.ratio.value=1.5;
   masterGlue.attack.value=0.03; masterGlue.release.value=0.25;
 
   masterFader = c.createGain(); masterFader.gain.value = 1;
 
+  // HPF 30 Hz sur le bus master : enlève l'énergie sub qui module le limiteur (anti-pompage)
+  const masterHPF = c.createBiquadFilter();
+  masterHPF.type='highpass'; masterHPF.frequency.value=30; masterHPF.Q.value=0.707;
+
   limiter = c.createDynamicsCompressor();
   limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
-  limiter.attack.value=0.002; limiter.release.value=0.18;
+  limiter.attack.value=0.006; limiter.release.value=0.18;  // attaque plus lente → moins de distorsion grave
 
-  // Master bus chain
-  // EQ master 3-bandes retiré (doublon de l'EQ 2D) → busTrim direct vers le glue
+  // Master bus chain : busTrim → glue → fader → HPF 30Hz → limiteur → sortie
   busTrim.connect(masterGlue); masterGlue.connect(masterFader);
-  masterFader.connect(limiter); limiter.connect(c.destination);
+  masterFader.connect(masterHPF); masterHPF.connect(limiter); limiter.connect(c.destination);
 
   // Channel insert (mix sec) → compressor → busTrim
   eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(compressor);
