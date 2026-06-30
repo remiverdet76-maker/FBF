@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="css/04-ui.css">
 <link rel="stylesheet" href="css/05-mobile.css">
 </head>
-<body>
+<body class="mode-simple">
 
 <!-- Splash 36 Rayons -->
 <div id="splash-36">
@@ -58,6 +58,7 @@
     <button class="params-item" style="--ic:#FFD060;" onclick="openTab('panUT')">⊙ <span>Horloge UT432</span></button>
     <button class="params-item" style="--ic:#FF9A8B;" onclick="openTab('panSamples')">◎ <span>Samples</span></button>
     <button class="params-item" style="--ic:#FFB0FF;" onclick="openTab('panNotice')">≡ <span>Notice &amp; Thème</span></button>
+    <button class="params-item" id="btn-advanced" style="--ic:#C080FF;" onclick="toggleAdvanced()">⊹ <span>Mode avancé (6 sphères) : OFF</span></button>
     <button class="params-item" id="btn-vislite" style="--ic:#86FFC0;" onclick="toggleVisLite()">⚡ <span>Visuel léger : OFF</span></button>
   </div>
 </div>
@@ -154,7 +155,6 @@
     <button class="fbf-step" onclick="masterStep(-108)">−108</button>
   </div>
   <div id="random-table" class="random-table"></div>
-  <div class="rand-prog-section" id="rand-prog-wrap"></div>
 </div>
 
 <!-- Panel : Horloge UT432 — droite -->

@@ -30,6 +30,14 @@
   display:flex;align-items:center;justify-content:center;
   z-index:8;
 }
+/* Sphère maître seule (mode simple) : plus grande, contemplative, respire */
+.vp-center-wrap.vp-solo{ width:min(64vw,300px); height:min(64vw,300px); }
+.vp-center-wrap.vp-solo .vp-p{ animation:soloBreath 7s ease-in-out infinite; }
+.vp-center-wrap.vp-solo .ms-freq{ font-size:2.8rem; }
+@keyframes soloBreath{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.06); }
+}
 .ms-freq{font-family:'IM Fell English',serif;font-size:2.2rem;color:#F3D9FF;line-height:1;cursor:text;text-shadow:0 0 20px rgba(220,130,255,.75);font-weight:bold;}
 .ms-freq:hover{color:#fff;}
 .ms-state{font-size:.7rem;font-style:italic;letter-spacing:.1em;color:rgba(220,180,255,.7);text-transform:uppercase;transition:color .5s;font-weight:bold;}

@@ -117,5 +117,13 @@ function harmonicRandomInit() {
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
+// Couleur organique selon la fréquence : grave = violet/indigo → aigu = ambre/or
+function freqHue(f) {
+  const n = Math.max(0, Math.min(1, (Math.max(54, Math.min(432, f)) - 54) / (432 - 54)));
+  return Math.round(262 - n * 222);  // 54Hz→262 (violet) … 432Hz→40 (ambre)
+}
+function freqColor(f, l)  { return `hsl(${freqHue(f)},72%,${l != null ? l : 60}%)`; }
+function freqColorA(f, l, a) { return `hsla(${freqHue(f)},72%,${l != null ? l : 60}%,${a})`; }
+
 // AudioContext natif — exposé via window.AC (partagé par 08-bowl-engine)
 let AC = null;
