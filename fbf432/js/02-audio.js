@@ -125,7 +125,9 @@ function buildOsc(id, freq, vol, pan) {
     osc.type = part.t;
     const ratio = part.r || 1;
     osc.frequency.value = Math.max(1, f0 * ratio);
-    osc.detune.value = part.d || 0;
+    // #6 : micro-désaccord aléatoire (±1.2 cents) → décorrèle les phases,
+    // évite l'addition constructive parfaite dans le grave (pic de crête). Δ binaural inchangé.
+    osc.detune.value = (part.d || 0) + (Math.random() * 2 - 1) * 1.2;
     const pg = c.createGain(); pg.gain.value = part.g != null ? part.g : 1;
     osc.connect(pg); pg.connect(signalIn);
     if (_driftDepth) { try { _driftDepth.connect(osc.detune); } catch(e) {} }
@@ -247,9 +249,10 @@ function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] 
 
 function safeRamp(gainParam, target, duration) {
   const now = aNow();
+  const cur = gainParam.value;        // #16 : lire la valeur AVANT cancel (pas de saut)
   gainParam.cancelScheduledValues(now);
-  gainParam.setValueAtTime(gainParam.value, now);
-  gainParam.setTargetAtTime(target, now, Math.max(0.01, duration / 5));
+  gainParam.setValueAtTime(cur, now);
+  gainParam.setTargetAtTime(target, now, Math.max(0.025, duration / 5)); // #18 : ≥25ms
 }
 
 /* ---------- 2.2 · ANTI-CRACK (gain ∝ 1/√actifs) ---------- */
@@ -330,8 +333,9 @@ function initFXChain() {
 
   // Delay — entrée = ppSendBus/reverbSendBus pattern ; ici delayInBus
   masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
-  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.25;
-  masterDelay.connect(masterDelayFb); masterDelayFb.connect(masterDelay);
+  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.2;   // #13 : feedback réduit
+  const dFbLP = c.createBiquadFilter(); dFbLP.type='lowpass'; dFbLP.frequency.value=3200; // amortissement HF
+  masterDelay.connect(masterDelayFb); masterDelayFb.connect(dFbLP); dFbLP.connect(masterDelay);
   delayInBus = c.createGain(); delayInBus.gain.value = 0.5;   // bus d'entrée (envois de paires, headroom)
   const delayWet = c.createGain(); delayWet.gain.value = 0; // retour (curseur master)
   delayInBus.connect(masterDelay); masterDelay.connect(delayWet);
@@ -347,16 +351,18 @@ function initFXChain() {
   // Ping-pong stéréo cross-feedback — entrée ppSendBus → tank → retour ppWet
   const ppDelL = c.createDelay(2.0); ppDelL.delayTime.value = 0.25;
   const ppDelR = c.createDelay(2.0); ppDelR.delayTime.value = 0.375;
-  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.28;  // L→R cross (amorti, anti-tore)
-  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.28;  // R→L cross
+  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.25;  // L→R cross (amorti, anti-tore)
+  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.25;  // R→L cross
+  const ppLP1  = c.createBiquadFilter(); ppLP1.type='lowpass'; ppLP1.frequency.value=3200; // amortissement HF
+  const ppLP2  = c.createBiquadFilter(); ppLP2.type='lowpass'; ppLP2.frequency.value=3200;
   const ppPanL = c.createStereoPanner(); ppPanL.pan.value = -1;
   const ppPanR = c.createStereoPanner(); ppPanR.pan.value =  1;
   ppWet    = c.createGain(); ppWet.gain.value = 0;   // retour (curseur master)
   ppSendBus = c.createGain(); ppSendBus.gain.value = 0.5; // entrée (envois de paires, headroom)
 
   ppSendBus.connect(ppDelL);
-  ppDelL.connect(ppFbLR); ppFbLR.connect(ppDelR);
-  ppDelR.connect(ppFbRL); ppFbRL.connect(ppDelL);
+  ppDelL.connect(ppFbLR); ppFbLR.connect(ppLP1); ppLP1.connect(ppDelR);
+  ppDelR.connect(ppFbRL); ppFbRL.connect(ppLP2); ppLP2.connect(ppDelL);
   ppDelL.connect(ppPanL); ppDelR.connect(ppPanR);
   ppPanL.connect(ppWet); ppPanR.connect(ppWet);
   pingPongDelay = { delayL: ppDelL, delayR: ppDelR, _fbLR: ppFbLR, _fbRL: ppFbRL, _wet: ppWet };
@@ -516,8 +522,8 @@ function setOscFilter(id, cutoff, res) {
   OSC_FILTER[id] = cur;
   const node = nodes[id]; if (!node?.flt) return;
   const now = aNow();
-  node.flt.frequency.setTargetAtTime(cur.cutoff, now, 0.05);
-  node.flt.Q.setTargetAtTime(cur.res, now, 0.05);
+  node.flt.frequency.setTargetAtTime(cur.cutoff, now, 0.2);  // #10 : balayage lissé (pas de "zip")
+  node.flt.Q.setTargetAtTime(cur.res, now, 0.2);
 }
 
 // FX on/off par oscillateur (envoi unique vers les 3 tanks)
