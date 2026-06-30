@@ -293,6 +293,20 @@ function buildMasterFXHTML() {
       <div style="font-size:.62rem;color:rgba(140,255,200,.5);font-style:italic;">0% = compact au médium · 100% = étalé 54–396 Hz, large stéréo · appliqué au ⚄ random</div>
     </div>
 
+    <!-- ✦ FX global (fin de chaîne, indépendant du jeu) -->
+    <div class="fx-block" style="border:1px solid rgba(255,208,96,.28);background:rgba(255,208,96,.05);">
+      <div class="fx-title" style="color:rgba(255,208,96,.9);">✦ FX global · fin de chaîne</div>
+      <div class="fx-row">
+        <div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Intensité FX</span>
+          <input type="range" class="fx-slider" id="fxIntensity" min="0" max="1" step="0.02" value="0.3" oninput="setFXIntensity(this.value)">
+          <span class="fx-val-disp" id="sv-fxint">30%</span>
+        </div>
+      </div>
+      <button class="btn-flow" style="width:100%;margin-top:.3rem;border-color:rgba(255,208,96,.5);color:#FFD060;background:rgba(255,208,96,.07);" onclick="triggerRandomFX()">✦ Random FX</button>
+      <div style="font-size:.62rem;color:rgba(255,208,96,.5);font-style:italic;margin-top:.25rem;">Indépendant du ⚄ random fréquence · appliqué à tout le mix, avant le master</div>
+    </div>
+
     <!-- ① Fondu -->
     <div class="fx-block">
       <div class="fx-title">① Fondu d'entrée / sortie</div>

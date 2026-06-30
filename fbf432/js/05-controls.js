@@ -50,23 +50,41 @@ function setRandRatioMode(m,btn){
 function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
 
 // FX aléatoire — randomise delay, reverb, EQ
+// Random FX — INDÉPENDANT du random fréquence. FX globaux en fin de chaîne.
 function randomizeFX(){
-  const delT  = +(0.08 + Math.random() * 0.9).toFixed(2);
-  const delFB = +(Math.random() * 0.5).toFixed(2);
+  const delT  = +(0.12 + Math.random() * 0.7).toFixed(2);
+  const delFB = +(Math.random() * 0.4).toFixed(2);
   const delW  = +(Math.random() * 0.3).toFixed(2);
-  const revW  = +(Math.random() * 0.45).toFixed(2);
-  const eqLF  = Math.round(50  + Math.random() * 300);
-  const eqLG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  const eqMF  = Math.round(300 + Math.random() * 3000);
-  const eqMG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  const eqHF  = Math.round(3000 + Math.random() * 9000);
-  const eqHG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
-   ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
-   ['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
+  const revW  = +(0.1 + Math.random() * 0.4).toFixed(2);
+  const ppT   = +(0.1 + Math.random() * 0.5).toFixed(2);
+  const ppFb  = +(Math.random() * 0.4).toFixed(2);
+  const ppW   = +(Math.random() * 0.35).toFixed(2);
+  const fxInt = +(0.25 + Math.random() * 0.5).toFixed(2);
+  // Delay + Reverb (via sliders + updateFX → gating auto)
+  [['delayTime',delT],['delayFeedback',delFB],['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
     const sl = document.getElementById(id); if (sl) sl.value = val;
     if (typeof updateFX === 'function') updateFX(id, val);
   });
+  // Ping-pong (fonctions dédiées)
+  if (typeof setPingPongTime === 'function') setPingPongTime(ppT);
+  if (typeof setPingPongFb   === 'function') setPingPongFb(ppFb);
+  if (typeof setPingPongWet  === 'function') setPingPongWet(ppW);
+  if (typeof setFXIntensity  === 'function') setFXIntensity(fxInt);
+  // Reflète sur les curseurs visibles
+  [['ppTime',ppT],['ppFb',ppFb],['ppWetSlider',ppW],['fxIntensity',fxInt]].forEach(([id,v])=>{
+    const s = document.getElementById(id); if (s) s.value = v;
+  });
+  const d1=document.getElementById('ppTime-val'); if(d1)d1.textContent=ppT.toFixed(2)+'s';
+  const d2=document.getElementById('ppFb-val');   if(d2)d2.textContent=Math.round(ppFb*100)+'%';
+  const d3=document.getElementById('ppWet-val');  if(d3)d3.textContent=Math.round(ppW*100)+'%';
+  const d4=document.getElementById('sv-fxint');   if(d4)d4.textContent=Math.round(fxInt*100)+'%';
+}
+
+// Raccourci Random FX (bouton jaune du dock + bouton panneau FX)
+function triggerRandomFX(){
+  randomizeFX();
+  const b = document.getElementById('btn-rfx-dock');
+  if (b) { b.style.color='#fff'; setTimeout(()=>{ if(b) b.style.color=''; }, 400); }
 }
 
 function setN(i, raw) {
@@ -334,7 +352,8 @@ function triggerMagicAuto(opts) {
       if (typeof setOscHPF === 'function') { setOscHPF(pid, OSC_FILTER[pid].hp); setOscHPF(iid, OSC_FILTER[iid].hp); }
     }
   });
-  if (useFX) randomizeFX();
+  // Random FX DÉCOUPLÉ : le random fréquence ne déclenche plus les FX
+  // (évite le double calcul). Utiliser le bouton jaune Random FX.
   if (!flowing) startFlow();
   buildVesicaPairs();
   patchRandomTable();

@@ -28,6 +28,7 @@ const PAIR_FX = {};           // id oscillateur → bool (défaut true)
 const FX_SEND_LEVEL = 0.3;    // niveau d'envoi quand FX ON
 let compressor = null;
 let busTrim = null, mEqLow = null, mEqMid = null, mEqHigh = null, masterGlue = null, masterFader = null;
+let preMaster = null, fxSendG = null;   // FX globaux fin de chaîne + fader d'intensité
 let _fxInput = null;
 let _stereo3D = false;
 // Positions 3D hexagonales [x, y, z] — listener au centre regardant +z
@@ -157,13 +158,10 @@ function buildOsc(id, freq, vol, pan) {
   p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
   hiTrim.connect(masterGain);
 
-  // Envoi FX unique de la paire (vers reverb + delay + ping-pong)
-  const fxOn   = PAIR_FX[id] !== false;
-  const fxSend = c.createGain(); fxSend.gain.value = fxOn ? FX_SEND_LEVEL : 0;
+  // FX désormais GLOBAUX (fin de chaîne) → plus d'envoi FX par oscillateur.
+  // On garde un nœud fxSend inerte pour compat (non connecté aux tanks).
+  const fxSend = c.createGain(); fxSend.gain.value = 0;
   hiTrim.connect(fxSend);
-  if (reverbSendBus) fxSend.connect(reverbSendBus);
-  if (delayInBus)    fxSend.connect(delayInBus);
-  if (ppSendBus)     fxSend.connect(ppSendBus);
 
   const node = { _id: id, o: subs[0].osc, subs, signalIn, shaper, g, p, hpf, flt, hiTrim, fxSend };
   applyHiBand(node, f0);
@@ -387,39 +385,51 @@ function initFXChain() {
 
   limiter = c.createDynamicsCompressor();
   limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
-  limiter.attack.value=0.006; limiter.release.value=0.18;  // attaque plus lente → moins de distorsion grave
+  limiter.attack.value=0.006; limiter.release.value=0.18;
 
-  // Master bus chain : busTrim → glue → fader → HPF 30Hz → limiteur → sortie
-  busTrim.connect(masterGlue); masterGlue.connect(masterFader);
+  // ── FX EN FIN DE CHAÎNE, GLOBAUX, INDÉPENDANTS DU JEU ──────────────
+  // Le mix (busTrim) part en SEC vers preMaster, et part aussi (via fxSendG,
+  // fader d'intensité) dans les tanks. Les retours reviennent dans preMaster
+  // (jamais dans busTrim → aucune boucle). Le jeu n'alimente plus les tanks.
+  preMaster = c.createGain(); preMaster.gain.value = 1;
+  fxSendG   = c.createGain(); fxSendG.gain.value = 0.3;   // intensité FX globale (fader)
+
+  busTrim.connect(preMaster);                              // SEC
+  busTrim.connect(fxSendG);                                // départ FX (fin de chaîne)
+  if (reverbSendBus) fxSendG.connect(reverbSendBus);
+  if (delayInBus)    fxSendG.connect(delayInBus);
+  if (ppSendBus)     fxSendG.connect(ppSendBus);
+
+  preMaster.connect(masterGlue); masterGlue.connect(masterFader);
   masterFader.connect(masterHPF); masterHPF.connect(limiter); limiter.connect(c.destination);
 
-  // Channel insert (mix sec) → busTrim DIRECT.
-  // Compresseur −24/4 DÉBRANCHÉ : il écrasait toute la dynamique (son plat/compressé).
-  // La dynamique vit librement ; seuls le glue léger (1.5) et le limiteur tiennent le plafond.
+  // Mix sec : channel insert → busTrim (dynamique libre, glue+limiteur seuls)
   eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(busTrim);
 
-  // #29 : retours FX NON connectés au démarrage → les tanks (convolution/delay/pp)
-  // ne sont PAS dans le chemin actif tant que leur wet=0 → CPU libéré (anti-braises).
-  // _gateTank(...) les (dé)connecte à la demande.
-
+  // Retours FX → preMaster, NON connectés tant que wet=0 (CPU, #29)
   _fxInput = eqLow;
   _fxRefs = { delayWet };
 }
 let _fxRefs = {};
 
-/* ---------- 2.4b · GATING DES TANKS FX (#29 — CPU) ---------- */
+/* ---------- 2.4b · GATING DES TANKS FX (#29 — CPU), retours → preMaster ---------- */
 let _gRev = false, _gDel = false, _gPP = false;
 function _gateReverb(on) {
-  if (on === _gRev || !reverbWetGain || !busTrim) return;
-  try { on ? reverbWetGain.connect(busTrim) : reverbWetGain.disconnect(busTrim); _gRev = on; } catch(e) {}
+  if (on === _gRev || !reverbWetGain || !preMaster) return;
+  try { on ? reverbWetGain.connect(preMaster) : reverbWetGain.disconnect(preMaster); _gRev = on; } catch(e) {}
 }
 function _gateDelay(on) {
-  if (on === _gDel || !_fxRefs.delayWet || !busTrim) return;
-  try { on ? _fxRefs.delayWet.connect(busTrim) : _fxRefs.delayWet.disconnect(busTrim); _gDel = on; } catch(e) {}
+  if (on === _gDel || !_fxRefs.delayWet || !preMaster) return;
+  try { on ? _fxRefs.delayWet.connect(preMaster) : _fxRefs.delayWet.disconnect(preMaster); _gDel = on; } catch(e) {}
 }
 function _gatePP(on) {
-  if (on === _gPP || !ppWet || !busTrim) return;
-  try { on ? ppWet.connect(busTrim) : ppWet.disconnect(busTrim); _gPP = on; } catch(e) {}
+  if (on === _gPP || !ppWet || !preMaster) return;
+  try { on ? ppWet.connect(preMaster) : ppWet.disconnect(preMaster); _gPP = on; } catch(e) {}
+}
+// Intensité FX globale (fader)
+function setFXIntensity(v) {
+  if (fxSendG) fxSendG.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+  const el = document.getElementById('sv-fxint'); if (el) el.textContent = Math.round(parseFloat(v)*100)+'%';
 }
 
 /* ---------- 2.5 · REVERB ---------- */
@@ -604,6 +614,7 @@ function getFXState() {
     pp: pingPongDelay ? { t:pingPongDelay.delayL.delayTime.value,
                           fb:pingPongDelay._fbLR.gain.value,
                           wet:ppWet ? ppWet.gain.value : 0 } : null,
+    fxInt: fxSendG ? fxSendG.gain.value : 0.3,
     lfo: { ...LFO_STATE }, breath: { ...BREATH_STATE }, grain: { ...GRAIN_STATE },
     comp: compressor ? { th:compressor.threshold.value, ra:compressor.ratio.value } : null,
     waves: { ...OSC_WAVES },
@@ -627,6 +638,7 @@ function applyFXState(s) {
     setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb); setPingPongWet(s.pp.wet || 0);
     setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider', s.pp.wet || 0);
   }
+  if (s.fxInt != null && typeof setFXIntensity === 'function') { setFXIntensity(s.fxInt); setSl('fxIntensity', s.fxInt); }
   if (s.lfo)    { LFO_STATE.rate=s.lfo.rate; LFO_STATE.depth=s.lfo.depth; lfoToggle(!!s.lfo.on);
                   const c=document.getElementById('lfo-on'); if (c) c.checked=!!s.lfo.on; }
   if (s.breath) { BREATH_STATE.rate=s.breath.rate; BREATH_STATE.depth=s.breath.depth; breathToggle(!!s.breath.on); }

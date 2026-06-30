@@ -367,6 +367,38 @@
 }
 #btn-rand-dock:active{transform:scale(.92);}
 
+/* ─── Bouton ✦ Random FX (jaune) ─── */
+#btn-rfx-dock{
+  flex-shrink:0;
+  width:42px;height:42px;
+  border-radius:10px;
+  border:2px solid rgba(255,208,96,.55);
+  background:radial-gradient(circle at 40% 35%,rgba(255,208,96,.2),rgba(30,22,4,.85));
+  color:#FFD060;
+  font-size:1.2rem;line-height:1;
+  cursor:pointer;transition:all .22s;
+}
+#btn-rfx-dock:hover{border-color:#FFE08A;color:#FFE8A0;box-shadow:0 0 24px rgba(255,208,96,.5);}
+#btn-rfx-dock:active{transform:scale(.92);}
+
+/* ─── Bouton ⚙ Paramètres (case verte, même taille que les autres) ─── */
+.tnav-params{
+  flex-shrink:0;
+  width:42px;height:42px;
+  border-radius:10px;
+  border:2px solid rgba(134,255,192,.55) !important;
+  background:radial-gradient(circle at 40% 35%,rgba(134,255,192,.2),rgba(4,30,18,.85)) !important;
+  color:#86FFC0 !important;
+  font-size:1.2rem;line-height:1;
+  font-family:inherit !important;letter-spacing:0 !important;
+  cursor:pointer;transition:all .22s;
+  display:flex;align-items:center;justify-content:center;
+}
+.tnav-params:hover{border-color:#A8FFD0 !important;color:#C0FFE0 !important;box-shadow:0 0 24px rgba(134,255,192,.5);}
+.tnav-params:active{transform:scale(.92);}
+#tab-nav{flex:0 0 auto;overflow:visible;}
+#btn-rec{margin-left:auto;}  /* pousse Rec + plein écran au bord droit */
+
 /* ─── Bouton ❤️ (sauve jeu complet, FX inclus) ─── */
 #btn-fav-dock{
   flex-shrink:0;
