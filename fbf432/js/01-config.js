@@ -10,9 +10,13 @@ const LS_KEY = 'fbf432_state_cosmic';
 // Ancienne base 36–864 → empilement au plafond 432. Nouvelle base 54–396 :
 // les oscillateurs respirent sous le maître, qui garde son accès au 432.
 const F_MIN   = 54;
-const F_MAX   = 396;
-const N_MAX   = 1.0;        // n plafonné à 1 (point 9)
-const F_SEUIL = 360;        // seuil de protection auto (point 9)
+const F_MAX   = 566;        // plafond du jeu aléatoire (bande haute 288–566)
+const N_MAX   = 8.0;        // n libre : sert à placer le carrier dans sa bande
+const F_SEUIL = 360;        // (conservé pour info — protection auto désactivée v2.x)
+
+// Bandes fréquentielles attitrées (boue sub évitée par répartition)
+const FBF_BANDS = [[54, 144], [144, 288], [288, 566]];
+const PAIR_BAND = [0, 0, 1, 1, 2, 2];   // paires 0-5 → bande (master = source)
 
 const HEX_DEG    = [0, 60, 120, 180, 240, 300];
 const MASTER_IDX = 6;
@@ -65,8 +69,8 @@ let OSC_PAN = buildOscPan(0.7);
 // Courbe isosonique : graves plus forts, aigus plus doux
 function isosonicVol(freq, base) {
   const f = Math.max(F_MIN, Math.min(F_MAX, freq));
-  const k = 1 + 0.52 * (1 - Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN));
-  return base * Math.max(0.5, Math.min(1.75, k));
+  const k = 1 + 0.48 * (1 - Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN));
+  return base * Math.max(0.5, Math.min(1.5, k));  // dynamique grave rendue (mais maîtrisée)
 }
 
 let mutedOscs = {};

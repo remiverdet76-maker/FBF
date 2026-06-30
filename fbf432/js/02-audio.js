@@ -28,6 +28,7 @@ const PAIR_FX = {};           // id oscillateur → bool (défaut true)
 const FX_SEND_LEVEL = 0.3;    // niveau d'envoi quand FX ON
 let compressor = null;
 let busTrim = null, mEqLow = null, mEqMid = null, mEqHigh = null, masterGlue = null, masterFader = null;
+let preMaster = null, fxSendG = null;   // FX globaux fin de chaîne + fader d'intensité
 let _fxInput = null;
 let _stereo3D = false;
 // Positions 3D hexagonales [x, y, z] — listener au centre regardant +z
@@ -41,7 +42,7 @@ const HEX_3D_POS = [
   [ 0.0, 0,  0.0],  // Maître  → centre
 ];
 const LFO_STATE    = {on:false, rate:.25,  depth:.08};
-const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
+const BREATH_STATE = {on:true, rate:0.11, depth:0.18};  // respiration douce par défaut = le souffle de vie
 let _lfoNode = null, _lfoGain = null, _lfoDepthGain = null;
 let _breathLFO = null, _breathGain = null, _breathDepthGain = null;
 let _btKeepalive = null;
@@ -106,19 +107,13 @@ function setGrainDrift(v) {
 }
 
 /* ---------- 2.1 · OSCILLATEURS (persistants, retune lisse) ---------- */
-function applyHiBand(node, freq) {
-  if (!node) return;
-  const hi = freq > 432, now = aNow();
-  try {
-    if (node.hpf)    node.hpf.frequency.setTargetAtTime(hi ? 420 : 20, now, 0.05);
-    if (node.hiTrim) node.hiTrim.gain.setTargetAtTime(hi ? 0.75 : 1.0, now, 0.08);
-  } catch(e) {}
-}
+// Les filtres sont gérés par bande (cut bas/haut). applyHiBand est neutralisé.
+function applyHiBand(node, freq) { /* no-op : géré par les cuts de bande */ }
 
 function buildOsc(id, freq, vol, pan) {
   const c      = audioCtx();
   const engine = OSC_ENGINES[OSC_WAVES[id]] || OSC_ENGINES.sine;
-  const fs     = OSC_FILTER[id] || { cutoff: 20000, res: 0 };
+  const fs     = OSC_FILTER[id] || { cutoff: 6000, res: 0.707 };  // Q neutre (pas de surtension)
   const env    = OSC_ENV[id]    || { a: 0, r: 0 };
   const f0     = safeF(freq);
 
@@ -131,7 +126,9 @@ function buildOsc(id, freq, vol, pan) {
     osc.type = part.t;
     const ratio = part.r || 1;
     osc.frequency.value = Math.max(1, f0 * ratio);
-    osc.detune.value = part.d || 0;
+    // #6 : micro-désaccord aléatoire (±1.2 cents) → décorrèle les phases,
+    // évite l'addition constructive parfaite dans le grave (pic de crête). Δ binaural inchangé.
+    osc.detune.value = (part.d || 0) + (Math.random() * 2 - 1) * 1.2;
     const pg = c.createGain(); pg.gain.value = part.g != null ? part.g : 1;
     osc.connect(pg); pg.connect(signalIn);
     if (_driftDepth) { try { _driftDepth.connect(osc.detune); } catch(e) {} }
@@ -149,7 +146,7 @@ function buildOsc(id, freq, vol, pan) {
   }
 
   const p   = c.createStereoPanner(); p.pan.value = pan;
-  const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 20; hpf.Q.value = 0.707;
+  const hpf = c.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = fs.hp || 20; hpf.Q.value = 0.707;
   const flt = c.createBiquadFilter(); flt.type = 'lowpass';
   flt.frequency.value = Math.max(20, Math.min(20000, fs.cutoff));
   flt.Q.value = Math.max(0, Math.min(30, fs.res));
@@ -161,13 +158,10 @@ function buildOsc(id, freq, vol, pan) {
   p.connect(hpf); hpf.connect(flt); flt.connect(g); g.connect(hiTrim);
   hiTrim.connect(masterGain);
 
-  // Envoi FX unique de la paire (vers reverb + delay + ping-pong)
-  const fxOn   = PAIR_FX[id] !== false;
-  const fxSend = c.createGain(); fxSend.gain.value = fxOn ? FX_SEND_LEVEL : 0;
+  // FX désormais GLOBAUX (fin de chaîne) → plus d'envoi FX par oscillateur.
+  // On garde un nœud fxSend inerte pour compat (non connecté aux tanks).
+  const fxSend = c.createGain(); fxSend.gain.value = 0;
   hiTrim.connect(fxSend);
-  if (reverbSendBus) fxSend.connect(reverbSendBus);
-  if (delayInBus)    fxSend.connect(delayInBus);
-  if (ppSendBus)     fxSend.connect(ppSendBus);
 
   const node = { _id: id, o: subs[0].osc, subs, signalIn, shaper, g, p, hpf, flt, hiTrim, fxSend };
   applyHiBand(node, f0);
@@ -233,7 +227,6 @@ function swapPingala(i) {
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   _applyAntiCrack();
-  _applySeuilProtect(i);
   updatePairUI(i);
 }
 function swapIda(i) {
@@ -247,7 +240,6 @@ function swapIda(i) {
     nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), vol, pan);
   }
   _applyAntiCrack();
-  _applySeuilProtect(i);
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
@@ -255,9 +247,10 @@ function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] 
 
 function safeRamp(gainParam, target, duration) {
   const now = aNow();
+  const cur = gainParam.value;        // #16 : lire la valeur AVANT cancel (pas de saut)
   gainParam.cancelScheduledValues(now);
-  gainParam.setValueAtTime(gainParam.value, now);
-  gainParam.setTargetAtTime(target, now, Math.max(0.01, duration / 5));
+  gainParam.setValueAtTime(cur, now);
+  gainParam.setTargetAtTime(target, now, Math.max(0.025, duration / 5)); // #18 : ≥25ms
 }
 
 /* ---------- 2.2 · ANTI-CRACK (gain ∝ 1/√actifs) ---------- */
@@ -265,7 +258,7 @@ let _antiCrackTarget = 1;
 function _applyAntiCrack() {
   if (!masterGain) return;
   const active = Object.keys(nodes).length || 1;
-  _antiCrackTarget = Math.max(0.25, 1 / Math.sqrt(active));
+  _antiCrackTarget = Math.max(0.28, 1.0 / Math.sqrt(active));  // présence rendue, le limiteur tient le plafond
   // Appliqué ici (au changement), plus dans la boucle RAF → 0 écriture audio/frame
   if (_lfoGain) _lfoGain.gain.setTargetAtTime(_antiCrackTarget, aNow(), 0.3);
 }
@@ -324,9 +317,10 @@ function initFXChain() {
   if (eqLow) return;
   const c = audioCtx();
 
-  eqLow  = c.createBiquadFilter(); eqLow.type='lowshelf';  eqLow.frequency.value=200;  eqLow.gain.value=0;
-  eqMid  = c.createBiquadFilter(); eqMid.type='peaking';   eqMid.frequency.value=1000; eqMid.Q.value=1; eqMid.gain.value=0;
-  eqHigh = c.createBiquadFilter(); eqHigh.type='highshelf';eqHigh.frequency.value=5000; eqHigh.gain.value=0;
+  // EQ unique (2D) — bandes : Bass 54-144 · Médium 144-288 · Haut 288-566
+  eqLow  = c.createBiquadFilter(); eqLow.type='lowshelf';  eqLow.frequency.value=96;  eqLow.gain.value=0;
+  eqMid  = c.createBiquadFilter(); eqMid.type='peaking';   eqMid.frequency.value=216; eqMid.Q.value=1; eqMid.gain.value=0;
+  eqHigh = c.createBiquadFilter(); eqHigh.type='highshelf';eqHigh.frequency.value=427; eqHigh.gain.value=0;
 
   compressor = c.createDynamicsCompressor();
   compressor.threshold.value=-24; compressor.ratio.value=4; compressor.attack.value=0.02; compressor.release.value=0.25;
@@ -337,8 +331,9 @@ function initFXChain() {
 
   // Delay — entrée = ppSendBus/reverbSendBus pattern ; ici delayInBus
   masterDelay   = c.createDelay(1.0); masterDelay.delayTime.value=0.3;
-  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.25;
-  masterDelay.connect(masterDelayFb); masterDelayFb.connect(masterDelay);
+  masterDelayFb = c.createGain(); masterDelayFb.gain.value=0.2;   // #13 : feedback réduit
+  const dFbLP = c.createBiquadFilter(); dFbLP.type='lowpass'; dFbLP.frequency.value=3200; // amortissement HF
+  masterDelay.connect(masterDelayFb); masterDelayFb.connect(dFbLP); dFbLP.connect(masterDelay);
   delayInBus = c.createGain(); delayInBus.gain.value = 0.5;   // bus d'entrée (envois de paires, headroom)
   const delayWet = c.createGain(); delayWet.gain.value = 0; // retour (curseur master)
   delayInBus.connect(masterDelay); masterDelay.connect(delayWet);
@@ -354,16 +349,18 @@ function initFXChain() {
   // Ping-pong stéréo cross-feedback — entrée ppSendBus → tank → retour ppWet
   const ppDelL = c.createDelay(2.0); ppDelL.delayTime.value = 0.25;
   const ppDelR = c.createDelay(2.0); ppDelR.delayTime.value = 0.375;
-  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.28;  // L→R cross (amorti, anti-tore)
-  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.28;  // R→L cross
+  const ppFbLR = c.createGain(); ppFbLR.gain.value = 0.25;  // L→R cross (amorti, anti-tore)
+  const ppFbRL = c.createGain(); ppFbRL.gain.value = 0.25;  // R→L cross
+  const ppLP1  = c.createBiquadFilter(); ppLP1.type='lowpass'; ppLP1.frequency.value=3200; // amortissement HF
+  const ppLP2  = c.createBiquadFilter(); ppLP2.type='lowpass'; ppLP2.frequency.value=3200;
   const ppPanL = c.createStereoPanner(); ppPanL.pan.value = -1;
   const ppPanR = c.createStereoPanner(); ppPanR.pan.value =  1;
   ppWet    = c.createGain(); ppWet.gain.value = 0;   // retour (curseur master)
   ppSendBus = c.createGain(); ppSendBus.gain.value = 0.5; // entrée (envois de paires, headroom)
 
   ppSendBus.connect(ppDelL);
-  ppDelL.connect(ppFbLR); ppFbLR.connect(ppDelR);
-  ppDelR.connect(ppFbRL); ppFbRL.connect(ppDelL);
+  ppDelL.connect(ppFbLR); ppFbLR.connect(ppLP1); ppLP1.connect(ppDelR);
+  ppDelR.connect(ppFbRL); ppFbRL.connect(ppLP2); ppLP2.connect(ppDelL);
   ppDelL.connect(ppPanL); ppDelR.connect(ppPanR);
   ppPanL.connect(ppWet); ppPanR.connect(ppWet);
   pingPongDelay = { delayL: ppDelL, delayR: ppDelR, _fbLR: ppFbLR, _fbRL: ppFbRL, _wet: ppWet };
@@ -375,34 +372,65 @@ function initFXChain() {
   mEqMid  = c.createBiquadFilter(); mEqMid.type='peaking';   mEqMid.frequency.value=216;  mEqMid.Q.value=0.9; mEqMid.gain.value=0;
   mEqHigh = c.createBiquadFilter(); mEqHigh.type='highshelf';mEqHigh.frequency.value=432; mEqHigh.gain.value=0;
 
+  // Glue doux (un seul vrai compresseur léger)
   masterGlue = c.createDynamicsCompressor();
-  masterGlue.threshold.value=-18; masterGlue.knee.value=6; masterGlue.ratio.value=2;
+  masterGlue.threshold.value=-14; masterGlue.knee.value=8; masterGlue.ratio.value=1.5;
   masterGlue.attack.value=0.03; masterGlue.release.value=0.25;
 
   masterFader = c.createGain(); masterFader.gain.value = 1;
 
+  // HPF 30 Hz sur le bus master : enlève l'énergie sub qui module le limiteur (anti-pompage)
+  const masterHPF = c.createBiquadFilter();
+  masterHPF.type='highpass'; masterHPF.frequency.value=30; masterHPF.Q.value=0.707;
+
   limiter = c.createDynamicsCompressor();
   limiter.threshold.value=-3.6; limiter.knee.value=0; limiter.ratio.value=20;
-  limiter.attack.value=0.002; limiter.release.value=0.18;
+  limiter.attack.value=0.006; limiter.release.value=0.18;
 
-  // Master bus chain
-  busTrim.connect(mEqLow); mEqLow.connect(mEqMid); mEqMid.connect(mEqHigh);
-  mEqHigh.connect(masterGlue); masterGlue.connect(masterFader);
-  masterFader.connect(limiter); limiter.connect(c.destination);
+  // ── FX EN FIN DE CHAÎNE, GLOBAUX, INDÉPENDANTS DU JEU ──────────────
+  // Le mix (busTrim) part en SEC vers preMaster, et part aussi (via fxSendG,
+  // fader d'intensité) dans les tanks. Les retours reviennent dans preMaster
+  // (jamais dans busTrim → aucune boucle). Le jeu n'alimente plus les tanks.
+  preMaster = c.createGain(); preMaster.gain.value = 1;
+  fxSendG   = c.createGain(); fxSendG.gain.value = 0.3;   // intensité FX globale (fader)
 
-  // Channel insert (mix sec) → compressor → busTrim
-  eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(compressor);
-  compressor.connect(busTrim);   // chemin SEC (le seul depuis le bus voix)
+  busTrim.connect(preMaster);                              // SEC
+  busTrim.connect(fxSendG);                                // départ FX (fin de chaîne)
+  if (reverbSendBus) fxSendG.connect(reverbSendBus);
+  if (delayInBus)    fxSendG.connect(delayInBus);
+  if (ppSendBus)     fxSendG.connect(ppSendBus);
 
-  // Retours FX → busTrim (alimentés par les envois de paires, pas par le bus voix)
-  delayWet.connect(busTrim);
-  reverbWetGain.connect(busTrim);
-  ppWet.connect(busTrim);
+  preMaster.connect(masterGlue); masterGlue.connect(masterFader);
+  masterFader.connect(masterHPF); masterHPF.connect(limiter); limiter.connect(c.destination);
 
+  // Mix sec : channel insert → busTrim (dynamique libre, glue+limiteur seuls)
+  eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(busTrim);
+
+  // Retours FX → preMaster, NON connectés tant que wet=0 (CPU, #29)
   _fxInput = eqLow;
   _fxRefs = { delayWet };
 }
 let _fxRefs = {};
+
+/* ---------- 2.4b · GATING DES TANKS FX (#29 — CPU), retours → preMaster ---------- */
+let _gRev = false, _gDel = false, _gPP = false;
+function _gateReverb(on) {
+  if (on === _gRev || !reverbWetGain || !preMaster) return;
+  try { on ? reverbWetGain.connect(preMaster) : reverbWetGain.disconnect(preMaster); _gRev = on; } catch(e) {}
+}
+function _gateDelay(on) {
+  if (on === _gDel || !_fxRefs.delayWet || !preMaster) return;
+  try { on ? _fxRefs.delayWet.connect(preMaster) : _fxRefs.delayWet.disconnect(preMaster); _gDel = on; } catch(e) {}
+}
+function _gatePP(on) {
+  if (on === _gPP || !ppWet || !preMaster) return;
+  try { on ? ppWet.connect(preMaster) : ppWet.disconnect(preMaster); _gPP = on; } catch(e) {}
+}
+// Intensité FX globale (fader)
+function setFXIntensity(v) {
+  if (fxSendG) fxSendG.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+  const el = document.getElementById('sv-fxint'); if (el) el.textContent = Math.round(parseFloat(v)*100)+'%';
+}
 
 /* ---------- 2.5 · REVERB ---------- */
 let _reverbActive = false;
@@ -519,8 +547,8 @@ function setOscFilter(id, cutoff, res) {
   OSC_FILTER[id] = cur;
   const node = nodes[id]; if (!node?.flt) return;
   const now = aNow();
-  node.flt.frequency.setTargetAtTime(cur.cutoff, now, 0.05);
-  node.flt.Q.setTargetAtTime(cur.res, now, 0.05);
+  node.flt.frequency.setTargetAtTime(cur.cutoff, now, 0.2);  // #10 : balayage lissé (pas de "zip")
+  node.flt.Q.setTargetAtTime(cur.res, now, 0.2);
 }
 
 // FX on/off par oscillateur (envoi unique vers les 3 tanks)
@@ -567,7 +595,10 @@ function setPingPongFb(v) {
 }
 
 function setPingPongWet(v) {
-  if (ppWet) ppWet.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+  const val = Math.max(0, Math.min(1, parseFloat(v)));
+  if (!ppWet) return;
+  if (val > 0.001) { _gatePP(true); ppWet.gain.setTargetAtTime(val, aNow(), 0.05); }
+  else { ppWet.gain.setTargetAtTime(0, aNow(), 0.05); setTimeout(() => { if (ppWet && ppWet.gain.value < 0.002) _gatePP(false); }, 300); }
 }
 
 /* ---------- 2.6d · SNAPSHOT / RESTORE FX (pour ❤️ presets) ---------- */
@@ -583,6 +614,7 @@ function getFXState() {
     pp: pingPongDelay ? { t:pingPongDelay.delayL.delayTime.value,
                           fb:pingPongDelay._fbLR.gain.value,
                           wet:ppWet ? ppWet.gain.value : 0 } : null,
+    fxInt: fxSendG ? fxSendG.gain.value : 0.3,
     lfo: { ...LFO_STATE }, breath: { ...BREATH_STATE }, grain: { ...GRAIN_STATE },
     comp: compressor ? { th:compressor.threshold.value, ra:compressor.ratio.value } : null,
     waves: { ...OSC_WAVES },
@@ -606,6 +638,7 @@ function applyFXState(s) {
     setPingPongTime(s.pp.t); setPingPongFb(s.pp.fb); setPingPongWet(s.pp.wet || 0);
     setSl('ppTime',s.pp.t); setSl('ppFb',s.pp.fb); setSl('ppWetSlider', s.pp.wet || 0);
   }
+  if (s.fxInt != null && typeof setFXIntensity === 'function') { setFXIntensity(s.fxInt); setSl('fxIntensity', s.fxInt); }
   if (s.lfo)    { LFO_STATE.rate=s.lfo.rate; LFO_STATE.depth=s.lfo.depth; lfoToggle(!!s.lfo.on);
                   const c=document.getElementById('lfo-on'); if (c) c.checked=!!s.lfo.on; }
   if (s.breath) { BREATH_STATE.rate=s.breath.rate; BREATH_STATE.depth=s.breath.depth; breathToggle(!!s.breath.on); }
@@ -813,12 +846,14 @@ function _uiBusy() {
 }
 function masterTick(ts) {
   masterRAF = requestAnimationFrame(masterTick);
-  // Bride à ~30 fps (moitié de charge CPU, invisible à l'œil)
-  if (ts && _lastTick && ts - _lastTick < 33) return;
+  // Bride à ~22 fps : libère du CPU pour le thread audio (anti-"braises"/underrun)
+  if (ts && _lastTick && ts - _lastTick < 45) return;
   _lastTick = ts || 0;
   if (document.visibilityState === 'hidden') return;
   // Menu/modal ouvert → on ne dessine RIEN (priorité au son)
   if (_uiBusy()) return;
+  // #36 mode visuel "lite" : coupe TOUT dessin (métatron + spectroïde) → CPU max pour l'audio
+  if (document.body.classList.contains('vis-lite')) return;
 
   metaAngle = (metaAngle + 0.006) % (Math.PI * 2);
   drawMetatron();

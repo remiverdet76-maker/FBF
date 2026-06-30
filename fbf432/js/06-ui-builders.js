@@ -3,14 +3,17 @@
    ═══════════════════════════════════════════ */
 
 // ── EQ 2D Parametric Canvas ───────────────────────────────────────
+// Bandes recalées sur le jeu FBF : Bass 54-144 · Médium 144-288 · Haut 288-566
 const EQ_BANDS=[
-  {id:'low', freq:200, gain:0,color:'#60D8FF',type:'lowshelf', fMin:20,  fMax:600,  label:'BAS'},
-  {id:'mid', freq:1000,gain:0,color:'#FFD060',type:'peak',     fMin:200, fMax:6000, label:'MID'},
-  {id:'high',freq:5000,gain:0,color:'#FF8EFF',type:'highshelf',fMin:2000,fMax:20000,label:'HAUT'},
+  {id:'low', freq:96, gain:0,color:'#60D8FF',type:'lowshelf', fMin:54,  fMax:144, label:'BAS'},
+  {id:'mid', freq:216,gain:0,color:'#FFD060',type:'peak',     fMin:144, fMax:288, label:'MED'},
+  {id:'high',freq:427,gain:0,color:'#FF8EFF',type:'highshelf',fMin:288, fMax:566, label:'HAUT'},
 ];
+// Axe fréquentiel borné : 40 → 1296 Hz (ne monte jamais plus haut)
+const EQ_FLO=40, EQ_FHI=1296;
 var _eqDrag=null;
-function _f2x(f,w){return w*Math.log(f/20)/Math.log(1000);}
-function _x2f(x,w){return 20*Math.pow(1000,x/w);}
+function _f2x(f,w){return w*Math.log(f/EQ_FLO)/Math.log(EQ_FHI/EQ_FLO);}
+function _x2f(x,w){return EQ_FLO*Math.pow(EQ_FHI/EQ_FLO,x/w);}
 function _g2y(g,h){return h*(1-(g+18)/36);}
 function _y2g(y,h){return(1-y/h)*36-18;}
 function _eqCurveY(f){
@@ -29,14 +32,14 @@ function drawEQ2D(cv){
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle='rgba(4,2,16,.9)';ctx.fillRect(0,0,W,H);
-  // Grid
-  [50,100,200,500,1000,2000,5000,10000].forEach(f=>{
-    if(f>20000)return;
+  // Grid (bornes 54 · 144 · 288 · 432 · 566 · 1296)
+  [54,144,288,432,566,864,1296].forEach(f=>{
+    if(f>EQ_FHI)return;
     const x=_f2x(f,W);
     ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
-    if(f>=100){ctx.fillStyle='rgba(255,255,255,.2)';ctx.font=`${Math.max(7,W*.028)}px monospace`;
-      ctx.fillText(f>=1000?(f/1000)+'k':f,x+2,H-3);}
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.font=`${Math.max(7,W*.028)}px monospace`;
+    ctx.fillText(f>=1000?(f/1000).toFixed(1)+'k':f,x+2,H-3);
   });
   // 0 dB line
   const y0=_g2y(0,H);
@@ -45,7 +48,7 @@ function drawEQ2D(cv){
   // EQ curve
   const N=100;
   ctx.beginPath();
-  for(let i=0;i<=N;i++){const f=20*Math.pow(1000,i/N);const x=_f2x(f,W);const y=_g2y(_eqCurveY(f),H);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  for(let i=0;i<=N;i++){const f=EQ_FLO*Math.pow(EQ_FHI/EQ_FLO,i/N);const x=_f2x(f,W);const y=_g2y(_eqCurveY(f),H);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
   ctx.strokeStyle='rgba(160,210,255,.6)';ctx.lineWidth=1.5;ctx.stroke();
   ctx.lineTo(W,y0);ctx.lineTo(0,y0);ctx.closePath();
   ctx.fillStyle='rgba(80,150,255,.06)';ctx.fill();
@@ -113,7 +116,7 @@ function buildFreqMini() {
       <span class="fmini-dot" style="background:${pair.color}cc" id="fmini-dot-${i}"></span>
       <span class="fmini-freq"  id="fmini-f-${i}" style="color:${pair.color}">${pF.toFixed(0)} Hz</span>
       <span class="fmini-ratio" id="fmini-r-${i}" style="color:${pair.color}bb">${RATIO_OPTS[pair.pingala.ri].l}</span>
-      <span class="fmini-n"     id="fmini-n-${i}" style="color:${pair.color}88">×${pair.pingala.n}</span>`;
+      <span class="fmini-n"     id="fmini-n-${i}" style="color:${pair.color}88">×${(+pair.pingala.n).toFixed(2)}</span>`;
     wrap.appendChild(row);
   });
 }
@@ -123,7 +126,7 @@ function patchFreqMini() {
     const pF = calcPFreq(i);
     const f = document.getElementById('fmini-f-'+i); if (f) f.textContent = pF.toFixed(0)+' Hz';
     const r = document.getElementById('fmini-r-'+i); if (r) r.textContent = RATIO_OPTS[pair.pingala.ri].l;
-    const n = document.getElementById('fmini-n-'+i); if (n) n.textContent = '×'+pair.pingala.n;
+    const n = document.getElementById('fmini-n-'+i); if (n) n.textContent = '×'+(+pair.pingala.n).toFixed(2);
   });
 }
 
@@ -147,7 +150,7 @@ function buildRandomTable() {
       <span class="rand-dot" style="background:${pair.color}"></span>
       <span class="rand-freq"  id="rt-f-${i}" style="color:${pair.color}">${pF.toFixed(1)} Hz</span>
       <span class="rand-ratio" id="rt-r-${i}" style="color:${pair.color}bb">${RATIO_OPTS[pair.pingala.ri].l}</span>
-      <span class="rand-n"     id="rt-n-${i}" style="color:${pair.color}88">×${pair.pingala.n}</span>
+      <span class="rand-n"     id="rt-n-${i}" style="color:${pair.color}88">×${(+pair.pingala.n).toFixed(2)}</span>
       <button class="rand-lock${lk?' locked':''}" id="lock-${i}" onclick="toggleLock(${i})" title="Verrouiller la fréquence">${lk?'🔒':'🔓'}</button>
     </div>`;
   }).join('');
@@ -158,7 +161,7 @@ function patchRandomTable() {
     const pF = calcPFreq(i);
     const f = document.getElementById('rt-f-'+i); if (f) f.textContent = pF.toFixed(1)+' Hz';
     const r = document.getElementById('rt-r-'+i); if (r) r.textContent = RATIO_OPTS[pair.pingala.ri].l;
-    const n = document.getElementById('rt-n-'+i); if (n) n.textContent = '×'+pair.pingala.n;
+    const n = document.getElementById('rt-n-'+i); if (n) n.textContent = '×'+(+pair.pingala.n).toFixed(2);
     const lk = document.getElementById('lock-'+i);
     if (lk && typeof isLocked === 'function') { const on = isLocked(i); lk.textContent = on?'🔒':'🔓'; lk.classList.toggle('locked', on); }
   });
@@ -288,6 +291,20 @@ function buildMasterFXHTML() {
         </div>
       </div>
       <div style="font-size:.62rem;color:rgba(140,255,200,.5);font-style:italic;">0% = compact au médium · 100% = étalé 54–396 Hz, large stéréo · appliqué au ⚄ random</div>
+    </div>
+
+    <!-- ✦ FX global (fin de chaîne, indépendant du jeu) -->
+    <div class="fx-block" style="border:1px solid rgba(255,208,96,.28);background:rgba(255,208,96,.05);">
+      <div class="fx-title" style="color:rgba(255,208,96,.9);">✦ FX global · fin de chaîne</div>
+      <div class="fx-row">
+        <div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Intensité FX</span>
+          <input type="range" class="fx-slider" id="fxIntensity" min="0" max="1" step="0.02" value="0.3" oninput="setFXIntensity(this.value)">
+          <span class="fx-val-disp" id="sv-fxint">30%</span>
+        </div>
+      </div>
+      <button class="btn-flow" style="width:100%;margin-top:.3rem;border-color:rgba(255,208,96,.5);color:#FFD060;background:rgba(255,208,96,.07);" onclick="triggerRandomFX()">✦ Random FX</button>
+      <div style="font-size:.62rem;color:rgba(255,208,96,.5);font-style:italic;margin-top:.25rem;">Indépendant du ⚄ random fréquence · appliqué à tout le mix, avant le master</div>
     </div>
 
     <!-- ① Fondu -->
@@ -529,8 +546,12 @@ function updateFX(paramId, value) {
   else if(paramId==='eqHighGain') { if(valDisp)valDisp.textContent=v.toFixed(1)+' dB'; if(eqHigh)eqHigh.gain.value=v; EQ_BANDS[2].gain=v; }
   else if(paramId==='delayTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(masterDelay)masterDelay.delayTime.value=v;}catch(e){} }
   else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelayFb)masterDelayFb.gain.setTargetAtTime(v,aNow(),.05);}catch(e){} }
-  else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(_fxRefs?.delayWet)_fxRefs.delayWet.gain.setTargetAtTime(v,aNow(),.05);}catch(e){} }
-  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(reverbWetGain)reverbWetGain.gain.setTargetAtTime(v,aNow(),.08); }
+  else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%';
+    try{ if(v>0.001){ if(typeof _gateDelay==='function')_gateDelay(true); _fxRefs.delayWet.gain.setTargetAtTime(v,aNow(),.05); }
+         else { _fxRefs.delayWet.gain.setTargetAtTime(0,aNow(),.05); setTimeout(()=>{if(typeof _gateDelay==='function'&&_fxRefs.delayWet.gain.value<0.002)_gateDelay(false);},300); } }catch(e){} }
+  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%';
+    try{ if(v>0.001){ if(typeof _gateReverb==='function')_gateReverb(true); reverbWetGain.gain.setTargetAtTime(v,aNow(),.08); }
+         else { reverbWetGain.gain.setTargetAtTime(0,aNow(),.08); setTimeout(()=>{if(typeof _gateReverb==='function'&&reverbWetGain.gain.value<0.002)_gateReverb(false);},350); } }catch(e){} }
 }
 
 // ── updateMasterState ─────────────────────────────────────────────

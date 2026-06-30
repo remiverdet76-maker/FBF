@@ -37,10 +37,11 @@
     <span class="flux-txt" id="flux-txt">FLUX</span>
     <span class="flux-state" id="flux-state-side">OFF</span>
   </button>
-  <button id="btn-rand-dock" onclick="triggerMagicAuto()" title="Aléatoire harmonique">⚄</button>
-  <button id="btn-fav-dock" onclick="favGame()" title="Sauver le jeu (FX inclus) ❤️">❤</button>
+  <button id="btn-rand-dock" onclick="triggerMagicAuto()" title="Aléatoire fréquences">⚄</button>
+  <button id="btn-rfx-dock" onclick="triggerRandomFX()" title="Aléatoire FX">✦</button>
+  <button id="btn-fav-dock" onclick="favGame()" title="Sauver le jeu ❤️">❤</button>
   <nav id="tab-nav">
-    <button class="tnav-btn tnav-params" id="tParams" onclick="tPanel('panParams','tParams')">⚙ Paramètres</button>
+    <button class="tnav-btn tnav-params" id="tParams" onclick="tPanel('panParams','tParams')" title="Paramètres">⚙</button>
   </nav>
   <button id="btn-rec" class="tnav-btn tnav-rec" onclick="recToggle()">⏺ Rec</button>
   <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
@@ -57,6 +58,7 @@
     <button class="params-item" style="--ic:#FFD060;" onclick="openTab('panUT')">⊙ <span>Horloge UT432</span></button>
     <button class="params-item" style="--ic:#FF9A8B;" onclick="openTab('panSamples')">◎ <span>Samples</span></button>
     <button class="params-item" style="--ic:#FFB0FF;" onclick="openTab('panNotice')">≡ <span>Notice &amp; Thème</span></button>
+    <button class="params-item" id="btn-vislite" style="--ic:#86FFC0;" onclick="toggleVisLite()">⚡ <span>Visuel léger : OFF</span></button>
   </div>
 </div>
 

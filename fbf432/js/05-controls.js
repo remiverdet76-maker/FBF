@@ -50,23 +50,41 @@ function setRandRatioMode(m,btn){
 function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
 
 // FX aléatoire — randomise delay, reverb, EQ
+// Random FX — INDÉPENDANT du random fréquence. FX globaux en fin de chaîne.
 function randomizeFX(){
-  const delT  = +(0.08 + Math.random() * 0.9).toFixed(2);
-  const delFB = +(Math.random() * 0.5).toFixed(2);
+  const delT  = +(0.12 + Math.random() * 0.7).toFixed(2);
+  const delFB = +(Math.random() * 0.4).toFixed(2);
   const delW  = +(Math.random() * 0.3).toFixed(2);
-  const revW  = +(Math.random() * 0.45).toFixed(2);
-  const eqLF  = Math.round(50  + Math.random() * 300);
-  const eqLG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  const eqMF  = Math.round(300 + Math.random() * 3000);
-  const eqMG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  const eqHF  = Math.round(3000 + Math.random() * 9000);
-  const eqHG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
-   ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
-   ['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
+  const revW  = +(0.1 + Math.random() * 0.4).toFixed(2);
+  const ppT   = +(0.1 + Math.random() * 0.5).toFixed(2);
+  const ppFb  = +(Math.random() * 0.4).toFixed(2);
+  const ppW   = +(Math.random() * 0.35).toFixed(2);
+  const fxInt = +(0.25 + Math.random() * 0.5).toFixed(2);
+  // Delay + Reverb (via sliders + updateFX → gating auto)
+  [['delayTime',delT],['delayFeedback',delFB],['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
     const sl = document.getElementById(id); if (sl) sl.value = val;
     if (typeof updateFX === 'function') updateFX(id, val);
   });
+  // Ping-pong (fonctions dédiées)
+  if (typeof setPingPongTime === 'function') setPingPongTime(ppT);
+  if (typeof setPingPongFb   === 'function') setPingPongFb(ppFb);
+  if (typeof setPingPongWet  === 'function') setPingPongWet(ppW);
+  if (typeof setFXIntensity  === 'function') setFXIntensity(fxInt);
+  // Reflète sur les curseurs visibles
+  [['ppTime',ppT],['ppFb',ppFb],['ppWetSlider',ppW],['fxIntensity',fxInt]].forEach(([id,v])=>{
+    const s = document.getElementById(id); if (s) s.value = v;
+  });
+  const d1=document.getElementById('ppTime-val'); if(d1)d1.textContent=ppT.toFixed(2)+'s';
+  const d2=document.getElementById('ppFb-val');   if(d2)d2.textContent=Math.round(ppFb*100)+'%';
+  const d3=document.getElementById('ppWet-val');  if(d3)d3.textContent=Math.round(ppW*100)+'%';
+  const d4=document.getElementById('sv-fxint');   if(d4)d4.textContent=Math.round(fxInt*100)+'%';
+}
+
+// Raccourci Random FX (bouton jaune du dock + bouton panneau FX)
+function triggerRandomFX(){
+  randomizeFX();
+  const b = document.getElementById('btn-rfx-dock');
+  if (b) { b.style.color='#fff'; setTimeout(()=>{ if(b) b.style.color=''; }, 400); }
 }
 
 function setN(i, raw) {
@@ -240,75 +258,102 @@ function aeratedN(master, ratio, idx, spread) {
   return Math.max(0.03, Math.min(N_MAX, Math.round(n * 100) / 100));
 }
 
+// Indice de ratio le plus proche d'une valeur cible dans RATIO_OPTS
+function closestRatioIdx(target) {
+  return RATIO_OPTS.reduce((best, o, i) =>
+    Math.abs(o.r - target) < Math.abs(RATIO_OPTS[best].r - target) ? i : best, 0);
+}
+
 function triggerMagicAuto(opts) {
   const keepMaster = !!(opts && opts.keepMaster);
-  const {freqMin,freqMax,rangeOn,useFX}=RAND_OPTS;
-  const lo = rangeOn ? Math.max(F_MIN, freqMin) : F_MIN;
-  const hi = rangeOn ? Math.min(432, freqMax)   : 432;
+  const spread = RAND_OPTS.spread, useFX = RAND_OPTS.useFX, mode = RAND_OPTS.ratioMode;
 
-  // ── 1. Ratio-graine : UN seul ratio tire tout le champ ───────────
-  const seedRi  = Math.floor(Math.random() * RATIO_OPTS.length);
-  const seedR   = RATIO_OPTS[seedRi].r;
-  const invRi   = RATIO_OPTS.reduce((best,r,i) =>
-    Math.abs(r.r - 1/seedR) < Math.abs(RATIO_OPTS[best].r - 1/seedR) ? i : best, 0);
-  const sq      = seedR * seedR;
-  const sqRi    = RATIO_OPTS.reduce((best,r,i) =>
-    Math.abs(r.r - sq) < Math.abs(RATIO_OPTS[best].r - sq) ? i : best, 0);
-  // Schéma : R / 1/R / R / 1/R / R² / 1/R
-  const RI_SCHEME = [seedRi, invRi, seedRi, invRi, sqRi, invRi];
+  // ── #1 PLAGE DE FRÉQUENCE (reconnectée) ───────────────────────────
+  // Si activée, les 3 bandes couvrent [freqMin, freqMax] ; sinon bandes FBF par défaut.
+  let BANDS = FBF_BANDS;
+  if (RAND_OPTS.rangeOn) {
+    const lo = Math.max(40, Math.min(540, RAND_OPTS.freqMin));
+    const hi = Math.max(lo + 24, Math.min(566, RAND_OPTS.freqMax));
+    const e1 = lo * Math.pow(hi / lo, 1/3), e2 = lo * Math.pow(hi / lo, 2/3);
+    BANDS = [[lo, e1], [e1, e2], [e2, hi]];
+  }
 
-  // ── 2. Delta-base + multiplicateurs cohérents ─────────────────────
-  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 6.0, 7.83];
+  // ── #2 MAÎTRE : varie sur random (sauf verrou) ────────────────────
+  // Avant il restait figé → "dernier oscillateur bloqué". Le verrou 🔒 le garde comme base.
+  const masterLocked = (typeof isLocked === 'function' && isLocked(MASTER_IDX)) || keepMaster;
+  const MASTER_POOL = [144,162,180,198,216,234,252,288,324,360,396,432];
+  const newMaster = masterLocked ? masterFreq
+    : MASTER_POOL[Math.floor(Math.random() * MASTER_POOL.length)];
+
+  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 7.83];
   const baseDelta   = BASE_DELTAS[Math.floor(Math.random() * BASE_DELTAS.length)];
-  const D_MULT      = [1, 2, 0.5, 3, 1.5, 4];
 
-  // ── 3. Nouvelle fréquence maître via ratio-graine ─────────────────
-  // Lock maître (Phase 3) : on garde la valeur si verrouillée.
-  const masterLocked = typeof isLocked === 'function' && isLocked(MASTER_IDX);
-  const newMaster = (masterLocked || keepMaster) ? masterFreq
-    : Math.max(lo, Math.min(hi, Math.round(masterFreq * seedR)));
-
-  // ── 4. Aération : carriers étalés sur la bande selon RAND_OPTS.spread ──
-  const spread = RAND_OPTS.spread;
+  // Graine + ratios par bande, selon le mode (Harmonique / Identique / Aléatoire)
+  const bandData = BANDS.map(([blo, bhi]) => {
+    const geoC = Math.sqrt(blo * bhi);
+    const seed = geoC * (1 + (Math.random() - 0.5) * 0.2 * (0.4 + spread));
+    const maxR = Math.min(bhi / seed, seed / blo);
+    const cands = RATIO_OPTS.map((o, i) => ({ i, r: o.r })).filter(o => o.r >= 1.0 && o.r <= maxR);
+    const pk = () => cands.length ? cands[Math.floor(Math.random() * cands.length)] : { i: closestRatioIdx(1), r: 1 };
+    return { seed, p1: pk(), p2: pk() };
+  });
 
   PAIRS.forEach((pair, idx) => {
-    // Lock par fréquence (Phase 3) : on ne touche pas une paire verrouillée.
     if (typeof isLocked === 'function' && isLocked(idx)) return;
 
     if (idx === MASTER_IDX) {
-      pair.pingala.ri = seedRi;
-      pair.pingala.n  = 1.0;
-      pair.ida.delta  = baseDelta;
-    } else {
-      pair.pingala.ri = RI_SCHEME[idx];
-      pair.pingala.n  = aeratedN(newMaster, RATIO_OPTS[pair.pingala.ri].r, idx, spread);
-      pair.ida.delta  = Math.max(0.1, Math.min(36,
-        Math.round(baseDelta * D_MULT[idx] * 10) / 10));
+      pair.pingala.n = 1.0;
+      pair.ida.delta = baseDelta;
+      pair.ida.polarity = 1;
+      const pf = Math.min(432, newMaster);
+      pair.pingala.vol = isosonicVol(pf, 0.14);
+      pair.ida.vol     = isosonicVol(pf, 0.14);
+      return;
     }
-    const pf   = idx === MASTER_IDX ? Math.min(432, newMaster)
-      : Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
-    const base = idx === MASTER_IDX ? 0.14 : 0.12;
-    // Point 9 : au-dessus du seuil → −50% de volume (spatialisation gérée côté audio)
-    const volMul = (idx !== MASTER_IDX && pf > F_SEUIL) ? 0.5 : 1.0;
-    pair.pingala.vol  = isosonicVol(pf, base) * volMul;
-    pair.ida.vol      = isosonicVol(pf, base) * volMul;
-    pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
+
+    const b = PAIR_BAND[idx];
+    const bd = bandData[b];
+    const isFirst = (idx % 2 === 0);
+    // #1b mode de ratio reconnecté :
+    //   harmonic = miroir R / 1/R · same = ratio identique · random = indépendant
+    let ri;
+    if      (mode === 'same')     ri = bd.p1.i;
+    else if (mode === 'harmonic') ri = isFirst ? closestRatioIdx(1 / bd.p1.r) : bd.p1.i;
+    else                          ri = isFirst ? bd.p1.i : bd.p2.i;
+    pair.pingala.ri  = ri;
+    pair.pingala.n   = Math.round((bd.seed / newMaster) * 1000) / 1000;  // #2b n arrondi (fini les décimales à rallonge)
+    pair.ida.delta   = baseDelta;
+    pair.ida.polarity = isFirst ? -1 : 1;
+
+    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[ri].r * pair.pingala.n));
+    pair.pingala.vol = isosonicVol(pf, 0.12);
+    pair.ida.vol     = isosonicVol(pf, 0.12);
+
+    // #3 LOW-CUT SUPPRIMÉ (plus de passe-haut). Bande haute : lowpass doux conservé.
+    const cut = (b === 2) ? 200 : 6000;
+    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 0.707, hp: 20 };
+    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 0.707, hp: 20 };
   });
 
   // Éventail stéréo selon le spread
   OSC_PAN = buildOscPan(0.35 + spread * 0.6);
 
   setMasterFreq(newMaster);
-  // Applique volumes + pan (éventail) + protection seuil sur les nœuds vivants
+  // Applique volumes + pan + filtres sur les nœuds vivants
   if (flowing) PAIRS.forEach((pair, i) => {
     const pid = pair.pingala.id, iid = pair.ida.id;
     if (nodes[pid] && !mutedOscs[pid]) safeRamp(nodes[pid].g.gain, pair.pingala.vol, 0.4);
     if (nodes[iid] && !mutedOscs[iid]) safeRamp(nodes[iid].g.gain, pair.ida.vol, 0.4);
     if (nodes[pid]?.p && OSC_PAN[i]) nodes[pid].p.pan.setTargetAtTime(OSC_PAN[i][0], aNow(), 0.15);
     if (nodes[iid]?.p && OSC_PAN[i]) nodes[iid].p.pan.setTargetAtTime(OSC_PAN[i][1], aNow(), 0.15);
-    if (typeof _applySeuilProtect === 'function') _applySeuilProtect(i);
+    if (i !== MASTER_IDX) {
+      setOscFilter(pid, OSC_FILTER[pid].cutoff, OSC_FILTER[pid].res);
+      setOscFilter(iid, OSC_FILTER[iid].cutoff, OSC_FILTER[iid].res);
+      if (typeof setOscHPF === 'function') { setOscHPF(pid, OSC_FILTER[pid].hp); setOscHPF(iid, OSC_FILTER[iid].hp); }
+    }
   });
-  if (useFX) randomizeFX();
+  // Random FX DÉCOUPLÉ : le random fréquence ne déclenche plus les FX
+  // (évite le double calcul). Utiliser le bouton jaune Random FX.
   if (!flowing) startFlow();
   buildVesicaPairs();
   patchRandomTable();
