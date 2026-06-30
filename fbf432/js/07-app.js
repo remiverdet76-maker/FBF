@@ -541,6 +541,24 @@ function _loadTheme() {
   setTheme(t);
 }
 
+// #36 mode visuel "lite" : coupe le dessin du métatron (CPU) pour les appareils faibles
+const VISLITE_KEY = 'fbf432-vislite';
+function toggleVisLite() {
+  const on = document.body.classList.toggle('vis-lite');
+  try { localStorage.setItem(VISLITE_KEY, on ? '1' : '0'); } catch(e) {}
+  const b = document.getElementById('btn-vislite');
+  if (b) { b.classList.toggle('on', on); b.querySelector('span').textContent = on ? 'Visuel léger : ON' : 'Visuel léger : OFF'; }
+}
+function _loadVisLite() {
+  let on = false;
+  try { on = localStorage.getItem(VISLITE_KEY) === '1'; } catch(e) {}
+  if (on) {
+    document.body.classList.add('vis-lite');
+    const b = document.getElementById('btn-vislite');
+    if (b) { b.classList.add('on'); const s=b.querySelector('span'); if(s) s.textContent='Visuel léger : ON'; }
+  }
+}
+
 // ── Splash 36 Rayons ──────────────────────────────────────────────
 function hideSplash() {
   const s = document.getElementById('splash-36');
@@ -553,6 +571,7 @@ function hideSplash() {
 function init() {
   loadState();
   _loadTheme();
+  _loadVisLite();
   harmonicRandomInit();
 
   // Inject FX panel

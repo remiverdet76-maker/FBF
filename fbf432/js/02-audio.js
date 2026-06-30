@@ -398,15 +398,29 @@ function initFXChain() {
   // La dynamique vit librement ; seuls le glue léger (1.5) et le limiteur tiennent le plafond.
   eqLow.connect(eqMid); eqMid.connect(eqHigh); eqHigh.connect(busTrim);
 
-  // Retours FX → busTrim (alimentés par les envois de paires, pas par le bus voix)
-  delayWet.connect(busTrim);
-  reverbWetGain.connect(busTrim);
-  ppWet.connect(busTrim);
+  // #29 : retours FX NON connectés au démarrage → les tanks (convolution/delay/pp)
+  // ne sont PAS dans le chemin actif tant que leur wet=0 → CPU libéré (anti-braises).
+  // _gateTank(...) les (dé)connecte à la demande.
 
   _fxInput = eqLow;
   _fxRefs = { delayWet };
 }
 let _fxRefs = {};
+
+/* ---------- 2.4b · GATING DES TANKS FX (#29 — CPU) ---------- */
+let _gRev = false, _gDel = false, _gPP = false;
+function _gateReverb(on) {
+  if (on === _gRev || !reverbWetGain || !busTrim) return;
+  try { on ? reverbWetGain.connect(busTrim) : reverbWetGain.disconnect(busTrim); _gRev = on; } catch(e) {}
+}
+function _gateDelay(on) {
+  if (on === _gDel || !_fxRefs.delayWet || !busTrim) return;
+  try { on ? _fxRefs.delayWet.connect(busTrim) : _fxRefs.delayWet.disconnect(busTrim); _gDel = on; } catch(e) {}
+}
+function _gatePP(on) {
+  if (on === _gPP || !ppWet || !busTrim) return;
+  try { on ? ppWet.connect(busTrim) : ppWet.disconnect(busTrim); _gPP = on; } catch(e) {}
+}
 
 /* ---------- 2.5 · REVERB ---------- */
 let _reverbActive = false;
@@ -571,7 +585,10 @@ function setPingPongFb(v) {
 }
 
 function setPingPongWet(v) {
-  if (ppWet) ppWet.gain.setTargetAtTime(Math.max(0, Math.min(1, parseFloat(v))), aNow(), 0.05);
+  const val = Math.max(0, Math.min(1, parseFloat(v)));
+  if (!ppWet) return;
+  if (val > 0.001) { _gatePP(true); ppWet.gain.setTargetAtTime(val, aNow(), 0.05); }
+  else { ppWet.gain.setTargetAtTime(0, aNow(), 0.05); setTimeout(() => { if (ppWet && ppWet.gain.value < 0.002) _gatePP(false); }, 300); }
 }
 
 /* ---------- 2.6d · SNAPSHOT / RESTORE FX (pour ❤️ presets) ---------- */
@@ -823,6 +840,8 @@ function masterTick(ts) {
   if (document.visibilityState === 'hidden') return;
   // Menu/modal ouvert → on ne dessine RIEN (priorité au son)
   if (_uiBusy()) return;
+  // #36 mode visuel "lite" : coupe TOUT dessin (métatron + spectroïde) → CPU max pour l'audio
+  if (document.body.classList.contains('vis-lite')) return;
 
   metaAngle = (metaAngle + 0.006) % (Math.PI * 2);
   drawMetatron();
