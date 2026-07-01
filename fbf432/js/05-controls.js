@@ -17,7 +17,16 @@ function toggleLock(i) {
 }
 
 // ── Options mode aléatoire ────────────────────────────────────────
-const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false,spread:0.6};
+// lockBinaural : ACTIVÉ par défaut. Le jeu aléatoire NE touche PAS au delta
+// binaural (testé 100% fautif du « mode IRM ») → battements doux et stables.
+const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false,spread:0.6,lockBinaural:true};
+
+// Verrouillage du battement binaural (delta) pendant le random
+function setBinauralLock(v){
+  RAND_OPTS.lockBinaural=!!v;
+  const ck=document.getElementById('ck-binaural-lock'); if(ck) ck.checked=RAND_OPTS.lockBinaural;
+  saveState();
+}
 
 // Spatialisation : aération fréquentielle + largeur de l'éventail stéréo
 function setRandSpread(v) {
@@ -287,6 +296,9 @@ function triggerMagicAuto(opts) {
     : FUND_POOL[Math.floor(Math.random() * FUND_POOL.length)];
 
   // ── Δ binaural DOUX (thêta/alpha, relaxant) ───────────────────────
+  // VERROU BINAURAL (défaut) : on NE touche PAS au delta — chaque paire garde
+  // son battement doux et distinct. Déverrouillé, le random tire un delta commun.
+  const lockBin = RAND_OPTS.lockBinaural;
   const DELTAS = [3, 4, 5, 6, 7.83];
   const baseDelta = DELTAS[Math.floor(Math.random() * DELTAS.length)];
 
@@ -302,7 +314,7 @@ function triggerMagicAuto(opts) {
 
     if (idx === MASTER_IDX) {
       pair.pingala.ri = 0; pair.pingala.n = 1.0;
-      pair.ida.delta = baseDelta; pair.ida.polarity = 1;
+      if (!lockBin) { pair.ida.delta = baseDelta; pair.ida.polarity = 1; }
       const pf = Math.min(432, newMaster);
       pair.pingala.vol = isosonicVol(pf, 0.11);
       pair.ida.vol     = isosonicVol(pf, 0.11);
@@ -313,8 +325,10 @@ function triggerMagicAuto(opts) {
     const oct = OCTAVES[Math.floor(idx / 2)];   // paires 0-1→oct0, 2-3→oct1, 4-5→oct2
     pair.pingala.ri = ri;
     pair.pingala.n  = oct;                       // freq = maître × ratioOmcV × octave
-    pair.ida.delta  = baseDelta;
-    pair.ida.polarity = (idx % 2 === 0) ? 1 : -1; // miroir de polarité
+    if (!lockBin) {                              // delta figé si verrou binaural (défaut)
+      pair.ida.delta  = baseDelta;
+      pair.ida.polarity = (idx % 2 === 0) ? 1 : -1; // miroir de polarité
+    }
 
     const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[ri].r * oct));
     pair.pingala.vol = isosonicVol(pf, 0.085);   // doux
