@@ -243,6 +243,44 @@
 .fx-btn-step:hover{background:rgba(200,160,255,.2);border-color:#F3D9FF;transform:scale(1.1);}
 .fx-val-disp{font-family:'IM Fell English',serif;font-size:.9rem;color:#D29DFF;min-width:42px;text-align:right;font-weight:bold;}
 
+/* ─── FX COMPACT — bloc rapide (gain + fréquence + binaural + effets) ─── */
+.fx-panel.fx-compact{ gap:.7rem; }
+.fx-quick{ gap:.5rem !important; padding:.85rem .9rem !important; }
+.fxq-row{ display:flex;align-items:center;gap:.55rem; }
+.fxq-lbl{ font-size:.72rem;font-style:italic;font-weight:bold;color:rgba(220,195,255,.85);
+  min-width:78px;flex-shrink:0;letter-spacing:.02em; }
+.fxq-row .fx-slider{ flex:1;accent-color:#D29DFF;height:20px;cursor:pointer; }
+.fxq-row .fx-val-disp{ min-width:44px; }
+.fxq-step{ width:30px;height:30px;flex-shrink:0;border-radius:50%;
+  border:1.5px solid rgba(200,140,255,.55);background:rgba(20,8,40,.7);
+  color:#F3D9FF;font-size:1.05rem;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s; }
+.fxq-step:hover{ border-color:#F3D9FF;box-shadow:0 0 10px rgba(200,120,255,.5);transform:scale(1.1); }
+.fxq-step:active{ transform:scale(.9); }
+.fxq-num{ width:74px;flex:0 0 auto;text-align:center;font-family:'IM Fell English',serif;font-weight:bold;
+  font-size:1.25rem;color:#F3D9FF;background:rgba(20,8,40,.8);
+  border:1.5px solid rgba(200,140,255,.35);border-bottom:2.5px solid rgba(200,140,255,.75);
+  border-radius:7px;padding:.15rem .2rem;outline:none;-moz-appearance:textfield; }
+.fxq-num::-webkit-inner-spin-button,.fxq-num::-webkit-outer-spin-button{-webkit-appearance:none;}
+.fxq-unit{ font-size:.7rem;color:rgba(200,180,255,.5);font-style:italic; }
+.fxq-wave{ font-family:'IM Fell English',serif;font-style:italic;font-weight:bold;
+  font-size:.82rem;color:#63CCFF;min-width:48px;text-align:center; }
+.fxq-sep{ height:1px;background:rgba(200,160,255,.16);margin:.15rem 0; }
+.btn-reset.sm{ width:30px;height:30px;font-size:1rem;flex-shrink:0; }
+
+/* Réglages avancés repliés */
+.fx-more{ border:1px solid rgba(200,160,255,.16);border-radius:12px;background:rgba(200,160,255,.03);
+  padding:0 .55rem; }
+.fx-more>summary{ list-style:none;cursor:pointer;padding:.7rem .2rem;
+  font-family:'Cinzel Decorative',serif;font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(200,170,255,.75);font-weight:700;
+  display:flex;align-items:center;gap:.5rem; }
+.fx-more>summary::-webkit-details-marker{ display:none; }
+.fx-more>summary::before{ content:'▸';transition:transform .2s;font-size:.9rem; }
+.fx-more[open]>summary::before{ transform:rotate(90deg); }
+.fx-more[open]{ padding-bottom:.6rem; }
+.fx-more .fx-block{ margin-top:.5rem; }
+
 /* ─── Random panel ───────────────────────────── */
 .rand-panel{display:flex;flex-direction:column;gap:1rem;}
 .btn-magic-rand{width:100%;padding:1rem;border-radius:12px;background:radial-gradient(circle at 30% 30%, rgba(255,142,255,.25), rgba(99,230,255,.15), rgba(134,255,192,.1));border:2px solid rgba(200,100,255,.55);color:#F3D9FF;font-family:'Cinzel Decorative',serif;font-size:1.1rem;letter-spacing:.2em;text-transform:uppercase;font-weight:bold;transition:all .35s;}

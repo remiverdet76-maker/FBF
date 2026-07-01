@@ -242,10 +242,10 @@ function buildMasterFXHTML() {
       <button class="fx-preset-btn save" onclick="savePreset(${s})">■</button>
       <button class="fx-preset-btn del"  id="ps-del-${s}"  onclick="delPreset(${s})"  disabled>✕</button>
     </div>`).join('');
-  return `<div class="fx-panel">
-    <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem;">
+  return `<div class="fx-panel fx-compact">
+    <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.2rem;">
       <div class="dot" id="dot"></div>
-      <span id="stxt" style="font-size:.9rem;font-style:italic;letter-spacing:.1em;color:rgba(200,170,255,.7);">Initialisation...</span>
+      <span id="stxt" style="font-size:.82rem;font-style:italic;letter-spacing:.1em;color:rgba(200,170,255,.7);">Initialisation...</span>
       <span class="wave-badge" id="wave-badge"></span>
     </div>
     <div class="flow-row">
@@ -253,100 +253,62 @@ function buildMasterFXHTML() {
       <button class="btn-flow" id="btn-dis" onclick="stopFlow()"  style="border-color:#FF8E8E;color:#FF8E8E;background:rgba(255,142,142,0.06);">Dissoudre</button>
       <button class="btn-flow" id="btn-rec" onclick="recToggle()" style="border-color:#FFB347;color:#FFB347;background:rgba(255,179,71,0.06);">⏺ Rec</button>
     </div>
-    <div class="mvol-wrap" style="margin-top:.55rem;">
-      <span class="mvol-label">Volume général</span>
-      <div class="mvol-row">
-        <input type="range" id="mvol-slider" class="mvol-slider" min="0" max="1" step="0.01" value="0.8" oninput="setMasterVol(this.value)">
-        <span class="mvol-val" id="mvol-val">80%</span>
-        <button class="btn-reset" onclick="resetAll()" title="Réinitialiser">↺</button>
+
+    <!-- ══ Bloc principal COMPACT : gain + fréquence + binaural + effets ══ -->
+    <div class="fx-block fx-quick">
+      <!-- Fader GAIN (volume général) -->
+      <div class="fxq-row">
+        <span class="fxq-lbl">Gain</span>
+        <input type="range" id="mvol-slider" class="fx-slider" min="0" max="1" step="0.01" value="0.8" oninput="setMasterVol(this.value)">
+        <span class="fx-val-disp" id="mvol-val">80%</span>
+        <button class="btn-reset sm" onclick="resetAll()" title="Réinitialiser">↺</button>
       </div>
-    </div>
-    <div class="mfreq-ctrl" style="margin-top:.38rem;">
-      <div class="mfreq-label">Fréquence maître</div>
-      <div class="mfreq-row">
-        <button class="mfreq-btn sm" onclick="masterStep(-1)">−</button>
-        <input type="number" id="master-input" class="mfreq-input" min="54" max="432" value="252" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
-        <button class="mfreq-btn" onclick="masterStep(1)">+</button>
+      <!-- Fréquence maître -->
+      <div class="fxq-row">
+        <span class="fxq-lbl">Maître</span>
+        <button class="fxq-step" onclick="masterStep(-1)">−</button>
+        <input type="number" id="master-input" class="fxq-num" min="54" max="432" value="252" step="1" oninput="onMasterInput(this.value)" onchange="onMasterChange(this.value)">
+        <button class="fxq-step" onclick="masterStep(1)">+</button>
+        <span class="fxq-unit">Hz</span>
       </div>
-      <div class="mfreq-range">54 — 432 Hz</div>
-    </div>
-    <div class="delta-sphere-wrap" style="margin-top:.5rem;">
-      <div class="delta-sphere-label">Battement Binaural Global</div>
-      <div class="delta-sphere-row">
-        <button class="delta-sphere-btn" onclick="deltaStep(-0.1)">−</button>
-        <div class="delta-sphere-val">
-          <input type="number" class="delta-sphere-num" id="global-delta-input" min="0.1" max="36" step="0.1" value="1.8" oninput="setGlobalDelta(this.value)" onchange="setGlobalDelta(this.value)">
-          <span class="delta-sphere-wave" id="global-ws">Delta</span>
-          <span class="delta-sphere-range">0.1 — 36 Hz</span>
-        </div>
-        <button class="delta-sphere-btn" onclick="deltaStep(0.1)">+</button>
+      <!-- Battement binaural ±0,1 -->
+      <div class="fxq-row">
+        <span class="fxq-lbl">Binaural</span>
+        <button class="fxq-step" onclick="deltaStep(-0.1)">−</button>
+        <input type="number" id="global-delta-input" class="fxq-num" min="0.1" max="36" step="0.1" value="4.0" oninput="setGlobalDelta(this.value)" onchange="setGlobalDelta(this.value)">
+        <button class="fxq-step" onclick="deltaStep(0.1)">+</button>
+        <span class="fxq-wave" id="global-ws">Thêta</span>
       </div>
+      <div class="fxq-sep"></div>
+      <!-- Effets essentiels : sliders précis, espacés -->
+      <div class="fxq-row"><span class="fxq-lbl">Intensité FX</span>
+        <input type="range" class="fx-slider" id="fxIntensity" min="0" max="1" step="0.02" value="0.3" oninput="setFXIntensity(this.value)">
+        <span class="fx-val-disp" id="sv-fxint">30%</span></div>
+      <div class="fxq-row"><span class="fxq-lbl">Réverbe</span>
+        <input type="range" class="fx-slider" id="reverbWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('reverbWet',this.value)">
+        <span class="fx-val-disp" id="reverbWet-val">0%</span></div>
+      <div class="fxq-row"><span class="fxq-lbl">Delay</span>
+        <input type="range" class="fx-slider" id="delayWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('delayWet',this.value)">
+        <span class="fx-val-disp" id="delayWet-val">0%</span></div>
+      <div class="fxq-row"><span class="fxq-lbl">Ping-Pong</span>
+        <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongWet(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
+        <span class="fx-val-disp" id="ppWet-val">0%</span></div>
+      <div class="fxq-row"><span class="fxq-lbl">Espace</span>
+        <input type="range" class="fx-slider" id="randSpread" min="0" max="1" step="0.02" value="0.6" oninput="setRandSpread(this.value)">
+        <span class="fx-val-disp" id="sv-spread">60%</span></div>
+      <div class="fx-space-btns" style="margin-top:.15rem;">
+        <button class="fx-space-btn" onclick="setReverbSpace('sec')">Sec</button>
+        <button class="fx-space-btn" onclick="setReverbSpace('grotte')">Grotte</button>
+        <button class="fx-space-btn" onclick="setReverbSpace('cathedrale')">Cathéd.</button>
+        <button class="fx-space-btn" onclick="setReverbSpace('cosmos')">Cosmos</button>
+      </div>
+      <button class="btn-flow" style="width:100%;margin-top:.4rem;border-color:rgba(255,208,96,.5);color:#FFD060;background:rgba(255,208,96,.07);" onclick="triggerRandomFX()">✦ Random FX</button>
     </div>
 
-    <!-- ✦ Spatialisation (intégrée au random) -->
-    <div class="fx-block" style="border:1px solid rgba(140,255,200,.22);background:rgba(140,255,200,.04);">
-      <div class="fx-title" style="color:rgba(140,255,200,.85);">✦ Spatialisation · Aération</div>
-      <div class="fx-row">
-        <div class="fx-control-group" style="flex:1">
-          <span class="fx-label">Étalement fréquences + éventail stéréo</span>
-          <input type="range" class="fx-slider" id="randSpread" min="0" max="1" step="0.02" value="0.6" oninput="setRandSpread(this.value)">
-          <span class="fx-val-disp" id="sv-spread">60%</span>
-        </div>
-      </div>
-      <div style="font-size:.62rem;color:rgba(140,255,200,.5);font-style:italic;">0% = compact au médium · 100% = étalé 54–396 Hz, large stéréo · appliqué au ⚄ random</div>
-    </div>
-
-    <!-- ✦ FX global (fin de chaîne, indépendant du jeu) -->
-    <div class="fx-block" style="border:1px solid rgba(255,208,96,.28);background:rgba(255,208,96,.05);">
-      <div class="fx-title" style="color:rgba(255,208,96,.9);">✦ FX global · fin de chaîne</div>
-      <div class="fx-row">
-        <div class="fx-control-group" style="flex:1">
-          <span class="fx-label">Intensité FX</span>
-          <input type="range" class="fx-slider" id="fxIntensity" min="0" max="1" step="0.02" value="0.3" oninput="setFXIntensity(this.value)">
-          <span class="fx-val-disp" id="sv-fxint">30%</span>
-        </div>
-      </div>
-      <button class="btn-flow" style="width:100%;margin-top:.3rem;border-color:rgba(255,208,96,.5);color:#FFD060;background:rgba(255,208,96,.07);" onclick="triggerRandomFX()">✦ Random FX</button>
-      <div style="font-size:.62rem;color:rgba(255,208,96,.5);font-style:italic;margin-top:.25rem;">Indépendant du ⚄ random fréquence · appliqué à tout le mix, avant le master</div>
-    </div>
-
-    <!-- ① Fondu -->
+    <!-- EQ 2D compact -->
     <div class="fx-block">
-      <div class="fx-title">① Fondu d'entrée / sortie</div>
-      <div class="fx-row">
-        <div class="fx-control-group" style="flex:1">
-          <span class="fx-label">Durée</span>
-          <input type="range" class="fx-slider" id="fadeDur" min="0.5" max="15" step="0.5" value="2" oninput="setFadeDur(this.value)">
-          <span class="fx-val-disp" id="sv-fade">2.0s</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ② LFO -->
-    <div class="fx-block">
-      <div class="fx-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>② LFO — Trémolo organique</span>
-        <label class="fx-toggle"><input type="checkbox" id="lfo-on" onchange="lfoToggle(this.checked)"><span class="fx-tog-track"></span></label>
-      </div>
-      <div class="fx-row">
-        <div class="fx-control-group">
-          <span class="fx-label">Rythme</span>
-          <input type="range" class="fx-slider" id="lfo-rate" min="0.02" max="2" step="0.01" value="0.25" oninput="lfoSet('rate',this.value)">
-          <span class="fx-val-disp" id="sv-lfo-rate">0.25</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Profond.</span>
-          <input type="range" class="fx-slider" id="lfo-depth" min="0.01" max="0.5" step="0.01" value="0.08" oninput="lfoSet('depth',this.value)">
-          <span class="fx-val-disp" id="sv-lfo-depth">0.08</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ③ EQ Multiband 2D — glisser les points Bas/Mid/Haut -->
-    <div class="fx-block">
-      <div class="fx-title">③ EQ Paramétrique 2D <span style="font-size:.68rem;font-weight:400;color:rgba(200,180,255,.5);">· glisser les points</span></div>
-      <canvas id="eq2d-canvas" style="width:100%;height:115px;display:block;border-radius:8px;cursor:crosshair;touch-action:none;"></canvas>
-      <!-- Hidden sliders for compat -->
+      <div class="fx-title">EQ Paramétrique 2D <span style="font-size:.66rem;font-weight:400;color:rgba(200,180,255,.5);">· glisser</span></div>
+      <canvas id="eq2d-canvas" style="width:100%;height:100px;display:block;border-radius:8px;cursor:crosshair;touch-action:none;"></canvas>
       <input type="range" id="eqLowFreq"  min="20"   max="600"   value="200"  style="display:none" oninput="updateFX('eqLowFreq',this.value)">
       <input type="range" id="eqLowGain"  min="-18"  max="18"    value="0"    style="display:none" oninput="updateFX('eqLowGain',this.value)">
       <input type="range" id="eqMidFreq"  min="200"  max="6000"  value="1000" style="display:none" oninput="updateFX('eqMidFreq',this.value)">
@@ -358,118 +320,101 @@ function buildMasterFXHTML() {
       <span id="eqHighFreq-val" style="display:none">5000 Hz</span><span id="eqHighGain-val" style="display:none">0 dB</span>
     </div>
 
-    <!-- ④ Delay FX -->
-    <div class="fx-block">
-      <div class="fx-title">④ Delay</div>
-      <div class="fx-row">
-        <div class="fx-control-group">
-          <span class="fx-label">Temps</span>
-          <input type="range" class="fx-slider" id="delayTime" min="0.04" max="1.5" step="0.01" value="0.3" oninput="updateFX('delayTime',this.value)">
-          <span class="fx-val-disp" id="delayTime-val">0.30s</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Feedback</span>
-          <input type="range" class="fx-slider" id="delayFeedback" min="0" max="0.85" step="0.01" value="0.3" oninput="updateFX('delayFeedback',this.value)">
-          <span class="fx-val-disp" id="delayFeedback-val">30%</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Mix</span>
-          <input type="range" class="fx-slider" id="delayWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('delayWet',this.value)">
-          <span class="fx-val-disp" id="delayWet-val">0%</span>
-        </div>
-      </div>
-    </div>
+    <!-- ══ Réglages avancés (repliés par défaut → panneau compact) ══ -->
+    <details class="fx-more">
+      <summary>Réglages avancés</summary>
 
-    <!-- ⑤ Réverbe spatiale -->
-    <div class="fx-block">
-      <div class="fx-title">⑤ Réverbe Spatiale</div>
-      <div class="fx-space-btns">
-        <button class="fx-space-btn" onclick="setReverbSpace('sec')">Sec</button>
-        <button class="fx-space-btn" onclick="setReverbSpace('grotte')">Grotte</button>
-        <button class="fx-space-btn" onclick="setReverbSpace('cathedrale')">Cathédrale</button>
-        <button class="fx-space-btn" onclick="setReverbSpace('cosmos')">Cosmos</button>
+      <div class="fx-block">
+        <div class="fx-title">Fondu d'entrée / sortie</div>
+        <div class="fx-row"><div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Durée</span>
+          <input type="range" class="fx-slider" id="fadeDur" min="0.5" max="15" step="0.5" value="2" oninput="setFadeDur(this.value)">
+          <span class="fx-val-disp" id="sv-fade">2.0s</span>
+        </div></div>
       </div>
-      <div class="fx-row" style="margin-top:.35rem;">
-        <div class="fx-control-group">
-          <span class="fx-label">Reverb</span>
-          <input type="range" class="fx-slider" id="reverbWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('reverbWet',this.value)">
-          <span class="fx-val-disp" id="reverbWet-val">0%</span>
+
+      <div class="fx-block">
+        <div class="fx-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>LFO — Trémolo organique</span>
+          <label class="fx-toggle"><input type="checkbox" id="lfo-on" onchange="lfoToggle(this.checked)"><span class="fx-tog-track"></span></label>
+        </div>
+        <div class="fx-row">
+          <div class="fx-control-group"><span class="fx-label">Rythme</span>
+            <input type="range" class="fx-slider" id="lfo-rate" min="0.02" max="2" step="0.01" value="0.25" oninput="lfoSet('rate',this.value)">
+            <span class="fx-val-disp" id="sv-lfo-rate">0.25</span></div>
+          <div class="fx-control-group"><span class="fx-label">Profond.</span>
+            <input type="range" class="fx-slider" id="lfo-depth" min="0.01" max="0.5" step="0.01" value="0.08" oninput="lfoSet('depth',this.value)">
+            <span class="fx-val-disp" id="sv-lfo-depth">0.08</span></div>
         </div>
       </div>
-    </div>
 
-    <!-- ⑥ Ping-Pong Delay -->
-    <div class="fx-block">
-      <div class="fx-title">⑥ Ping-Pong Stéréo</div>
-      <div class="fx-row">
-        <div class="fx-control-group">
-          <span class="fx-label">Temps</span>
-          <input type="range" class="fx-slider" id="ppTime" min="0.04" max="1.5" step="0.01" value="0.25" oninput="setPingPongTime(this.value);document.getElementById('ppTime-val').textContent=parseFloat(this.value).toFixed(2)+'s'">
-          <span class="fx-val-disp" id="ppTime-val">0.25s</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Feedback</span>
-          <input type="range" class="fx-slider" id="ppFb" min="0" max="0.85" step="0.01" value="0.35" oninput="setPingPongFb(this.value);document.getElementById('ppFb-val').textContent=Math.round(this.value*100)+'%'">
-          <span class="fx-val-disp" id="ppFb-val">35%</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Mix</span>
-          <input type="range" class="fx-slider" id="ppWetSlider" min="0" max="1" step="0.02" value="0" oninput="setPingPongWet(this.value);document.getElementById('ppWet-val').textContent=Math.round(this.value*100)+'%'">
-          <span class="fx-val-disp" id="ppWet-val">0%</span>
+      <div class="fx-block">
+        <div class="fx-title">Delay — Temps / Feedback</div>
+        <div class="fx-row">
+          <div class="fx-control-group"><span class="fx-label">Temps</span>
+            <input type="range" class="fx-slider" id="delayTime" min="0.04" max="1.5" step="0.01" value="0.3" oninput="updateFX('delayTime',this.value)">
+            <span class="fx-val-disp" id="delayTime-val">0.30s</span></div>
+          <div class="fx-control-group"><span class="fx-label">Feedback</span>
+            <input type="range" class="fx-slider" id="delayFeedback" min="0" max="0.85" step="0.01" value="0.3" oninput="updateFX('delayFeedback',this.value)">
+            <span class="fx-val-disp" id="delayFeedback-val">30%</span></div>
         </div>
       </div>
-    </div>
 
-    <!-- ⑦ Compresseur -->
-    <div class="fx-block">
-      <div class="fx-title">⑦ Compresseur Dynamique</div>
-      <div class="fx-row">
-        <div class="fx-control-group">
-          <span class="fx-label">Seuil</span>
-          <input type="range" class="fx-slider" id="compThresh" min="-60" max="0" value="-24" oninput="setCompThresh(this.value);document.getElementById('compThresh-val').textContent=this.value+'dB'">
-          <span class="fx-val-disp" id="compThresh-val">−24dB</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Ratio</span>
-          <input type="range" class="fx-slider" id="compRatio" min="1" max="20" step="0.5" value="4" oninput="setCompRatio(this.value);document.getElementById('compRatio-val').textContent=this.value+':1'">
-          <span class="fx-val-disp" id="compRatio-val">4:1</span>
+      <div class="fx-block">
+        <div class="fx-title">Ping-Pong — Temps / Feedback</div>
+        <div class="fx-row">
+          <div class="fx-control-group"><span class="fx-label">Temps</span>
+            <input type="range" class="fx-slider" id="ppTime" min="0.04" max="1.5" step="0.01" value="0.25" oninput="setPingPongTime(this.value);document.getElementById('ppTime-val').textContent=parseFloat(this.value).toFixed(2)+'s'">
+            <span class="fx-val-disp" id="ppTime-val">0.25s</span></div>
+          <div class="fx-control-group"><span class="fx-label">Feedback</span>
+            <input type="range" class="fx-slider" id="ppFb" min="0" max="0.85" step="0.01" value="0.35" oninput="setPingPongFb(this.value);document.getElementById('ppFb-val').textContent=Math.round(this.value*100)+'%'">
+            <span class="fx-val-disp" id="ppFb-val">35%</span></div>
         </div>
       </div>
-    </div>
 
-    <!-- ⑧ Spectre harmonique -->
-    <div class="fx-block" style="padding-bottom:.35rem;">
-      <div class="fx-title">⑧ Spectre Harmonique</div>
-      <div style="height:54px;background:rgba(5,3,18,.65);border-radius:8px;overflow:hidden;">
-        <canvas id="fx-spectroid-canvas" style="width:100%;height:100%;display:block;"></canvas>
+      <div class="fx-block">
+        <div class="fx-title">Compresseur Dynamique</div>
+        <div class="fx-row">
+          <div class="fx-control-group"><span class="fx-label">Seuil</span>
+            <input type="range" class="fx-slider" id="compThresh" min="-60" max="0" value="-24" oninput="setCompThresh(this.value);document.getElementById('compThresh-val').textContent=this.value+'dB'">
+            <span class="fx-val-disp" id="compThresh-val">−24dB</span></div>
+          <div class="fx-control-group"><span class="fx-label">Ratio</span>
+            <input type="range" class="fx-slider" id="compRatio" min="1" max="20" step="0.5" value="4" oninput="setCompRatio(this.value);document.getElementById('compRatio-val').textContent=this.value+':1'">
+            <span class="fx-val-disp" id="compRatio-val">4:1</span></div>
+        </div>
       </div>
-    </div>
 
-    <!-- ⑨ Minuterie -->
-    <div class="fx-block">
-      <div class="fx-title">⑨ Minuterie de Méditation</div>
-      <div class="fx-timer-presets">
-        <button class="fx-timer-btn" onclick="timerPreset(10)">10'</button>
-        <button class="fx-timer-btn" onclick="timerPreset(20)">20'</button>
-        <button class="fx-timer-btn" onclick="timerPreset(30)">30'</button>
-        <button class="fx-timer-btn" onclick="timerPreset(45)">45'</button>
-        <button class="fx-timer-btn" onclick="timerPreset(60)">60'</button>
+      <div class="fx-block" style="padding-bottom:.35rem;">
+        <div class="fx-title">Spectre Harmonique</div>
+        <div style="height:54px;background:rgba(5,3,18,.65);border-radius:8px;overflow:hidden;">
+          <canvas id="fx-spectroid-canvas" style="width:100%;height:100%;display:block;"></canvas>
+        </div>
       </div>
-      <div class="fx-timer-row">
-        <div class="fx-timer-display" id="timer-display">--:--</div>
-        <button class="fx-timer-start" id="btn-timer-start" onclick="timerToggle()">▶ Démarrer</button>
+
+      <div class="fx-block">
+        <div class="fx-title">Minuterie de Méditation</div>
+        <div class="fx-timer-presets">
+          <button class="fx-timer-btn" onclick="timerPreset(10)">10'</button>
+          <button class="fx-timer-btn" onclick="timerPreset(20)">20'</button>
+          <button class="fx-timer-btn" onclick="timerPreset(30)">30'</button>
+          <button class="fx-timer-btn" onclick="timerPreset(45)">45'</button>
+          <button class="fx-timer-btn" onclick="timerPreset(60)">60'</button>
+        </div>
+        <div class="fx-timer-row">
+          <div class="fx-timer-display" id="timer-display">--:--</div>
+          <button class="fx-timer-start" id="btn-timer-start" onclick="timerToggle()">▶ Démarrer</button>
+        </div>
       </div>
-    </div>
 
-    <!-- ⑩ Presets de session -->
-    <div class="fx-block">
-      <div class="fx-title">⑩ Presets de Session</div>
-      <div class="fx-presets-list" id="fx-presets-list">${psRows}</div>
-    </div>
+      <div class="fx-block">
+        <div class="fx-title">Presets de Session</div>
+        <div class="fx-presets-list" id="fx-presets-list">${psRows}</div>
+      </div>
 
-    <div style="text-align:center;margin-top:.4rem;padding-bottom:.5rem;">
-      <button class="btn-flow" onclick="exportState()" style="padding:.45rem 1.1rem;font-size:.72rem;border-color:rgba(99,230,255,.5);color:#63E6FF;background:rgba(99,230,255,.06);">⎘ Partager Config</button>
-    </div>
+      <div style="text-align:center;margin-top:.4rem;padding-bottom:.5rem;">
+        <button class="btn-flow" onclick="exportState()" style="padding:.45rem 1.1rem;font-size:.72rem;border-color:rgba(99,230,255,.5);color:#63E6FF;background:rgba(99,230,255,.06);">⎘ Partager Config</button>
+      </div>
+    </details>
   </div>`;
 }
 
