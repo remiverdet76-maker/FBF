@@ -65,6 +65,28 @@ jobs:
         working-directory: apk
         run: npx cap add android
 
+      - name: App icon — Mandala solaire 36 Rayons
+        working-directory: apk
+        continue-on-error: true
+        run: |
+          SRC=../fbf432/assets/logo-36rayons.png
+          RES=android/app/src/main/res
+          if [ -f "$SRC" ]; then
+            # Carré centré (retire le texte bas de la mandala)
+            convert "$SRC" -gravity center -crop 1024x1024+0+0 +repage /tmp/icon_sq.png
+            for pair in "mdpi 48" "hdpi 72" "xhdpi 96" "xxhdpi 144" "xxxhdpi 192"; do
+              d=$(echo $pair | cut -d' ' -f1); px=$(echo $pair | cut -d' ' -f2)
+              mkdir -p "$RES/mipmap-$d"
+              convert /tmp/icon_sq.png -resize ${px}x${px} "$RES/mipmap-$d/ic_launcher.png"
+              convert /tmp/icon_sq.png -resize ${px}x${px} "$RES/mipmap-$d/ic_launcher_round.png"
+              # Foreground adaptatif : mandala plein cadre (fond masqué)
+              convert /tmp/icon_sq.png -resize ${px}x${px} "$RES/mipmap-$d/ic_launcher_foreground.png"
+            done
+            echo "Icône mandala appliquée."
+          else
+            echo "Logo introuvable, icône par défaut conservée."
+          fi
+
       - name: Sync web assets to Android
         working-directory: apk
         run: npx cap sync android
