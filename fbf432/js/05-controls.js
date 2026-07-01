@@ -280,24 +280,18 @@ function triggerMagicAuto(opts) {
   const DELTAS = [3, 4, 5, 6, 7.83];
   const baseDelta = DELTAS[Math.floor(Math.random() * DELTAS.length)];
 
-  // ── VOIX CONSONANTES (justes) : accord/drone harmonieux, pas de rugosité ─
-  // multiplicateurs = octaves / quintes / quartes / tierces justes → aucune battement dur.
-  const VOICINGS = [
-    [0.5, 0.75, 1.0, 1.5, 2.0, 3.0],   // ouvert (octaves + quintes)
-    [1.0, 1.5, 2.0, 2.5, 3.0, 4.0],    // série harmonique montante
-    [0.25, 0.5, 0.75, 1.0, 1.5, 2.0],  // ample/grave (subharmonique)
-    [0.5, 1.0, 1.5, 2.0, 3.0, 4.0],    // quintes-octaves
-    [1.0, 1.25, 1.5, 2.0, 2.5, 3.0],   // majeur (tierce 5/4)
-  ];
-  let voicing = VOICINGS[Math.floor(Math.random() * VOICINGS.length)].slice();
-  if (Math.random() < 0.5) voicing.reverse();   // crescendo / decrescendo
-  const UNI = closestRatioIdx(1.0);             // ratio 1/1 → consonance exacte
+  // ── Ratios OmcV en MIROIR, étalés par OCTAVES (aération douce) ────
+  // 3 paires-miroir : (0,1)=(11/10,10/11) · (2,3)=(12/11,11/12) · (4,5)=(12/10,10/12)
+  // Chaque paire-miroir posée sur une octave différente → 3 étages, shimmer OmcV.
+  const OCTAVES = [1, 2, 0.5];                  // registres : médium · aigu · grave
+  if (Math.random() < 0.5) OCTAVES.reverse();   // crescendo / decrescendo
+  const RI_ORDER = [0, 1, 2, 3, 4, 5];          // miroirs consécutifs
 
   PAIRS.forEach((pair, idx) => {
     if (typeof isLocked === 'function' && isLocked(idx)) return;
 
     if (idx === MASTER_IDX) {
-      pair.pingala.ri = UNI; pair.pingala.n = 1.0;
+      pair.pingala.ri = 0; pair.pingala.n = 1.0;
       pair.ida.delta = baseDelta; pair.ida.polarity = 1;
       const pf = Math.min(432, newMaster);
       pair.pingala.vol = isosonicVol(pf, 0.11);
@@ -305,17 +299,17 @@ function triggerMagicAuto(opts) {
       return;
     }
 
-    const mult = voicing[idx];                  // multiplicateur consonant
-    pair.pingala.ri = UNI;                       // freq = maître × 1 × mult (consonant)
-    pair.pingala.n  = mult;
+    const ri  = RI_ORDER[idx];                  // ratio OmcV
+    const oct = OCTAVES[Math.floor(idx / 2)];   // paires 0-1→oct0, 2-3→oct1, 4-5→oct2
+    pair.pingala.ri = ri;
+    pair.pingala.n  = oct;                       // freq = maître × ratioOmcV × octave
     pair.ida.delta  = baseDelta;
-    pair.ida.polarity = (idx % 2 === 0) ? -1 : 1;
+    pair.ida.polarity = (idx % 2 === 0) ? 1 : -1; // miroir de polarité
 
-    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * mult));
-    pair.pingala.vol = isosonicVol(pf, 0.085);   // plus doux
+    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[ri].r * oct));
+    pair.pingala.vol = isosonicVol(pf, 0.085);   // doux
     pair.ida.vol     = isosonicVol(pf, 0.085);
 
-    // Filtres ouverts et doux (sinus pures, léger arrondi du haut)
     OSC_FILTER[pair.pingala.id] = { cutoff: 3200, res: 0.707, hp: 20 };
     OSC_FILTER[pair.ida.id]     = { cutoff: 3200, res: 0.707, hp: 20 };
   });

@@ -21,35 +21,29 @@ const PAIR_BAND = [0, 0, 1, 1, 2, 2];   // paires 0-5 → bande (master = source
 const HEX_DEG    = [0, 60, 120, 180, 240, 300];
 const MASTER_IDX = 6;
 
+// Ratios OmcV — famille 10-11-12 uniquement (les 9/x et 13/x, trop rugueux, sont retirés)
+// Paires miroir : (11/10 ↔ 10/11) · (12/11 ↔ 11/12) · (12/10 ↔ 10/12)
 const RATIO_OPTS = [
-  {r:10/11, l:'10/11'}, {r:11/10, l:'11/10'},
-  {r:11/12, l:'11/12'}, {r:12/11, l:'12/11'},
-  {r:10/12, l:'10/12'}, {r:12/10, l:'12/10'},
-  {r:12/13, l:'12/13'}, {r:13/12, l:'13/12'},
-  {r:11/13, l:'11/13'}, {r:13/11, l:'13/11'},
-  {r:10/13, l:'10/13'}, {r:13/10, l:'13/10'},
-  {r: 9/10, l: '9/10'}, {r:10/ 9, l:'10/9'},
-  {r: 9/11, l: '9/11'}, {r:11/ 9, l:'11/9'},
-  {r: 9/12, l: '9/12'}, {r:12/ 9, l:'12/9'},
-  {r: 9/13, l: '9/13'}, {r:13/ 9, l:'13/9'},
-  {r:1,     l:'1/1'},                            // unisson (consonance de base du random doux)
+  {r:11/10, l:'11/10'}, {r:10/11, l:'10/11'},   // 0,1
+  {r:12/11, l:'12/11'}, {r:11/12, l:'11/12'},   // 2,3
+  {r:12/10, l:'12/10'}, {r:10/12, l:'10/12'},   // 4,5
 ];
 
 const PAIRS = [
   { label:'Paire 1', color:'#FF6B6B', grad:['#FF6B6B','#FF9A8B'],
-    pingala:{id:'p0', ri:2, n:0.30, vol:.12}, ida:{id:'i0', delta:1.8, polarity:1, vol:.12} },
+    pingala:{id:'p0', ri:0, n:1.0, vol:.10}, ida:{id:'i0', delta:1.8, polarity:1, vol:.10} },
   { label:'Paire 2', color:'#FFB347', grad:['#FFB347','#FFD080'],
-    pingala:{id:'p1', ri:2, n:0.50, vol:.12}, ida:{id:'i1', delta:1.8, polarity:1, vol:.12} },
+    pingala:{id:'p1', ri:1, n:1.0, vol:.10}, ida:{id:'i1', delta:1.8, polarity:-1, vol:.10} },
   { label:'Paire 3', color:'#E8FF60', grad:['#E8FF60','#C8FF80'],
-    pingala:{id:'p2', ri:2, n:0.70, vol:.12}, ida:{id:'i2', delta:1.8, polarity:1, vol:.12} },
+    pingala:{id:'p2', ri:2, n:2.0, vol:.10}, ida:{id:'i2', delta:1.8, polarity:1, vol:.10} },
   { label:'Paire 4', color:'#56FFB0', grad:['#56FFB0','#80FFD0'],
-    pingala:{id:'p3', ri:2, n:0.85, vol:.12}, ida:{id:'i3', delta:1.8, polarity:1, vol:.12} },
+    pingala:{id:'p3', ri:3, n:2.0, vol:.10}, ida:{id:'i3', delta:1.8, polarity:-1, vol:.10} },
   { label:'Paire 5', color:'#60D8FF', grad:['#60D8FF','#80B0FF'],
-    pingala:{id:'p4', ri:13, n:0.90, vol:.12}, ida:{id:'i4', delta:1.8, polarity:1, vol:.12} },
+    pingala:{id:'p4', ri:4, n:0.5, vol:.10}, ida:{id:'i4', delta:1.8, polarity:1, vol:.10} },
   { label:'Paire 6', color:'#C080FF', grad:['#C080FF','#E080FF'],
-    pingala:{id:'p5', ri:2, n:0.40, vol:.12}, ida:{id:'i5', delta:1.8, polarity:1, vol:.12} },
+    pingala:{id:'p5', ri:5, n:0.5, vol:.10}, ida:{id:'i5', delta:1.8, polarity:-1, vol:.10} },
   { label:'Maître',  color:'#FFB0FF', grad:['#FFB0FF','#FF80C0'],
-    pingala:{id:'p6', ri:0, n:1.0, vol:.14}, ida:{id:'i6', delta:1.8, polarity:1, vol:.14} },
+    pingala:{id:'p6', ri:0, n:1.0, vol:.12}, ida:{id:'i6', delta:1.8, polarity:1, vol:.12} },
 ];
 
 // Panoramique stéréo — éventail : chaque paire a un CENTRE distinct (gauche→droite),
