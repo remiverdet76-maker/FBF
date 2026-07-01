@@ -52,14 +52,15 @@ function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
 // FX aléatoire — randomise delay, reverb, EQ
 // Random FX — INDÉPENDANT du random fréquence. FX globaux en fin de chaîne.
 function randomizeFX(){
-  const delT  = +(0.12 + Math.random() * 0.7).toFixed(2);
-  const delFB = +(Math.random() * 0.4).toFixed(2);
-  const delW  = +(Math.random() * 0.3).toFixed(2);
-  const revW  = +(0.1 + Math.random() * 0.4).toFixed(2);
-  const ppT   = +(0.1 + Math.random() * 0.5).toFixed(2);
-  const ppFb  = +(Math.random() * 0.4).toFixed(2);
-  const ppW   = +(Math.random() * 0.35).toFixed(2);
-  const fxInt = +(0.25 + Math.random() * 0.5).toFixed(2);
+  // Valeurs franches → changement CLAIREMENT audible (avant : trop timide)
+  const delT  = +(0.18 + Math.random() * 0.6).toFixed(2);
+  const delFB = +(0.15 + Math.random() * 0.4).toFixed(2);
+  const delW  = +(0.25 + Math.random() * 0.45).toFixed(2);
+  const revW  = +(0.35 + Math.random() * 0.5).toFixed(2);
+  const ppT   = +(0.15 + Math.random() * 0.45).toFixed(2);
+  const ppFb  = +(0.2 + Math.random() * 0.4).toFixed(2);
+  const ppW   = +(0.25 + Math.random() * 0.45).toFixed(2);
+  const fxInt = +(0.55 + Math.random() * 0.4).toFixed(2);
   // Delay + Reverb (via sliders + updateFX → gating auto)
   [['delayTime',delT],['delayFeedback',delFB],['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
     const sl = document.getElementById(id); if (sl) sl.value = val;
@@ -266,73 +267,57 @@ function closestRatioIdx(target) {
 
 function triggerMagicAuto(opts) {
   const keepMaster = !!(opts && opts.keepMaster);
-  const spread = RAND_OPTS.spread, useFX = RAND_OPTS.useFX, mode = RAND_OPTS.ratioMode;
+  const spread = RAND_OPTS.spread;
 
-  // ── #1 PLAGE DE FRÉQUENCE (reconnectée) ───────────────────────────
-  // Si activée, les 3 bandes couvrent [freqMin, freqMax] ; sinon bandes FBF par défaut.
-  let BANDS = FBF_BANDS;
-  if (RAND_OPTS.rangeOn) {
-    const lo = Math.max(40, Math.min(540, RAND_OPTS.freqMin));
-    const hi = Math.max(lo + 24, Math.min(566, RAND_OPTS.freqMax));
-    const e1 = lo * Math.pow(hi / lo, 1/3), e2 = lo * Math.pow(hi / lo, 2/3);
-    BANDS = [[lo, e1], [e1, e2], [e2, hi]];
-  }
-
-  // ── #2 MAÎTRE : varie sur random (sauf verrou) ────────────────────
-  // Avant il restait figé → "dernier oscillateur bloqué". Le verrou 🔒 le garde comme base.
+  // ── MAÎTRE = fondamentale (varie sur tap, sauf verrou de fréquence) ─
   const masterLocked = (typeof isLocked === 'function' && isLocked(MASTER_IDX)) || keepMaster;
-  const MASTER_POOL = [144,162,180,198,216,234,252,288,324,360,396,432];
+  // Fondamentales graves 432-family (la pile harmonique tient dans 54–566)
+  const FUND_POOL = [108, 120, 135, 144, 162, 180];
   const newMaster = masterLocked ? masterFreq
-    : MASTER_POOL[Math.floor(Math.random() * MASTER_POOL.length)];
+    : FUND_POOL[Math.floor(Math.random() * FUND_POOL.length)];
 
-  const BASE_DELTAS = [0.5, 1.0, 1.5, 1.8, 2.1, 3.5, 4.0, 7.83];
-  const baseDelta   = BASE_DELTAS[Math.floor(Math.random() * BASE_DELTAS.length)];
+  // ── Δ binaural DOUX (thêta/alpha, relaxant) ───────────────────────
+  const DELTAS = [3, 4, 5, 6, 7.83];
+  const baseDelta = DELTAS[Math.floor(Math.random() * DELTAS.length)];
 
-  // Graine + ratios par bande, selon le mode (Harmonique / Identique / Aléatoire)
-  const bandData = BANDS.map(([blo, bhi]) => {
-    const geoC = Math.sqrt(blo * bhi);
-    const seed = geoC * (1 + (Math.random() - 0.5) * 0.2 * (0.4 + spread));
-    const maxR = Math.min(bhi / seed, seed / blo);
-    const cands = RATIO_OPTS.map((o, i) => ({ i, r: o.r })).filter(o => o.r >= 1.0 && o.r <= maxR);
-    const pk = () => cands.length ? cands[Math.floor(Math.random() * cands.length)] : { i: closestRatioIdx(1), r: 1 };
-    return { seed, p1: pk(), p2: pk() };
-  });
+  // ── VOIX CONSONANTES (justes) : accord/drone harmonieux, pas de rugosité ─
+  // multiplicateurs = octaves / quintes / quartes / tierces justes → aucune battement dur.
+  const VOICINGS = [
+    [0.5, 0.75, 1.0, 1.5, 2.0, 3.0],   // ouvert (octaves + quintes)
+    [1.0, 1.5, 2.0, 2.5, 3.0, 4.0],    // série harmonique montante
+    [0.25, 0.5, 0.75, 1.0, 1.5, 2.0],  // ample/grave (subharmonique)
+    [0.5, 1.0, 1.5, 2.0, 3.0, 4.0],    // quintes-octaves
+    [1.0, 1.25, 1.5, 2.0, 2.5, 3.0],   // majeur (tierce 5/4)
+  ];
+  let voicing = VOICINGS[Math.floor(Math.random() * VOICINGS.length)].slice();
+  if (Math.random() < 0.5) voicing.reverse();   // crescendo / decrescendo
+  const UNI = closestRatioIdx(1.0);             // ratio 1/1 → consonance exacte
 
   PAIRS.forEach((pair, idx) => {
     if (typeof isLocked === 'function' && isLocked(idx)) return;
 
     if (idx === MASTER_IDX) {
-      pair.pingala.n = 1.0;
-      pair.ida.delta = baseDelta;
-      pair.ida.polarity = 1;
+      pair.pingala.ri = UNI; pair.pingala.n = 1.0;
+      pair.ida.delta = baseDelta; pair.ida.polarity = 1;
       const pf = Math.min(432, newMaster);
-      pair.pingala.vol = isosonicVol(pf, 0.14);
-      pair.ida.vol     = isosonicVol(pf, 0.14);
+      pair.pingala.vol = isosonicVol(pf, 0.11);
+      pair.ida.vol     = isosonicVol(pf, 0.11);
       return;
     }
 
-    const b = PAIR_BAND[idx];
-    const bd = bandData[b];
-    const isFirst = (idx % 2 === 0);
-    // #1b mode de ratio reconnecté :
-    //   harmonic = miroir R / 1/R · same = ratio identique · random = indépendant
-    let ri;
-    if      (mode === 'same')     ri = bd.p1.i;
-    else if (mode === 'harmonic') ri = isFirst ? closestRatioIdx(1 / bd.p1.r) : bd.p1.i;
-    else                          ri = isFirst ? bd.p1.i : bd.p2.i;
-    pair.pingala.ri  = ri;
-    pair.pingala.n   = Math.round((bd.seed / newMaster) * 1000) / 1000;  // #2b n arrondi (fini les décimales à rallonge)
-    pair.ida.delta   = baseDelta;
-    pair.ida.polarity = isFirst ? -1 : 1;
+    const mult = voicing[idx];                  // multiplicateur consonant
+    pair.pingala.ri = UNI;                       // freq = maître × 1 × mult (consonant)
+    pair.pingala.n  = mult;
+    pair.ida.delta  = baseDelta;
+    pair.ida.polarity = (idx % 2 === 0) ? -1 : 1;
 
-    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * RATIO_OPTS[ri].r * pair.pingala.n));
-    pair.pingala.vol = isosonicVol(pf, 0.12);
-    pair.ida.vol     = isosonicVol(pf, 0.12);
+    const pf = Math.max(F_MIN, Math.min(F_MAX, newMaster * mult));
+    pair.pingala.vol = isosonicVol(pf, 0.085);   // plus doux
+    pair.ida.vol     = isosonicVol(pf, 0.085);
 
-    // #3 LOW-CUT SUPPRIMÉ (plus de passe-haut). Bande haute : lowpass doux conservé.
-    const cut = (b === 2) ? 200 : 6000;
-    OSC_FILTER[pair.pingala.id] = { cutoff: cut, res: 0.707, hp: 20 };
-    OSC_FILTER[pair.ida.id]     = { cutoff: cut, res: 0.707, hp: 20 };
+    // Filtres ouverts et doux (sinus pures, léger arrondi du haut)
+    OSC_FILTER[pair.pingala.id] = { cutoff: 3200, res: 0.707, hp: 20 };
+    OSC_FILTER[pair.ida.id]     = { cutoff: 3200, res: 0.707, hp: 20 };
   });
 
   // Éventail stéréo selon le spread

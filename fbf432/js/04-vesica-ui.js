@@ -21,7 +21,13 @@ function _vpStart(i,e){
 }
 function _vpEnd(i){
   clearTimeout(_vpMbTimer);
-  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;if(!_vpFired&&!_vpMbFired)toggleMutePair(i);}
+  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;
+    if(!_vpFired&&!_vpMbFired){
+      // Mode simple : un tap sur la sphère maître = nouveau jeu (Press & Destress)
+      if(document.body.classList.contains('mode-simple') && i===MASTER_IDX) triggerMagicAuto();
+      else toggleMutePair(i);
+    }
+  }
 }
 function _vpCancel(){clearTimeout(_vpTimer);_vpTimer=null;clearTimeout(_vpMbTimer);_vpMbTimer=null;}
 
@@ -87,7 +93,7 @@ function buildVesicaPairs() {
          style="border-color:${mc};background:radial-gradient(circle,${mcSoft} 0%,${mcGlow.replace('0.5','0.18')} 55%,rgba(20,5,38,.6) 100%);box-shadow:0 0 30px ${mcGlow};backdrop-filter:blur(4px);cursor:pointer;user-select:none;"
          onmousedown="_vpStart(${MASTER_IDX},event)" onmouseup="_vpEnd(${MASTER_IDX})" onmouseleave="_vpCancel()"
          ontouchstart="_vpStart(${MASTER_IDX},event)" ontouchend="_vpEnd(${MASTER_IDX})">
-      <span class="vp-type" style="color:${mc};font-size:.7rem;letter-spacing:.14em;">MAÎTRE</span>
+      <span class="vp-type" style="color:${mc};font-size:.62rem;letter-spacing:.1em;font-weight:bold;">FBF · PRESS &amp; DESTRESS</span>
       <span class="ms-freq" id="ms-freq" onclick="event.stopPropagation();openFreqEdit();">${masterFreq}</span>
       <input type="number" id="freq-input-master" min="36" max="864" placeholder="${masterFreq}" autocomplete="off"
              onkeydown="handleFreqKey(event);">

@@ -32,6 +32,7 @@ const RATIO_OPTS = [
   {r: 9/11, l: '9/11'}, {r:11/ 9, l:'11/9'},
   {r: 9/12, l: '9/12'}, {r:12/ 9, l:'12/9'},
   {r: 9/13, l: '9/13'}, {r:13/ 9, l:'13/9'},
+  {r:1,     l:'1/1'},                            // unisson (consonance de base du random doux)
 ];
 
 const PAIRS = [
@@ -79,9 +80,9 @@ PAIRS.forEach(p => {
   mutedOscs[p.ida.id]     = false;
 });
 
-let masterFreq  = 252;
+let masterFreq  = 144;
 let globalDelta = 1.8;
-let masterVol   = 0.8;
+let masterVol   = 0.6;   // plus doux par défaut (le jeu ne doit pas être criard)
 
 function waveState(hz) {
   const a = Math.abs(hz);
