@@ -46,32 +46,32 @@
    hauteur faible. Le desktop (large ET haut) garde son layout flottant. */
 @media (max-width: 900px), (max-height: 500px) {
 
-  /* Dock bas — plus compact sur mobile */
+  /* Dock bas — lisible et accessible (les parents doivent viser sans effort) */
   #bottom-dock {
-    height: 48px !important;
-    padding: 0 .22rem !important;
-    gap: .12rem !important;
+    height: 68px !important;
+    padding: 0 .4rem !important;
+    gap: .3rem !important;
   }
-  #dock-chevron { bottom: 48px !important; }
+  #dock-chevron { bottom: 68px !important; }
   #dock-chevron.dock-up { bottom: 0 !important; }
-  #bottom-dock.collapsed { transform: translateY(48px) !important; }
-  #spectroid-bar { bottom: 48px !important; width: 72vw !important; }
+  #bottom-dock.collapsed { transform: translateY(68px) !important; }
+  #spectroid-bar { bottom: 68px !important; width: 80vw !important; }
 
   #flux-btn {
-    width: 64px !important; max-width: 72px !important;
-    height: 36px !important; border-radius: 8px !important;
+    width: 84px !important; max-width: 96px !important;
+    height: 52px !important; border-radius: 10px !important;
   }
-  .flux-icon  { font-size: .9rem !important; }
-  .flux-txt   { font-size: .36rem !important; }
-  .flux-state { font-size: .38rem !important; }
+  .flux-icon  { font-size: 1.3rem !important; }
+  .flux-txt   { font-size: .52rem !important; }
+  .flux-state { font-size: .5rem !important; }
 
   #tab-nav .tnav-btn, .tnav-btn {
-    font-size: .5rem !important;
-    padding: .28rem .36rem !important;
+    font-size: .72rem !important;
+    padding: .42rem .5rem !important;
   }
   #btn-harmonic {
-    font-size: .5rem !important;
-    padding: .28rem .36rem !important;
+    font-size: .72rem !important;
+    padding: .42rem .5rem !important;
   }
 
   /* Panneaux : 2/3 écran à droite, déroulement haut → bas */
@@ -83,7 +83,7 @@
     width: 66vw !important;
     min-width: 220px !important;
     max-width: none !important;
-    height: calc(100vh - 48px) !important;
+    height: calc(100vh - 68px) !important;
     border-radius: 0 0 0 12px !important;
     border-left: 1px solid rgba(0,204,255,.22) !important;
     border-bottom: none !important;

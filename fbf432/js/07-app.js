@@ -628,8 +628,8 @@ function init() {
   // Init 3D geometry engine
   animMetatron();
 
-  // Sync global delta
-  setGlobalDelta(globalDelta);
+  // Sync affichage binaural SANS relocker : chaque paire garde son battement propre
+  syncDeltaUI();
 
   // Sync UI state
   updateDisplay();

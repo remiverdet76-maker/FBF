@@ -30,10 +30,12 @@
   display:flex;align-items:center;justify-content:center;
   z-index:8;
 }
-/* Sphère maître seule (mode simple) : plus grande, contemplative, respire */
-.vp-center-wrap.vp-solo{ width:min(64vw,300px); height:min(64vw,300px); }
+/* Sphère maître seule (mode simple) : grande, contemplative, respire */
+.vp-center-wrap.vp-solo{ width:min(84vw,540px); height:min(84vw,540px); }
 .vp-center-wrap.vp-solo .vp-p{ animation:soloBreath 7s ease-in-out infinite; }
-.vp-center-wrap.vp-solo .ms-freq{ font-size:2.8rem; }
+.vp-center-wrap.vp-solo .ms-freq{ font-size:4.2rem; }
+.vp-center-wrap.vp-solo .vp-type{ font-size:.95rem !important; }
+.vp-center-wrap.vp-solo .ms-state{ font-size:.9rem; }
 @keyframes soloBreath{
   0%,100%{ transform:scale(1); }
   50%{ transform:scale(1.06); }

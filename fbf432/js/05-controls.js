@@ -194,6 +194,16 @@ function setGlobalDelta(raw) {
   saveState();
 }
 
+// Rafraîchit l'affichage binaural sans imposer un battement unique à toutes les paires.
+function syncDeltaUI() {
+  PAIRS.forEach((_, i) => updatePairUI(i));
+  const ws  = waveState(globalDelta);
+  const gws = document.getElementById('global-ws');
+  if (gws) { gws.textContent = ws.s; gws.style.color = ws.c; }
+  const gdi = document.getElementById('global-delta-input');
+  if (gdi && document.activeElement !== gdi) gdi.value = globalDelta.toFixed(1);
+}
+
 function nDecrement(i) { setN(i, Math.max(0.1, Math.round((PAIRS[i].pingala.n - 0.1)*10)/10)); }
 function nIncrement(i) { setN(i, Math.round((PAIRS[i].pingala.n + 0.1)*10)/10); }
 function nReset(i) {
@@ -356,13 +366,13 @@ function toggleFullscreen() {
 
 function resetAll() {
   if (flowing) return;
-  masterFreq = 252; globalDelta = 1.8; masterVol = 0.8;
+  masterFreq = 252; globalDelta = 4.0; masterVol = 0.8;
   PAIRS.forEach((p, i) => {
     p.pingala.ri = i % RATIO_OPTS.length;
     p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i*0.5);
     p.pingala.vol = .12;
-    p.ida.delta   = 1.8;
-    p.ida.polarity = 1;
+    p.ida.delta   = DEFAULT_DELTAS[i];   // battements distincts & doux (plus de lock)
+    p.ida.polarity = (i % 2 === 0) ? 1 : -1;
     p.ida.vol     = .12;
     mutedOscs[p.pingala.id] = false;
     mutedOscs[p.ida.id]     = false;
