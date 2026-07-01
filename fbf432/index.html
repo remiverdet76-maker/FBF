@@ -30,21 +30,45 @@
 <canvas id="meta-canvas"></canvas>
 <div id="sphere-layer"></div>
 
-<!-- Dock bas : FLUX + Navigation horizontale -->
-<div id="bottom-dock">
-  <button id="flux-btn" onclick="fbfToggle()">
+<!-- Dock bas : 5 touches — colonne gauche (rouge/orange) · Flux centre · colonne droite (vert/bleu) -->
+<div id="bottom-dock" class="dock5">
+
+  <!-- Colonne gauche : ROUGE (haut) sur ORANGE (bas) -->
+  <div class="dock-col">
+    <!-- ROUGE — Fréquence Maître : tap = verrou · appui long = nouveau jeu -->
+    <button class="dcell dcell-red" id="dcRed" title="Tap : verrouiller · Appui long : nouveau jeu">
+      <span class="dcell-ico" id="dcRedLock">🔓</span>
+      <span class="dcell-txt"><b class="dcell-name">Fréquence Maître</b><span class="dcell-sub" id="dcRedFreq">144 Hz</span></span>
+    </button>
+    <!-- ORANGE — Δ Binaural : −0,1 · tap centre = verrou · +0,1 · appui long = FX -->
+    <button class="dcell dcell-orange" id="dcOrange" title="Tap : verrou binaural · Appui long : FX &amp; Master">
+      <span class="dcell-step" id="dcBinMinus">−0,1</span>
+      <span class="dcell-txt"><b class="dcell-name" id="dcBinName">🔒 Δ Binaural</b><span class="dcell-sub" id="dcBinVal">4.0 Hz</span></span>
+      <span class="dcell-step" id="dcBinPlus">+0,1</span>
+    </button>
+  </div>
+
+  <!-- CENTRE — FLUX : cercle jaune surélevé, plus gros -->
+  <button class="dcell-flux" id="dcFlux" title="Flux ouvert / fermé">
     <span class="flux-icon" id="flux-icon">◉</span>
-    <span class="flux-txt" id="flux-txt">FLUX</span>
     <span class="flux-state" id="flux-state-side">OFF</span>
   </button>
-  <button id="btn-rand-dock" onclick="triggerMagicAuto()" title="Aléatoire fréquences">⚄</button>
-  <button id="btn-rfx-dock" onclick="triggerRandomFX()" title="Aléatoire FX">✦</button>
-  <button id="btn-fav-dock" onclick="favGame()" title="Sauver le jeu ❤️">❤</button>
-  <nav id="tab-nav">
-    <button class="tnav-btn tnav-params" id="tParams" onclick="tPanel('panParams','tParams')" title="Paramètres">⚙</button>
-  </nav>
-  <button id="btn-rec" class="tnav-btn tnav-rec" onclick="recToggle()">⏺ Rec</button>
-  <button class="tnav-btn tnav-fullscreen" id="btn-fs" onclick="toggleFullscreen()">⤢</button>
+
+  <!-- Colonne droite : VERT (haut) sur BLEU (bas) -->
+  <div class="dock-col">
+    <!-- VERT — Effet Aléatoire : tap = nouveaux FX · appui long = FX -->
+    <button class="dcell dcell-green" id="dcGreen" title="Tap : nouveaux effets · Appui long : menu FX">
+      <span class="dcell-txt"><b class="dcell-name">✦ Effet Aléatoire</b><span class="dcell-sub">FX Master</span></span>
+    </button>
+    <!-- BLEU — Paramètres : tap = ouvrir · appui long = réinitialiser -->
+    <button class="dcell dcell-blue" id="dcBlue" title="Tap : Paramètres · Appui long : réinitialiser">
+      <span class="dcell-txt"><b class="dcell-name">Paramètres</b></span>
+    </button>
+  </div>
+
+  <!-- Rec + plein écran : discrets, coin droit -->
+  <button id="btn-rec" class="dock-mini tnav-rec" onclick="recToggle()" title="Enregistrer">⏺</button>
+  <button id="btn-fs" class="dock-mini" onclick="toggleFullscreen()" title="Plein écran">⤢</button>
 </div>
 <button id="dock-chevron" onclick="toggleDock()" title="Masquer / afficher le dock">⌄</button>
 
@@ -60,6 +84,17 @@
     <button class="params-item" style="--ic:#FFB0FF;" onclick="openTab('panNotice')">≡ <span>Notice &amp; Thème</span></button>
     <button class="params-item" id="btn-advanced" style="--ic:#C080FF;" onclick="toggleAdvanced()">⊹ <span>Mode avancé (6 sphères) : OFF</span></button>
     <button class="params-item" id="btn-vislite" style="--ic:#86FFC0;" onclick="toggleVisLite()">⚡ <span>Visuel léger : OFF</span></button>
+  </div>
+
+  <!-- Apparence : taille & couleur du texte -->
+  <div class="pct" style="margin-top:.8rem">Apparence</div>
+  <div class="sl-row">
+    <label>Taille du texte <span id="uisize-val">100%</span></label>
+    <input type="range" id="uisize-slider" min="80" max="140" step="5" value="100" oninput="setUISize(this.value)">
+  </div>
+  <div class="sl-row">
+    <label>Teinte du texte <span id="uihue-val">Or</span></label>
+    <input type="range" id="uihue-slider" min="0" max="360" step="10" value="45" oninput="setUIHue(this.value)">
   </div>
 </div>
 

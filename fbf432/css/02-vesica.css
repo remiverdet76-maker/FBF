@@ -32,7 +32,24 @@
 }
 /* Sphère maître seule (mode simple) : grande, contemplative, respire */
 .vp-center-wrap.vp-solo{ width:min(84vw,540px); height:min(84vw,540px); }
-.vp-center-wrap.vp-solo .vp-p{ animation:soloBreath 7s ease-in-out infinite; }
+/* Aura de rayonnement derrière la sphère */
+.vp-center-wrap.vp-solo::before{
+  content:'';position:absolute;top:50%;left:50%;
+  width:120%;height:120%;transform:translate(-50%,-50%);
+  border-radius:50%;pointer-events:none;z-index:-1;
+  background:radial-gradient(circle,rgba(255,220,140,.26) 0%,rgba(200,120,255,.14) 46%,transparent 72%);
+  filter:blur(10px);
+  animation:soloAura 7s ease-in-out infinite;
+}
+@keyframes soloAura{
+  0%,100%{ opacity:.55; transform:translate(-50%,-50%) scale(1); }
+  50%{ opacity:1;  transform:translate(-50%,-50%) scale(1.09); }
+}
+/* Relief 3D : lumière haut-gauche + profondeur */
+.vp-center-wrap.vp-solo .vp-p{
+  animation:soloBreath 7s ease-in-out infinite;
+  box-shadow:inset 0 0 55px rgba(255,255,255,.16),inset 12px -14px 55px rgba(0,0,0,.32),0 0 55px rgba(200,140,255,.32);
+}
 .vp-center-wrap.vp-solo .ms-freq{ font-size:4.2rem; }
 .vp-center-wrap.vp-solo .vp-type{ font-size:.95rem !important; }
 .vp-center-wrap.vp-solo .ms-state{ font-size:.9rem; }

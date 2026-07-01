@@ -39,9 +39,9 @@ body{
 /* Dock bas — Flux + Nav horizontaux */
 #bottom-dock{
   position:fixed;
-  bottom:0;left:0;right:0;height:54px;
-  display:flex;flex-direction:row;align-items:center;
-  gap:.28rem;padding:0 .45rem;
+  bottom:0;left:0;right:0;height:92px;
+  display:flex;flex-direction:row;align-items:center;justify-content:center;
+  gap:.5rem;padding:0 .5rem;
   z-index:100;
   background:rgba(2,1,14,.92);
   border-top:1px solid rgba(200,100,255,.22);
@@ -49,9 +49,9 @@ body{
   box-shadow:0 -4px 24px rgba(80,40,160,.18);
   transition:transform .35s cubic-bezier(.4,0,.2,1);
 }
-#bottom-dock.collapsed{transform:translateY(54px);}
+#bottom-dock.collapsed{transform:translateY(92px);}
 #dock-chevron{
-  position:fixed;bottom:54px;right:.5rem;
+  position:fixed;bottom:92px;right:.5rem;
   width:32px;height:20px;
   background:rgba(2,1,14,.88);
   border:1px solid rgba(200,100,255,.22);border-bottom:none;
@@ -74,7 +74,7 @@ body{
 /* Visualiseur spectral — au-dessus du dock */
 #spectroid-bar{
   position:fixed;
-  bottom:54px;left:50%;transform:translateX(-50%);
+  bottom:92px;left:50%;transform:translateX(-50%);
   width:min(680px,88vw);height:80px;
   z-index:22;
   background:linear-gradient(135deg,rgba(180,180,200,.12),rgba(220,220,240,.06),rgba(150,160,180,.10));

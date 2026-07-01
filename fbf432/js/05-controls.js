@@ -200,6 +200,7 @@ function setGlobalDelta(raw) {
   if (gws) { gws.textContent = ws.s; gws.style.color = ws.c; }
   const gdi = document.getElementById('global-delta-input');
   if (gdi && document.activeElement !== gdi) gdi.value = d.toFixed(1);
+  if (typeof updateDockDisplays === 'function') updateDockDisplays();
   saveState();
 }
 
@@ -293,7 +294,10 @@ function triggerMagicAuto(opts) {
   // Fondamentales graves 432-family (la pile harmonique tient dans 54–566)
   const FUND_POOL = [108, 120, 135, 144, 162, 180];
   const newMaster = masterLocked ? masterFreq
-    : FUND_POOL[Math.floor(Math.random() * FUND_POOL.length)];
+    : (RAND_OPTS.rangeOn
+        // Plage fréquence du menu Jeu Aléatoire respectée
+        ? Math.round(RAND_OPTS.freqMin + Math.random() * (Math.min(432, RAND_OPTS.freqMax) - RAND_OPTS.freqMin))
+        : FUND_POOL[Math.floor(Math.random() * FUND_POOL.length)]);
 
   // ── Δ binaural DOUX (thêta/alpha, relaxant) ───────────────────────
   // VERROU BINAURAL (défaut) : on NE touche PAS au delta — chaque paire garde
@@ -385,7 +389,7 @@ function resetAll() {
     p.pingala.ri = i % RATIO_OPTS.length;
     p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i*0.5);
     p.pingala.vol = .12;
-    p.ida.delta   = DEFAULT_DELTAS[i];   // battements distincts & doux (plus de lock)
+    p.ida.delta   = DELTA_DEFAULT;       // battement binaural doux, unique
     p.ida.polarity = (i % 2 === 0) ? 1 : -1;
     p.ida.vol     = .12;
     mutedOscs[p.pingala.id] = false;

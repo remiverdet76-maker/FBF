@@ -187,6 +187,9 @@ function patchFBFState() {
   if (fIcon) fIcon.textContent = flowing ? '◉' : '◎';
   if (fSt)  fSt.textContent   = flowing ? 'ON'  : 'OFF';
   if (fTxt) fTxt.style.color  = flowing ? '#63E6FF' : '';
+  const dcFlux = document.getElementById('dcFlux');
+  if (dcFlux) dcFlux.classList.toggle('flowing', !!flowing);
+  if (typeof updateDockDisplays === 'function') updateDockDisplays();
 }
 
 // ── Spectroid bar ─────────────────────────────────────────────────
@@ -584,6 +587,7 @@ function updateDisplay() {
   updateMasterState();
   patchRandomTable();
   patchFBFHz();
+  if (typeof updateDockDisplays === 'function') updateDockDisplays();
 }
 
 // ── updatePairUI ──────────────────────────────────────────────────

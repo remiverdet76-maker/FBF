@@ -29,26 +29,26 @@ const RATIO_OPTS = [
   {r:12/10, l:'12/10'}, {r:10/12, l:'10/12'},   // 4,5
 ];
 
-// Battements binauraux par défaut — DISTINCTS et DOUX (plus de « lock » global).
-// Chaque paire respire à sa propre fréquence lente (delta/thêta), la 6ᵉ sur la
-// résonance de Schumann 7,83 Hz. Champ binaural vivant et relaxant dès le départ.
-const DEFAULT_DELTAS = [2.0, 3.0, 4.0, 5.0, 6.0, 7.83, 4.0]; // 6 paires + maître
+// Battement binaural par défaut — UNE seule valeur douce (thêta 4 Hz).
+// Réglable finement par ±0,1 Hz (cellule orange) et verrouillé pendant le
+// jeu aléatoire (le delta binaural, testé 100% fautif du « mode IRM »).
+const DELTA_DEFAULT = 4.0;
 
 const PAIRS = [
   { label:'Paire 1', color:'#FF6B6B', grad:['#FF6B6B','#FF9A8B'],
-    pingala:{id:'p0', ri:0, n:1.0, vol:.10}, ida:{id:'i0', delta:2.0,  polarity:1,  vol:.10} },
+    pingala:{id:'p0', ri:0, n:1.0, vol:.10}, ida:{id:'i0', delta:DELTA_DEFAULT, polarity:1,  vol:.10} },
   { label:'Paire 2', color:'#FFB347', grad:['#FFB347','#FFD080'],
-    pingala:{id:'p1', ri:1, n:1.0, vol:.10}, ida:{id:'i1', delta:3.0,  polarity:-1, vol:.10} },
+    pingala:{id:'p1', ri:1, n:1.0, vol:.10}, ida:{id:'i1', delta:DELTA_DEFAULT, polarity:-1, vol:.10} },
   { label:'Paire 3', color:'#E8FF60', grad:['#E8FF60','#C8FF80'],
-    pingala:{id:'p2', ri:2, n:2.0, vol:.10}, ida:{id:'i2', delta:4.0,  polarity:1,  vol:.10} },
+    pingala:{id:'p2', ri:2, n:2.0, vol:.10}, ida:{id:'i2', delta:DELTA_DEFAULT, polarity:1,  vol:.10} },
   { label:'Paire 4', color:'#56FFB0', grad:['#56FFB0','#80FFD0'],
-    pingala:{id:'p3', ri:3, n:2.0, vol:.10}, ida:{id:'i3', delta:5.0,  polarity:-1, vol:.10} },
+    pingala:{id:'p3', ri:3, n:2.0, vol:.10}, ida:{id:'i3', delta:DELTA_DEFAULT, polarity:-1, vol:.10} },
   { label:'Paire 5', color:'#60D8FF', grad:['#60D8FF','#80B0FF'],
-    pingala:{id:'p4', ri:4, n:0.5, vol:.10}, ida:{id:'i4', delta:6.0,  polarity:1,  vol:.10} },
+    pingala:{id:'p4', ri:4, n:0.5, vol:.10}, ida:{id:'i4', delta:DELTA_DEFAULT, polarity:1,  vol:.10} },
   { label:'Paire 6', color:'#C080FF', grad:['#C080FF','#E080FF'],
-    pingala:{id:'p5', ri:5, n:0.5, vol:.10}, ida:{id:'i5', delta:7.83, polarity:-1, vol:.10} },
+    pingala:{id:'p5', ri:5, n:0.5, vol:.10}, ida:{id:'i5', delta:DELTA_DEFAULT, polarity:-1, vol:.10} },
   { label:'Maître',  color:'#FFB0FF', grad:['#FFB0FF','#FF80C0'],
-    pingala:{id:'p6', ri:0, n:1.0, vol:.12}, ida:{id:'i6', delta:4.0,  polarity:1,  vol:.12} },
+    pingala:{id:'p6', ri:0, n:1.0, vol:.12}, ida:{id:'i6', delta:DELTA_DEFAULT, polarity:1,  vol:.12} },
 ];
 
 // Panoramique stéréo — éventail : chaque paire a un CENTRE distinct (gauche→droite),

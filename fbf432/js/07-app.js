@@ -593,6 +593,7 @@ function init() {
   _loadTheme();
   _loadVisLite();
   _loadAdvanced();
+  _loadAppearance();
   harmonicRandomInit();
 
   // Inject FX panel
@@ -628,8 +629,12 @@ function init() {
   // Init 3D geometry engine
   animMetatron();
 
-  // Sync affichage binaural SANS relocker : chaque paire garde son battement propre
+  // Sync affichage binaural (valeur unique douce) sans relocker le random
   syncDeltaUI();
+
+  // Câblage du dock 5 touches (tap / appui long)
+  _bindDock();
+  updateDockDisplays();
 
   // Sync UI state
   updateDisplay();
@@ -641,6 +646,96 @@ function init() {
 
   ui('idle', 'Prêt · Cliquez FLUX ou FBF pour rayonner');
   setTimeout(hideSplash, 1400);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DOCK 5 TOUCHES — tap / appui long, et rafraîchissement des affichages
+// ═══════════════════════════════════════════════════════════════════
+
+// Lie un élément : onTap (tap court) vs onHold (appui long ~480ms).
+function _bindTapHold(el, onTap, onHold, holdMs) {
+  if (!el) return;
+  holdMs = holdMs || 480;
+  let timer = null, held = false, moved = false, sx = 0, sy = 0;
+  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } el.classList.remove('dc-hold'); };
+  el.addEventListener('pointerdown', e => {
+    held = false; moved = false; sx = e.clientX; sy = e.clientY;
+    el.classList.add('dc-hold');
+    timer = setTimeout(() => { held = true; el.classList.remove('dc-hold'); try { navigator.vibrate && navigator.vibrate(18); } catch(_) {} if (onHold) onHold(); }, holdMs);
+  });
+  el.addEventListener('pointermove', e => {
+    if (Math.abs(e.clientX - sx) > 12 || Math.abs(e.clientY - sy) > 12) { moved = true; clear(); }
+  });
+  el.addEventListener('pointerup', () => { const wasHeld = held; clear(); if (!wasHeld && !moved && onTap) onTap(); });
+  el.addEventListener('pointercancel', clear);
+  el.addEventListener('pointerleave', clear);
+}
+
+function _bindDock() {
+  // ROUGE — tap = verrou fréquence maître · appui long = nouveau jeu (plages respectées)
+  _bindTapHold(document.getElementById('dcRed'),
+    () => { if (typeof toggleLock === 'function') toggleLock(MASTER_IDX); updateDockDisplays(); },
+    () => { triggerMagicAuto(); });
+
+  // ORANGE — tap centre = verrou binaural · appui long = FX & Master · ±0,1 = pas fins
+  _bindTapHold(document.getElementById('dcOrange'),
+    () => { setBinauralLock(!RAND_OPTS.lockBinaural); updateDockDisplays(); },
+    () => { openTab('panFX'); });
+  const bm = document.getElementById('dcBinMinus'), bp = document.getElementById('dcBinPlus');
+  if (bm) bm.addEventListener('pointerup', e => { e.stopPropagation(); deltaStep(-0.1); updateDockDisplays(); });
+  if (bp) bp.addEventListener('pointerup', e => { e.stopPropagation(); deltaStep(0.1);  updateDockDisplays(); });
+  if (bm) bm.addEventListener('pointerdown', e => e.stopPropagation());
+  if (bp) bp.addEventListener('pointerdown', e => e.stopPropagation());
+
+  // CENTRE — Flux ouvert / fermé
+  _bindTapHold(document.getElementById('dcFlux'), () => { fbfToggle(); }, null);
+
+  // VERT — tap = nouveaux effets (radical) · appui long = menu FX
+  _bindTapHold(document.getElementById('dcGreen'),
+    () => { triggerRandomFX(); }, () => { openTab('panFX'); });
+
+  // BLEU — tap = Paramètres · appui long = réinitialisation
+  _bindTapHold(document.getElementById('dcBlue'),
+    () => { tPanel('panParams', null); },
+    () => { if (confirm('Réinitialiser tous les paramètres ?')) resetAll(); });
+}
+
+// Rafraîchit les libellés/états du dock (fréquence maître, Δ binaural, verrous)
+function updateDockDisplays() {
+  const locked = (typeof isLocked === 'function') && isLocked(MASTER_IDX);
+  const red = document.getElementById('dcRed');
+  if (red) red.classList.toggle('dc-locked', !!locked);
+  const rl = document.getElementById('dcRedLock'); if (rl) rl.textContent = locked ? '🔒' : '🔓';
+  const rf = document.getElementById('dcRedFreq'); if (rf) rf.textContent = masterFreq + ' Hz';
+
+  const binName = document.getElementById('dcBinName');
+  if (binName) binName.textContent = (RAND_OPTS.lockBinaural ? '🔒' : '🔓') + ' Δ Binaural';
+  const bv = document.getElementById('dcBinVal'); if (bv) bv.textContent = globalDelta.toFixed(1) + ' Hz';
+}
+
+// ═══ Apparence : taille & teinte du texte (paramétrable, persistant) ═══
+function setUISize(pct) {
+  pct = Math.max(80, Math.min(140, parseInt(pct) || 100));
+  document.documentElement.style.fontSize = (16 * pct / 100).toFixed(2) + 'px';
+  const v = document.getElementById('uisize-val'); if (v) v.textContent = pct + '%';
+  const sl = document.getElementById('uisize-slider'); if (sl && +sl.value !== pct) sl.value = pct;
+  try { localStorage.setItem('fbf_uisize', pct); } catch(e) {}
+}
+function setUIHue(hue) {
+  hue = Math.max(0, Math.min(360, parseInt(hue) || 45));
+  const col = `hsl(${hue},85%,78%)`;
+  document.documentElement.style.setProperty('--ui-accent', col);
+  const msf = document.getElementById('ms-freq');
+  if (msf) { msf.style.color = col; msf.style.textShadow = `0 0 20px hsla(${hue},85%,60%,.75)`; }
+  const v = document.getElementById('uihue-val'); if (v) v.textContent = (hue>=35&&hue<=55)?'Or':(hue+'°');
+  const sl = document.getElementById('uihue-slider'); if (sl && +sl.value !== hue) sl.value = hue;
+  try { localStorage.setItem('fbf_uihue', hue); } catch(e) {}
+}
+function _loadAppearance() {
+  let s = null, h = null;
+  try { s = localStorage.getItem('fbf_uisize'); h = localStorage.getItem('fbf_uihue'); } catch(e) {}
+  if (s) setUISize(s);
+  if (h) setUIHue(h);
 }
 
 // ── Deux orientations supportées (app Android : paysage + portrait) ──

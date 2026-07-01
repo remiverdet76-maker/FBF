@@ -7,7 +7,7 @@
 // 4 formes — compat stubs pour 07-app.js / updateInfobar
 const GEO_NAMES=['Sphère','Torus','Métatron','Merkaba'];
 const GEO_IDS  =['sphere','torus','metatron','merkaba'];
-let activeGeometry=0;
+let activeGeometry=1;   // Torus 3D par défaut (rotation auto active via V.autoRot)
 
 const V={rx:.28,ry:0,trx:.28,try_:0,zoom:2.2,tzoom:2.2,drag:false,lmx:0,lmy:0,t:0,spd:.8,autoRot:true};
 const HP={wi:6.0,ex:.18,tM:7,ns:200,br:true,pa:true,ma:true,la:true,gl:.65,f:1,breathe:1};
@@ -100,7 +100,7 @@ function buildMC(){
    Couleurs par ratio de fréquences. Caméra V partagée.
    ════════════════════════════════════════════════════════════════ */
 const FX3D={
-  form:'sphere', ratio:'432/360',
+  form:'torus', ratio:'432/360',
   density:220, torsion:3.0, expansion:1.0, spread:1.0, glow:0.65, polarity:0.0,
   _pts:null, _pairs:null
 };

@@ -46,33 +46,21 @@
    hauteur faible. Le desktop (large ET haut) garde son layout flottant. */
 @media (max-width: 900px), (max-height: 500px) {
 
-  /* Dock bas — lisible et accessible (les parents doivent viser sans effort) */
+  /* Dock 5 touches — lisible et accessible (les parents doivent viser sans effort) */
   #bottom-dock {
-    height: 68px !important;
-    padding: 0 .4rem !important;
-    gap: .3rem !important;
+    height: 96px !important;
+    padding: 0 .45rem !important;
+    gap: .45rem !important;
   }
-  #dock-chevron { bottom: 68px !important; }
+  #dock-chevron { bottom: 96px !important; }
   #dock-chevron.dock-up { bottom: 0 !important; }
-  #bottom-dock.collapsed { transform: translateY(68px) !important; }
-  #spectroid-bar { bottom: 68px !important; width: 80vw !important; }
+  #bottom-dock.collapsed { transform: translateY(96px) !important; }
+  #spectroid-bar { bottom: 96px !important; width: 80vw !important; }
 
-  #flux-btn {
-    width: 84px !important; max-width: 96px !important;
-    height: 52px !important; border-radius: 10px !important;
-  }
-  .flux-icon  { font-size: 1.3rem !important; }
-  .flux-txt   { font-size: .52rem !important; }
-  .flux-state { font-size: .5rem !important; }
-
-  #tab-nav .tnav-btn, .tnav-btn {
-    font-size: .72rem !important;
-    padding: .42rem .5rem !important;
-  }
-  #btn-harmonic {
-    font-size: .72rem !important;
-    padding: .42rem .5rem !important;
-  }
+  .dcell { height: 36px !important; }
+  .dcell-name { font-size: .58rem !important; }
+  .dcell-sub  { font-size: .74rem !important; }
+  .dcell-flux { width: 74px !important; height: 74px !important; margin-bottom: 30px !important; }
 
   /* Panneaux : 2/3 écran à droite, déroulement haut → bas */
   .pan-left.open,
@@ -83,7 +71,7 @@
     width: 66vw !important;
     min-width: 220px !important;
     max-width: none !important;
-    height: calc(100vh - 68px) !important;
+    height: calc(100vh - 96px) !important;
     border-radius: 0 0 0 12px !important;
     border-left: 1px solid rgba(0,204,255,.22) !important;
     border-bottom: none !important;

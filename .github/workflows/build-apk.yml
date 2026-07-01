@@ -1,10 +1,11 @@
 name: Build Android APK
 
 on:
+  # Plus de build automatique sur les branches de dev (« demande avant de build »).
+  # Le build se lance à la demande (bouton « Run workflow ») ou au push sur main.
   push:
     branches:
       - main
-      - 'claude/**'
   workflow_dispatch:
 
 jobs:
